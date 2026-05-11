@@ -1,0 +1,14 @@
+workflow:
+  id: example-feature-workflow
+  type: feature
+context:
+  workflow_file: workflows/examples/example-feature-workflow.yml
+  goal: Add a bounded reporting capability
+  scope:
+    - reporting endpoint
+    - validation
+  non_goals:
+    - no protected business logic changes
+  affected_modules:
+    - runtime layer
+  risk_level: MEDIUM

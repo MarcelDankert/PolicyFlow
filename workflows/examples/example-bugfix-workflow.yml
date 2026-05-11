@@ -1,0 +1,13 @@
+workflow:
+  id: example-bugfix-workflow
+  type: bugfix
+context:
+  workflow_file: workflows/examples/example-bugfix-workflow.yml
+  bug_summary: Fix invalid payload handling in a parser
+  scope:
+    - parser validation
+  non_goals:
+    - no contract shape changes
+  affected_modules:
+    - runtime layer
+  risk_level: MEDIUM
