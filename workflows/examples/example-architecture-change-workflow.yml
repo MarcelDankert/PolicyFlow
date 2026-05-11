@@ -10,3 +10,11 @@ context:
     - runtime layer
     - data layer
   risk_level: HIGH
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true

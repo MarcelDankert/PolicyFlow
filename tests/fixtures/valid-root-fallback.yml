@@ -1,0 +1,9 @@
+workflow:
+  id: valid-root-fallback
+  type: feature
+
+workflow_file: workflows/examples/root-fallback.yml
+risk_level: LOW
+required_reviews:
+  - review-agent
+human_approval_required: false

@@ -1,0 +1,12 @@
+workflow:
+  id: invalid-risk-level
+  type: feature
+
+context:
+  workflow_file: workflows/examples/invalid-risk-level.yml
+  risk_level: CRITICAL
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false

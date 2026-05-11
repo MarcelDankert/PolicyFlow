@@ -1,0 +1,11 @@
+workflow:
+  id: empty-required-reviews
+  type: feature
+
+context:
+  workflow_file: workflows/examples/empty-required-reviews.yml
+  risk_level: LOW
+
+governance:
+  required_reviews: []
+  human_approval_required: false

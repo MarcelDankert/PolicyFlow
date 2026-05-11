@@ -1,0 +1,30 @@
+[project]
+name = "policyflow"
+version = "0.1.0"
+description = "Lightweight governance validator for PolicyFlow workflows."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.0",
+  "pyyaml>=6.0",
+  "rich>=13.0",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+policyflow = "policyflow.cli:app"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["policyflow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

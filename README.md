@@ -14,7 +14,7 @@ It provides policy-as-code style documentation, risk-aware workflow templates, e
 
 - Not a product repository
 - Not a runtime orchestration system
-- Not a CLI or validator yet
+- Not a full orchestration platform
 - Not a substitute for target-project architecture, contracts, or domain context
 
 ## Why It Exists
@@ -64,8 +64,48 @@ PolicyFlow/
 ## Current Status
 
 - Template and governance framework
-- No runtime agent orchestration yet
-- No CLI yet
+- Lightweight governance validator
+- No runtime agent orchestration
+
+## Validator
+
+PolicyFlow now includes a lightweight governance validator for workflow YAML files.
+
+Install locally:
+
+```bash
+python -m pip install -e .[dev]
+```
+
+Validate a workflow file:
+
+```bash
+policyflow validate workflows/examples/example-feature-workflow.yml
+```
+
+Successful validation prints:
+
+```text
+[SUCCESS] Workflow validation passed.
+```
+
+Validation failures print a readable error summary and return a non-zero exit code.
+
+Current validator scope:
+
+- requires `workflow` metadata
+- requires `context.workflow_file`
+- requires `context.risk_level`
+- requires `governance.required_reviews`
+- allows `LOW`, `MEDIUM`, or `HIGH` risk only
+- requires `governance.required_reviews` to be a non-empty list
+- requires `governance.human_approval_required: true` for `HIGH` risk workflows
+- accepts equivalent root-level fields only as a backward-compatible fallback
+
+This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer.
+
+TODO:
+- Normalize the workflow schema into a single canonical governance block in a future PR after real usage validates the current field layout.
 
 ## Future Roadmap
 

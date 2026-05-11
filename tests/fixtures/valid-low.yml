@@ -1,0 +1,12 @@
+workflow:
+  id: valid-low
+  type: feature
+
+context:
+  workflow_file: workflows/examples/valid-low.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
