@@ -1,0 +1,10 @@
+workflow:
+  id: malformed
+  type: feature
+context:
+  workflow_file: workflows/examples/malformed.yml
+  risk_level: LOW
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: [false

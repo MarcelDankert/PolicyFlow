@@ -1,0 +1,15 @@
+workflow:
+  id: valid-high
+  type: architecture-change
+
+context:
+  workflow_file: workflows/examples/valid-high.yml
+  risk_level: HIGH
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true

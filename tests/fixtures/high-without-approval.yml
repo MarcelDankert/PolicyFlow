@@ -1,0 +1,14 @@
+workflow:
+  id: high-without-approval
+  type: architecture-change
+
+context:
+  workflow_file: workflows/examples/high-without-approval.yml
+  risk_level: HIGH
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false

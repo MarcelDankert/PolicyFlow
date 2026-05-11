@@ -1,0 +1,11 @@
+workflow:
+  id: missing-risk-level
+  type: feature
+
+context:
+  workflow_file: workflows/examples/missing-risk-level.yml
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false

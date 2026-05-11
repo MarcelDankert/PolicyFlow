@@ -12,3 +12,10 @@ context:
   affected_modules:
     - runtime layer
   risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
