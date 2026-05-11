@@ -1,0 +1,92 @@
+name: Architecture Change
+description: Propose a governed architecture or boundary change.
+title: "[Architecture] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Architecture changes default to `HIGH` risk unless explicitly justified otherwise.
+  - type: textarea
+    id: architecture_motivation
+    attributes:
+      label: Architecture Motivation
+    validations:
+      required: true
+  - type: textarea
+    id: affected_boundaries
+    attributes:
+      label: Affected Boundaries
+    validations:
+      required: true
+  - type: textarea
+    id: contracts_impact
+    attributes:
+      label: Contracts Impact
+    validations:
+      required: true
+  - type: textarea
+    id: runtime_impact
+    attributes:
+      label: Runtime Impact
+    validations:
+      required: true
+  - type: textarea
+    id: deployment_impact
+    attributes:
+      label: Deployment Impact
+    validations:
+      required: true
+  - type: dropdown
+    id: risk_level
+    attributes:
+      label: Risk Level
+      options:
+        - HIGH
+        - MEDIUM
+        - LOW
+    validations:
+      required: true
+  - type: textarea
+    id: required_reviews
+    attributes:
+      label: Required Reviews
+    validations:
+      required: true
+  - type: dropdown
+    id: human_approval_required
+    attributes:
+      label: Human Approval Required
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: workflow_file
+    attributes:
+      label: Workflow File
+      description: Expected path format `ai/workflows/<...>.yml`
+      placeholder: ai/workflows/features/example-architecture-change-workflow.yml
+    validations:
+      required: true
+  - type: textarea
+    id: rollback_considerations
+    attributes:
+      label: Rollback Considerations
+    validations:
+      required: true
+  - type: textarea
+    id: protected_areas_touched
+    attributes:
+      label: Protected Areas Touched
+    validations:
+      required: true
+  - type: dropdown
+    id: adr_required
+    attributes:
+      label: ADR Required
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true

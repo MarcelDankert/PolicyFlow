@@ -1,0 +1,161 @@
+workflow:
+  id: architecture-change-workflow-template
+  name: Architecture Change Workflow
+  version: 1
+  type: architecture-change
+  status: template
+
+context:
+  workflow_file: workflows/templates/architecture-change-workflow.template.yml
+  required_fields:
+    - change_goal
+    - current_state
+    - proposed_state
+    - scope
+    - non_goals
+    - affected_modules
+    - workflow_file
+    - risk_level
+    - confidence
+    - required_reviews
+    - human_approval_required
+    - protected_areas_touched
+    - approval_evidence
+
+steps:
+  - step: change-plan
+    agent: planning-agent
+    input_artifacts:
+      - approved architecture proposal
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    handoff_to: architecture-agent
+    handoff_conditions:
+      - current and proposed state are explicit
+      - workflow_file is declared
+    stop_conditions:
+      - boundary impact undefined
+    escalation_conditions:
+      - risk unclear
+  - step: architecture-review
+    agent: architecture-agent
+    input_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    output_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+    handoff_to: human approval
+    handoff_conditions:
+      - required reviews satisfy matrix
+    stop_conditions:
+      - approval path missing
+    escalation_conditions:
+      - scope expands
+  - step: human-approval-gate
+    agent: human approval
+    input_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+      - approval_evidence
+    output_artifacts:
+      - approval_evidence
+    handoff_to: senior-dev-agent
+    handoff_conditions:
+      - approval recorded
+    stop_conditions:
+      - approval missing
+    escalation_conditions:
+      - approval narrower than scope
+  - step: implement
+    agent: senior-dev-agent
+    input_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+      - approval_evidence
+    output_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    handoff_to: review-agent
+    handoff_conditions:
+      - implementation stays inside approved scope
+    stop_conditions:
+      - broader approval needed
+    escalation_conditions:
+      - architecture assumptions change
+  - step: review
+    agent: review-agent
+    input_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    output_artifacts:
+      - review_findings
+      - required_fixes
+      - severity
+      - approval_status
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+    handoff_to: senior-dev-agent or qa-agent
+    handoff_conditions:
+      - no blocking findings before QA
+    stop_conditions:
+      - evidence insufficient
+    escalation_conditions:
+      - approval path invalidated
+  - step: qa
+    agent: qa-agent
+    input_artifacts:
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+      - approval_evidence
+    output_artifacts:
+      - qa_report
+      - quality_gate_status
+      - unresolved_risks
+      - approval_required
+      - merge_readiness
+    handoff_to: human final approval or merge readiness
+    handoff_conditions:
+      - approvals recorded
+    stop_conditions:
+      - unresolved critical risk remains
+    escalation_conditions:
+      - renewed approval needed

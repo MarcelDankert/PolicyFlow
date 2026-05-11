@@ -1,0 +1,97 @@
+name: Bugfix
+description: Report and scope a governed bugfix.
+title: "[Bugfix] "
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-Goals
+    validations:
+      required: true
+  - type: textarea
+    id: affected_modules
+    attributes:
+      label: Affected Modules
+    validations:
+      required: true
+  - type: textarea
+    id: architecture_impact
+    attributes:
+      label: Architecture Impact
+    validations:
+      required: true
+  - type: textarea
+    id: contracts_impact
+    attributes:
+      label: Contracts Impact
+    validations:
+      required: true
+  - type: textarea
+    id: testing_expectations
+    attributes:
+      label: Testing Expectations
+    validations:
+      required: true
+  - type: textarea
+    id: observability_expectations
+    attributes:
+      label: Observability Expectations
+    validations:
+      required: true
+  - type: dropdown
+    id: risk_level
+    attributes:
+      label: Risk Level
+      options:
+        - LOW
+        - MEDIUM
+        - HIGH
+    validations:
+      required: true
+  - type: textarea
+    id: confidence_summary
+    attributes:
+      label: Confidence Summary
+    validations:
+      required: true
+  - type: textarea
+    id: required_reviews
+    attributes:
+      label: Required Reviews
+    validations:
+      required: true
+  - type: dropdown
+    id: human_approval_required
+    attributes:
+      label: Human Approval Required
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: protected_areas_touched
+    attributes:
+      label: Protected Areas Touched
+    validations:
+      required: true
+  - type: textarea
+    id: workflow_file
+    attributes:
+      label: Workflow File
+      description: Expected path format `ai/workflows/<...>.yml`
+      placeholder: ai/workflows/features/example-bugfix-workflow.yml
+    validations:
+      required: true

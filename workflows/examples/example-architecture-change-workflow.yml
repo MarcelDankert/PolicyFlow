@@ -1,0 +1,12 @@
+workflow:
+  id: example-architecture-change-workflow
+  type: architecture-change
+context:
+  workflow_file: workflows/examples/example-architecture-change-workflow.yml
+  change_goal: Split a boundary more explicitly
+  current_state: Runtime and data responsibilities are too loosely described
+  proposed_state: Responsibilities are explicitly separated
+  affected_modules:
+    - runtime layer
+    - data layer
+  risk_level: HIGH

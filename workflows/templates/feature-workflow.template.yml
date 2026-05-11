@@ -1,0 +1,137 @@
+workflow:
+  id: feature-workflow-template
+  name: Feature Workflow
+  version: 1
+  type: feature
+  status: template
+
+context:
+  workflow_file: workflows/templates/feature-workflow.template.yml
+  required_fields:
+    - goal
+    - scope
+    - non_goals
+    - affected_modules
+    - workflow_file
+    - risk_level
+    - confidence
+    - required_reviews
+    - human_approval_required
+    - protected_areas_touched
+    - approval_evidence
+
+steps:
+  - step: plan
+    agent: planning-agent
+    input_artifacts:
+      - approved issue
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    handoff_to: architecture-agent
+    handoff_conditions:
+      - risk is declared
+      - workflow_file is declared
+    stop_conditions:
+      - scope ambiguous
+    escalation_conditions:
+      - risk unclear
+  - step: architecture-check
+    agent: architecture-agent
+    input_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    output_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+    handoff_to: senior-dev-agent
+    handoff_conditions:
+      - review depth matches risk
+    stop_conditions:
+      - boundary conflict
+    escalation_conditions:
+      - approval path required
+  - step: implement
+    agent: senior-dev-agent
+    input_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+    output_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    handoff_to: review-agent
+    handoff_conditions:
+      - scope unchanged
+    stop_conditions:
+      - protected-area drift
+    escalation_conditions:
+      - runtime or data impact uncertain
+  - step: review
+    agent: review-agent
+    input_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    output_artifacts:
+      - review_findings
+      - required_fixes
+      - severity
+      - approval_status
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+    handoff_to: senior-dev-agent or qa-agent
+    handoff_conditions:
+      - no blocking findings before QA
+    stop_conditions:
+      - validation missing
+    escalation_conditions:
+      - risk understated
+  - step: qa
+    agent: qa-agent
+    input_artifacts:
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+    output_artifacts:
+      - qa_report
+      - quality_gate_status
+      - unresolved_risks
+      - approval_required
+      - merge_readiness
+    handoff_to: human approval or merge readiness
+    handoff_conditions:
+      - evidence present
+    stop_conditions:
+      - acceptance criteria not evidenced
+    escalation_conditions:
+      - approval unresolved

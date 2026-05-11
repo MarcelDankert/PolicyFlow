@@ -1,0 +1,20 @@
+governance:
+  workflow_file: workflows/examples/example-feature-workflow.yml
+  risk_level: MEDIUM
+  confidence:
+    overall: 0.85
+    implementation: 0.86
+    architecture_alignment: 0.88
+    test_completeness: 0.80
+    contract_safety: 0.85
+    rationale: bounded cross-module change with direct validation evidence
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: no
+  escalation_required: no
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none required for current classification

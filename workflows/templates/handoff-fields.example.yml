@@ -1,0 +1,39 @@
+handoff_example:
+  workflow_file: workflows/examples/example-feature-workflow.yml
+  risk_level: MEDIUM
+  confidence:
+    overall: 0.86
+    implementation: 0.84
+    architecture_alignment: 0.89
+    test_completeness: 0.81
+    contract_safety: 0.87
+    rationale: bounded workflow and documentation change with direct file validation
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: no
+  escalation_required: no
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none required for current classification
+  step:
+    agent: planning-agent
+    input_artifacts:
+      - approved issue
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    handoff_to: architecture-agent
+    handoff_conditions:
+      - planning artifacts exist
+    stop_conditions:
+      - scope ambiguous
+    escalation_conditions:
+      - risk level unclear
