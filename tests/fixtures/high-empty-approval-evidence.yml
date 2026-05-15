@@ -1,9 +1,9 @@
 workflow:
-  id: valid-high
+  id: high-empty-approval-evidence
   type: architecture-change
 
 context:
-  workflow_file: workflows/examples/valid-high.yml
+  workflow_file: workflows/examples/high-empty-approval-evidence.yml
   risk_level: HIGH
 
 governance:
@@ -13,5 +13,4 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
-  approval_evidence:
-    - approved in architecture review
+  approval_evidence: []
