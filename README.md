@@ -65,6 +65,9 @@ PolicyFlow/
 
 - Template and governance framework
 - Lightweight governance validator
+- Risk-review matrix enforcement
+- Approval evidence enforcement for `HIGH` risk
+- Protected-area escalation enforcement
 - No runtime agent orchestration
 
 ## Validator
@@ -83,6 +86,12 @@ Validate a workflow file:
 policyflow validate workflows/examples/example-feature-workflow.yml
 ```
 
+Validate a PR body markdown file against a workflow:
+
+```bash
+policyflow validate-pr workflows/examples/example-feature-workflow.yml path/to/pull-request.md
+```
+
 Successful validation prints:
 
 ```text
@@ -97,10 +106,22 @@ Current validator scope:
 - requires `context.workflow_file`
 - requires `context.risk_level`
 - requires `governance.required_reviews`
+- accepts governance fields primarily from `context` + `governance`
+- accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
 - requires `governance.required_reviews` to be a non-empty list
+- enforces minimum `required_reviews` from `rules/risk-review-matrix.md`
 - requires `governance.human_approval_required: true` for `HIGH` risk workflows
-- accepts equivalent root-level fields only as a backward-compatible fallback
+- requires non-empty `governance.approval_evidence` for `HIGH` risk workflows
+- requires workflows that touch protected areas to:
+  - use `HIGH` risk
+  - set `governance.escalation_required: true`
+- treats `governance.protected_areas_touched: [none]` as an explicit no-protected-area case
+- validates PR body markdown files against the existing PR template with:
+  - a non-empty `Linked Issue` section
+  - a `Workflow File` entry matching `context.workflow_file`
+  - a `Declared risk level` entry matching `context.risk_level`
+  - a checked confirmation that the linked workflow governed the change
 
 This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer.
 
@@ -109,10 +130,10 @@ TODO:
 
 ## Future Roadmap
 
-- Governance validator
-- GitHub Action checks
-- Prompt renderer
-- Workflow generator
+- workflow schema normalization after more consumer usage
+- packaged releases instead of `git+https` installation from `main`
+- additional consumer validation beyond AurumEdge once more repos adopt the workflow
+- GitHub API-based PR validation as a later target state after the local markdown flow is proven in real usage
 
 ## License
 

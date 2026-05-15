@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.validator import validate_workflow_file
+from policyflow.validator import validate_pull_request, validate_workflow_file
 
 
 app = typer.Typer(help="PolicyFlow governance validator.")
@@ -31,6 +31,21 @@ def validate(workflow_path: Path) -> None:
         raise typer.Exit(code=1) from exc
 
     console.print("[green][SUCCESS][/green] Workflow validation passed.")
+
+
+@app.command("validate-pr")
+def validate_pr(workflow_path: Path, pr_body_path: Path) -> None:
+    """Validate a PR body markdown file against a workflow file."""
+
+    try:
+        validate_pull_request(workflow_path, pr_body_path)
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] Pull request validation failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    console.print("[green][SUCCESS][/green] Pull request validation passed.")
 
 
 if __name__ == "__main__":

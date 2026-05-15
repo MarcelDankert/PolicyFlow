@@ -38,11 +38,11 @@ def test_valid_high_workflow_passes() -> None:
 
     assert result.context.risk_level == "HIGH"
     assert result.governance.human_approval_required is True
+    assert result.governance.escalation_required is True
+    assert result.governance.protected_areas_touched == ["database schema"]
     assert result.governance.approval_evidence == [
         "approved in architecture review"
     ]
-    assert result.governance.escalation_required is True
-    assert result.governance.protected_areas_touched == ["database schema"]
 
 
 def test_root_level_fallback_fields_are_accepted() -> None:

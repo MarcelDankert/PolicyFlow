@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,19 @@ def validate_workflow_file(path: str | Path) -> WorkflowDocument:
         raise WorkflowValidationError(_format_pydantic_errors(exc)) from exc
 
 
+def validate_pull_request(
+    workflow_path: str | Path, pr_body_path: str | Path
+) -> WorkflowDocument:
+    workflow = validate_workflow_file(workflow_path)
+    pr_body = _load_markdown_file(Path(pr_body_path))
+    errors = _collect_pull_request_errors(workflow, pr_body)
+
+    if errors:
+        raise WorkflowValidationError(errors)
+
+    return workflow
+
+
 def _load_workflow_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise WorkflowValidationError([f"Workflow file not found: {path}"])
@@ -48,6 +62,13 @@ def _load_workflow_yaml(path: Path) -> dict[str, Any]:
         )
 
     return data
+
+
+def _load_markdown_file(path: Path) -> str:
+    if not path.exists():
+        raise WorkflowValidationError([f"PR body file not found: {path}"])
+
+    return path.read_text(encoding="utf-8")
 
 
 def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
@@ -92,8 +113,15 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     ) is not True:
         errors.append("HIGH risk workflows require human approval.")
 
-    protected_areas_touched = governance.get("protected_areas_touched")
-    protected_areas = _normalize_protected_areas(protected_areas_touched)
+    approval_evidence = governance.get("approval_evidence")
+    if risk_level == RiskLevel.HIGH.value and (
+        not isinstance(approval_evidence, list) or not approval_evidence
+    ):
+        errors.append("HIGH risk workflows must include non-empty approval evidence.")
+
+    protected_areas = _normalize_protected_areas(
+        governance.get("protected_areas_touched")
+    )
     if protected_areas:
         if risk_level != RiskLevel.HIGH.value:
             errors.append("Workflows touching protected areas must use HIGH risk.")
@@ -102,13 +130,98 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
                 "Workflows touching protected areas must set escalation_required to true."
             )
 
-    approval_evidence = governance.get("approval_evidence")
-    if risk_level == RiskLevel.HIGH.value and (
-        not isinstance(approval_evidence, list) or not approval_evidence
-    ):
-        errors.append("HIGH risk workflows must include non-empty approval evidence.")
+    return errors
+
+
+def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> list[str]:
+    errors: list[str] = []
+    sections = _parse_markdown_sections(pr_body)
+
+    linked_issue = sections.get("Linked Issue", "").strip()
+    if not linked_issue:
+        errors.append("PR body must include a non-empty Linked Issue section.")
+
+    workflow_file = _extract_workflow_file(sections.get("Workflow File", ""))
+    if not workflow_file:
+        errors.append("PR body must include a Workflow File entry.")
+    elif workflow_file != workflow.context.workflow_file:
+        errors.append(
+            "PR body Workflow File must match context.workflow_file: "
+            f"{workflow.context.workflow_file}"
+        )
+
+    declared_risk_level = _extract_declared_risk_level(sections.get("Governance", ""))
+    if not declared_risk_level:
+        errors.append(
+            "PR body must include Declared risk level in the Governance section."
+        )
+    elif declared_risk_level != workflow.context.risk_level.value:
+        errors.append(
+            "PR body Declared risk level must match context.risk_level: "
+            f"{workflow.context.risk_level.value}"
+        )
+
+    if not _has_workflow_confirmation(sections.get("Confirmation", "")):
+        errors.append(
+            "PR body must confirm that the linked workflow file governed this change."
+        )
 
     return errors
+
+
+def _parse_markdown_sections(markdown: str) -> dict[str, str]:
+    sections: dict[str, str] = {}
+    current_heading: str | None = None
+    current_lines: list[str] = []
+
+    for line in markdown.splitlines():
+        if line.startswith("## "):
+            if current_heading is not None:
+                sections[current_heading] = "\n".join(current_lines).strip()
+            current_heading = line[3:].strip()
+            current_lines = []
+            continue
+
+        if current_heading is not None:
+            current_lines.append(line)
+
+    if current_heading is not None:
+        sections[current_heading] = "\n".join(current_lines).strip()
+
+    return sections
+
+
+def _extract_workflow_file(section_text: str) -> str | None:
+    for raw_line in section_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line = re.sub(r"^-+\s*", "", line)
+        line = line.strip("` ")
+        if line:
+            return line
+    return None
+
+
+def _extract_declared_risk_level(section_text: str) -> str | None:
+    match = re.search(
+        r"^- Declared risk level:\s*(LOW|MEDIUM|HIGH)\s*$",
+        section_text,
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+    return match.group(1)
+
+
+def _has_workflow_confirmation(section_text: str) -> bool:
+    return bool(
+        re.search(
+            r"^- \[[xX]\] The linked workflow file governed this change\s*$",
+            section_text,
+            re.MULTILINE,
+        )
+    )
 
 
 def _format_pydantic_errors(exc: ValidationError) -> list[str]:
