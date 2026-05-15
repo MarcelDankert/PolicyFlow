@@ -1,0 +1,16 @@
+workflow:
+  id: medium-protected-area
+  type: feature
+
+context:
+  workflow_file: workflows/examples/medium-protected-area.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  protected_areas_touched:
+    - protected business logic

@@ -18,3 +18,6 @@ governance:
     - review-agent
     - qa-agent
   human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none

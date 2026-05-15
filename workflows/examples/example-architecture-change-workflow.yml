@@ -18,5 +18,8 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - architecture boundary
   approval_evidence:
     - human approval recorded before implementation
