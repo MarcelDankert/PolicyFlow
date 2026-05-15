@@ -1,9 +1,9 @@
 workflow:
-  id: valid-high
+  id: high-missing-approval-evidence
   type: architecture-change
 
 context:
-  workflow_file: workflows/examples/valid-high.yml
+  workflow_file: workflows/examples/high-missing-approval-evidence.yml
   risk_level: HIGH
 
 governance:
@@ -13,5 +13,3 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
-  approval_evidence:
-    - approved in architecture review

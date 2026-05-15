@@ -18,3 +18,5 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
+  approval_evidence:
+    - human approval recorded before implementation

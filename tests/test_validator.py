@@ -38,6 +38,9 @@ def test_valid_high_workflow_passes() -> None:
 
     assert result.context.risk_level == "HIGH"
     assert result.governance.human_approval_required is True
+    assert result.governance.approval_evidence == [
+        "approved in architecture review"
+    ]
 
 
 def test_root_level_fallback_fields_are_accepted() -> None:
@@ -104,6 +107,26 @@ def test_high_risk_with_weaker_reviews_fails() -> None:
     assert (
         "HIGH risk workflows must include required reviews: "
         "architecture-agent, qa-agent"
+        in exc_info.value.errors
+    )
+
+
+def test_high_risk_without_approval_evidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("high-missing-approval-evidence.yml"))
+
+    assert (
+        "HIGH risk workflows must include non-empty approval evidence."
+        in exc_info.value.errors
+    )
+
+
+def test_high_risk_with_empty_approval_evidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("high-empty-approval-evidence.yml"))
+
+    assert (
+        "HIGH risk workflows must include non-empty approval evidence."
         in exc_info.value.errors
     )
 

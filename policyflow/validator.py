@@ -92,6 +92,12 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     ) is not True:
         errors.append("HIGH risk workflows require human approval.")
 
+    approval_evidence = governance.get("approval_evidence")
+    if risk_level == RiskLevel.HIGH.value and (
+        not isinstance(approval_evidence, list) or not approval_evidence
+    ):
+        errors.append("HIGH risk workflows must include non-empty approval evidence.")
+
     return errors
 
 

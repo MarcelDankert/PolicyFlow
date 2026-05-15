@@ -24,6 +24,7 @@ class WorkflowContext(BaseModel):
 class WorkflowGovernance(BaseModel):
     required_reviews: list[str]
     human_approval_required: bool = False
+    approval_evidence: list[str] | None = None
 
     @field_validator("required_reviews")
     @classmethod
