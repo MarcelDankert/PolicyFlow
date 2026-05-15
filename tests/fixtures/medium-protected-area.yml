@@ -1,6 +1,6 @@
 workflow:
   id: medium-protected-area
-  type: feature
+  type: bugfix
 
 context:
   workflow_file: workflows/examples/medium-protected-area.yml
@@ -12,5 +12,6 @@ governance:
     - review-agent
     - qa-agent
   human_approval_required: false
+  escalation_required: true
   protected_areas_touched:
-    - protected business logic
+    - contracts

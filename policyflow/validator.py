@@ -119,15 +119,15 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     ):
         errors.append("HIGH risk workflows must include non-empty approval evidence.")
 
-    if _touches_protected_areas(governance.get("protected_areas_touched")):
+    protected_areas = _normalize_protected_areas(
+        governance.get("protected_areas_touched")
+    )
+    if protected_areas:
         if risk_level != RiskLevel.HIGH.value:
-            errors.append(
-                "Workflows that touch protected areas must be classified as HIGH risk."
-            )
+            errors.append("Workflows touching protected areas must use HIGH risk.")
         if governance.get("escalation_required") is not True:
             errors.append(
-                "Workflows that touch protected areas must set "
-                "governance.escalation_required to true."
+                "Workflows touching protected areas must set escalation_required to true."
             )
 
     return errors
@@ -167,18 +167,6 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
         )
 
     return errors
-
-
-def _touches_protected_areas(value: Any) -> bool:
-    if not isinstance(value, list):
-        return False
-
-    normalized_values = {
-        item.strip().lower()
-        for item in value
-        if isinstance(item, str) and item.strip()
-    }
-    return bool(normalized_values and normalized_values != {"none"})
 
 
 def _parse_markdown_sections(markdown: str) -> dict[str, str]:
@@ -242,3 +230,17 @@ def _format_pydantic_errors(exc: ValidationError) -> list[str]:
         location = ".".join(str(part) for part in error["loc"])
         messages.append(f"{location}: {error['msg']}")
     return messages
+
+
+def _normalize_protected_areas(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+
+    normalized = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        if item.strip().lower() == "none":
+            continue
+        normalized.append(item)
+    return normalized

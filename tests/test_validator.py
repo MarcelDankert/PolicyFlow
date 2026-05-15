@@ -39,7 +39,7 @@ def test_valid_high_workflow_passes() -> None:
     assert result.context.risk_level == "HIGH"
     assert result.governance.human_approval_required is True
     assert result.governance.escalation_required is True
-    assert result.governance.protected_areas_touched == ["critical execution boundary"]
+    assert result.governance.protected_areas_touched == ["database schema"]
     assert result.governance.approval_evidence == [
         "approved in architecture review"
     ]
@@ -133,25 +133,24 @@ def test_high_risk_with_empty_approval_evidence_fails() -> None:
     )
 
 
-def test_medium_risk_with_protected_area_fails() -> None:
+def test_protected_areas_require_high_risk_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("medium-protected-area.yml"))
 
     assert (
-        "Workflows that touch protected areas must be classified as HIGH risk."
+        "Workflows touching protected areas must use HIGH risk."
         in exc_info.value.errors
     )
 
 
-def test_high_risk_with_protected_area_without_escalation_fails() -> None:
+def test_protected_areas_require_escalation_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(
             fixture_path("high-protected-area-without-escalation.yml")
         )
 
     assert (
-        "Workflows that touch protected areas must set "
-        "governance.escalation_required to true."
+        "Workflows touching protected areas must set escalation_required to true."
         in exc_info.value.errors
     )
 

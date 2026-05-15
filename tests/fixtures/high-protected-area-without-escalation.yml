@@ -13,7 +13,8 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
+  escalation_required: false
   protected_areas_touched:
-    - contracts
+    - architecture boundaries
   approval_evidence:
-    - architecture review approved the change
+    - approved in architecture review

@@ -15,6 +15,6 @@ governance:
   human_approval_required: true
   escalation_required: true
   protected_areas_touched:
-    - critical execution boundary
+    - database schema
   approval_evidence:
     - approved in architecture review
