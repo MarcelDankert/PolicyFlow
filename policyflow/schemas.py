@@ -26,6 +26,12 @@ def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
             "human_approval_required": governance.get(
                 "human_approval_required", data.get("human_approval_required", False)
             ),
+            "escalation_required": governance.get(
+                "escalation_required", data.get("escalation_required", False)
+            ),
+            "protected_areas_touched": governance.get(
+                "protected_areas_touched", data.get("protected_areas_touched")
+            ),
             "approval_evidence": governance.get(
                 "approval_evidence", data.get("approval_evidence")
             ),
