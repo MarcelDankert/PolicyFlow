@@ -11,6 +11,13 @@ from policyflow.models import RiskLevel, WorkflowDocument
 from policyflow.schemas import normalize_workflow_payload
 
 
+REQUIRED_REVIEWS_BY_RISK: dict[str, set[str]] = {
+    RiskLevel.LOW.value: {"review-agent"},
+    RiskLevel.MEDIUM.value: {"architecture-agent", "review-agent", "qa-agent"},
+    RiskLevel.HIGH.value: {"architecture-agent", "review-agent", "qa-agent"},
+}
+
+
 def validate_workflow_file(path: str | Path) -> WorkflowDocument:
     raw_data = _load_workflow_yaml(Path(path))
     normalized_data = normalize_workflow_payload(raw_data)
@@ -66,6 +73,19 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
         errors.append("governance.required_reviews is required")
     elif not isinstance(required_reviews, list) or not required_reviews:
         errors.append("governance.required_reviews must be a non-empty list")
+    elif risk_level in REQUIRED_REVIEWS_BY_RISK:
+        required_reviews_set = {
+            review for review in required_reviews if isinstance(review, str)
+        }
+        missing_reviews = sorted(
+            REQUIRED_REVIEWS_BY_RISK[risk_level] - required_reviews_set
+        )
+        if missing_reviews:
+            missing_reviews_text = ", ".join(missing_reviews)
+            errors.append(
+                f"{risk_level} risk workflows must include required reviews: "
+                f"{missing_reviews_text}"
+            )
 
     if risk_level == RiskLevel.HIGH.value and governance.get(
         "human_approval_required"
