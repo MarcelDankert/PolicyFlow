@@ -92,6 +92,16 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     ) is not True:
         errors.append("HIGH risk workflows require human approval.")
 
+    protected_areas_touched = governance.get("protected_areas_touched")
+    protected_areas = _normalize_protected_areas(protected_areas_touched)
+    if protected_areas:
+        if risk_level != RiskLevel.HIGH.value:
+            errors.append("Workflows touching protected areas must use HIGH risk.")
+        if governance.get("escalation_required") is not True:
+            errors.append(
+                "Workflows touching protected areas must set escalation_required to true."
+            )
+
     approval_evidence = governance.get("approval_evidence")
     if risk_level == RiskLevel.HIGH.value and (
         not isinstance(approval_evidence, list) or not approval_evidence
@@ -107,3 +117,17 @@ def _format_pydantic_errors(exc: ValidationError) -> list[str]:
         location = ".".join(str(part) for part in error["loc"])
         messages.append(f"{location}: {error['msg']}")
     return messages
+
+
+def _normalize_protected_areas(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+
+    normalized = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        if item.strip().lower() == "none":
+            continue
+        normalized.append(item)
+    return normalized

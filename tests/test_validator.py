@@ -41,6 +41,8 @@ def test_valid_high_workflow_passes() -> None:
     assert result.governance.approval_evidence == [
         "approved in architecture review"
     ]
+    assert result.governance.escalation_required is True
+    assert result.governance.protected_areas_touched == ["database schema"]
 
 
 def test_root_level_fallback_fields_are_accepted() -> None:
@@ -127,6 +129,28 @@ def test_high_risk_with_empty_approval_evidence_fails() -> None:
 
     assert (
         "HIGH risk workflows must include non-empty approval evidence."
+        in exc_info.value.errors
+    )
+
+
+def test_protected_areas_require_high_risk_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("medium-protected-area.yml"))
+
+    assert (
+        "Workflows touching protected areas must use HIGH risk."
+        in exc_info.value.errors
+    )
+
+
+def test_protected_areas_require_escalation_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("high-protected-area-without-escalation.yml")
+        )
+
+    assert (
+        "Workflows touching protected areas must set escalation_required to true."
         in exc_info.value.errors
     )
 

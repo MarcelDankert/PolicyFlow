@@ -1,9 +1,9 @@
 workflow:
-  id: valid-high
+  id: high-protected-area-without-escalation
   type: architecture-change
 
 context:
-  workflow_file: workflows/examples/valid-high.yml
+  workflow_file: workflows/examples/high-protected-area-without-escalation.yml
   risk_level: HIGH
 
 governance:
@@ -13,8 +13,8 @@ governance:
     - qa-agent
     - human approval
   human_approval_required: true
-  escalation_required: true
+  escalation_required: false
   protected_areas_touched:
-    - database schema
+    - architecture boundaries
   approval_evidence:
     - approved in architecture review

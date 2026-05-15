@@ -1,0 +1,17 @@
+workflow:
+  id: medium-protected-area
+  type: bugfix
+
+context:
+  workflow_file: workflows/examples/medium-protected-area.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: true
+  protected_areas_touched:
+    - contracts
