@@ -1,0 +1,12 @@
+workflow:
+  id: low-missing-review-agent
+  type: feature
+
+context:
+  workflow_file: workflows/examples/low-missing-review-agent.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - qa-agent
+  human_approval_required: false

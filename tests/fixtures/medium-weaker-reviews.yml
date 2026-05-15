@@ -1,0 +1,12 @@
+workflow:
+  id: medium-weaker-reviews
+  type: feature
+
+context:
+  workflow_file: workflows/examples/medium-weaker-reviews.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false

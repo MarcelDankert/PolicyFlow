@@ -1,0 +1,13 @@
+workflow:
+  id: high-weaker-reviews
+  type: architecture-change
+
+context:
+  workflow_file: workflows/examples/high-weaker-reviews.yml
+  risk_level: HIGH
+
+governance:
+  required_reviews:
+    - review-agent
+    - human approval
+  human_approval_required: true

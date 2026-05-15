@@ -76,6 +76,38 @@ def test_empty_required_reviews_fails() -> None:
     assert "governance.required_reviews must be a non-empty list" in exc_info.value.errors
 
 
+def test_low_risk_without_review_agent_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("low-missing-review-agent.yml"))
+
+    assert (
+        "LOW risk workflows must include required reviews: review-agent"
+        in exc_info.value.errors
+    )
+
+
+def test_medium_risk_with_weaker_reviews_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("medium-weaker-reviews.yml"))
+
+    assert (
+        "MEDIUM risk workflows must include required reviews: "
+        "architecture-agent, qa-agent"
+        in exc_info.value.errors
+    )
+
+
+def test_high_risk_with_weaker_reviews_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("high-weaker-reviews.yml"))
+
+    assert (
+        "HIGH risk workflows must include required reviews: "
+        "architecture-agent, qa-agent"
+        in exc_info.value.errors
+    )
+
+
 def test_malformed_yaml_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("malformed.yml"))
