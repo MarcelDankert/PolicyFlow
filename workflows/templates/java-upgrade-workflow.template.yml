@@ -1,0 +1,111 @@
+workflow:
+  id: java-upgrade-workflow-template
+  name: Java Upgrade Workflow
+  version: 1
+  type: java-upgrade
+  status: template
+
+context:
+  workflow_file: workflows/templates/java-upgrade-workflow.template.yml
+  required_fields:
+    - goal
+    - scope
+    - non_goals
+    - affected_modules
+    - workflow_file
+    - risk_level
+    - source_java_version
+    - target_java_version
+    - confidence
+    - required_reviews
+    - human_approval_required
+    - protected_areas_touched
+    - approval_evidence
+
+steps:
+  - step: plan-upgrade
+    agent: planning-agent
+    input_artifacts:
+      - approved issue
+      - target repository context
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - source_java_version
+      - target_java_version
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+    handoff_to: architecture-agent
+    handoff_conditions:
+      - source and target Java versions are explicit
+      - workflow_file is declared
+    stop_conditions:
+      - target runtime unsupported
+    escalation_conditions:
+      - upgrade path ambiguous
+  - step: architecture-check
+    agent: architecture-agent
+    input_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - source_java_version
+      - target_java_version
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+    output_artifacts:
+      - architecture_assessment
+      - migration_constraints
+      - module_boundaries
+      - compatibility_risks
+      - risk_review_decision
+      - required_reviews
+    handoff_to: senior-dev-agent
+    handoff_conditions:
+      - forward-only upgrade path confirmed
+    stop_conditions:
+      - dependency floor blocks target runtime
+    escalation_conditions:
+      - protected area impact detected
+  - step: implement-upgrade
+    agent: senior-dev-agent
+    input_artifacts:
+      - architecture_assessment
+      - migration_constraints
+      - module_boundaries
+      - compatibility_risks
+      - risk_review_decision
+      - required_reviews
+    output_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - unresolved_questions
+    handoff_to: review-agent
+    handoff_conditions:
+      - source and target versions remain unchanged
+    stop_conditions:
+      - backward migration requested
+    escalation_conditions:
+      - runtime behavior uncertain
+  - step: review-and-qa
+    agent: review-agent and qa-agent
+    input_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - unresolved_questions
+    output_artifacts:
+      - review_findings
+      - qa_report
+      - merge_readiness
+    handoff_to: human approval or merge readiness
+    handoff_conditions:
+      - evidence matches declared risk
+    stop_conditions:
+      - upgrade path not validated
+    escalation_conditions:
+      - approval unresolved

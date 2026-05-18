@@ -19,6 +19,8 @@ class WorkflowMetadata(BaseModel):
 class WorkflowContext(BaseModel):
     workflow_file: str = Field(min_length=1)
     risk_level: RiskLevel
+    source_java_version: int | None = None
+    target_java_version: int | None = None
 
 
 class WorkflowGovernance(BaseModel):

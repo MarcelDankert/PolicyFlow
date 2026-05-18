@@ -17,6 +17,7 @@ REQUIRED_REVIEWS_BY_RISK: dict[str, set[str]] = {
     RiskLevel.MEDIUM.value: {"architecture-agent", "review-agent", "qa-agent"},
     RiskLevel.HIGH.value: {"architecture-agent", "review-agent", "qa-agent"},
 }
+SUPPORTED_JAVA_LTS_TARGETS = {17, 21, 25}
 
 
 def validate_workflow_file(path: str | Path) -> WorkflowDocument:
@@ -129,6 +130,9 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
             errors.append(
                 "Workflows touching protected areas must set escalation_required to true."
             )
+
+    if workflow.get("type") == "java-upgrade":
+        _append_java_upgrade_errors(errors, context)
 
     return errors
 
@@ -244,3 +248,66 @@ def _normalize_protected_areas(value: Any) -> list[str]:
             continue
         normalized.append(item)
     return normalized
+
+
+def _append_java_upgrade_errors(errors: list[str], context: dict[str, Any]) -> None:
+    source_value = context.get("source_java_version")
+    if source_value in (None, ""):
+        errors.append(
+            "context.source_java_version is required for java-upgrade workflows."
+        )
+        source_version = None
+    else:
+        source_version = _parse_java_version(source_value)
+        if source_version is None:
+            errors.append(
+                "context.source_java_version must be a valid integer Java version."
+            )
+
+    target_value = context.get("target_java_version")
+    if target_value in (None, ""):
+        errors.append(
+            "context.target_java_version is required for java-upgrade workflows."
+        )
+        target_version = None
+    else:
+        target_version = _parse_java_version(target_value)
+        if target_version is None:
+            errors.append(
+                "context.target_java_version must be a valid integer Java version."
+            )
+
+    if target_version is not None and target_version not in SUPPORTED_JAVA_LTS_TARGETS:
+        supported_targets = ", ".join(
+            str(version) for version in sorted(SUPPORTED_JAVA_LTS_TARGETS)
+        )
+        errors.append(
+            "context.target_java_version must be one of the supported LTS targets: "
+            f"{supported_targets}."
+        )
+
+    if (
+        source_version is not None
+        and target_version is not None
+        and target_version <= source_version
+    ):
+        errors.append(
+            "context.target_java_version must be greater than "
+            "context.source_java_version."
+        )
+
+
+def _parse_java_version(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            return int(stripped)
+        except ValueError:
+            return None
+    return None

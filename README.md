@@ -117,6 +117,9 @@ Current validator scope:
   - use `HIGH` risk
   - set `governance.escalation_required: true`
 - treats `governance.protected_areas_touched: [none]` as an explicit no-protected-area case
+- requires `context.source_java_version` and `context.target_java_version` for `workflow.type: java-upgrade`
+- requires Java upgrade targets to be one of `17`, `21`, or `25`
+- requires Java upgrade targets to be greater than the declared source version
 - validates PR body markdown files against the existing PR template with:
   - a non-empty `Linked Issue` section
   - a `Workflow File` entry matching `context.workflow_file`

@@ -1,0 +1,16 @@
+workflow:
+  id: java-upgrade-target-not-greater
+  type: java-upgrade
+
+context:
+  workflow_file: workflows/examples/java-upgrade-target-not-greater.yml
+  risk_level: MEDIUM
+  source_java_version: 17
+  target_java_version: 17
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false

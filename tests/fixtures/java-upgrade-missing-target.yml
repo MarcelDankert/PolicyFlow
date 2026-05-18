@@ -1,0 +1,15 @@
+workflow:
+  id: java-upgrade-missing-target
+  type: java-upgrade
+
+context:
+  workflow_file: workflows/examples/java-upgrade-missing-target.yml
+  risk_level: MEDIUM
+  source_java_version: 11
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false

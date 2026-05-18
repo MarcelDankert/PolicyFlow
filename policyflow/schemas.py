@@ -18,6 +18,12 @@ def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
         "context": {
             "workflow_file": context.get("workflow_file", data.get("workflow_file")),
             "risk_level": context.get("risk_level", data.get("risk_level")),
+            "source_java_version": context.get(
+                "source_java_version", data.get("source_java_version")
+            ),
+            "target_java_version": context.get(
+                "target_java_version", data.get("target_java_version")
+            ),
         },
         "governance": {
             "required_reviews": governance.get(

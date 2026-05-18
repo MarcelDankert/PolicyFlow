@@ -11,6 +11,7 @@
 - `HIGH` human approval validation
 - `HIGH` approval evidence validation
 - protected-area escalation validation
+- Java upgrade workflow validation
 - CLI support via `policyflow validate <workflow.yml>`
 - PR body completeness validation via `policyflow validate-pr <workflow.yml> <pr-body.md>`
 
@@ -23,6 +24,9 @@
 - weaker-than-matrix review requirements
 - protected area touched without escalation
 - protected area touched outside `HIGH` risk
+- java-upgrade workflow missing source or target Java version
+- java-upgrade workflow target is not an allowed LTS version
+- java-upgrade workflow target is not greater than source
 - PR body missing linked issue
 - PR body workflow path mismatches the workflow file
 - PR body declared risk level mismatches the workflow file

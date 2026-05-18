@@ -1,0 +1,16 @@
+workflow:
+  id: java-upgrade-non-lts-target
+  type: java-upgrade
+
+context:
+  workflow_file: workflows/examples/java-upgrade-non-lts-target.yml
+  risk_level: MEDIUM
+  source_java_version: 11
+  target_java_version: 18
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false

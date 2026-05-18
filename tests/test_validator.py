@@ -45,6 +45,15 @@ def test_valid_high_workflow_passes() -> None:
     ]
 
 
+def test_valid_java_upgrade_workflow_passes() -> None:
+    result = validate_workflow_file(fixture_path("valid-java-upgrade.yml"))
+
+    assert result.workflow.type == "java-upgrade"
+    assert result.context.source_java_version == 11
+    assert result.context.target_java_version == 17
+    assert result.context.risk_level == "MEDIUM"
+
+
 def test_root_level_fallback_fields_are_accepted() -> None:
     result = validate_workflow_file(fixture_path("valid-root-fallback.yml"))
 
@@ -153,6 +162,53 @@ def test_protected_areas_require_escalation_fails() -> None:
         "Workflows touching protected areas must set escalation_required to true."
         in exc_info.value.errors
     )
+
+
+def test_java_upgrade_requires_source_version() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("java-upgrade-missing-source.yml"))
+
+    assert "context.source_java_version is required for java-upgrade workflows." in (
+        exc_info.value.errors
+    )
+
+
+def test_java_upgrade_requires_target_version() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("java-upgrade-missing-target.yml"))
+
+    assert "context.target_java_version is required for java-upgrade workflows." in (
+        exc_info.value.errors
+    )
+
+
+def test_java_upgrade_requires_integer_versions() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("java-upgrade-invalid-version.yml"))
+
+    assert "context.source_java_version must be a valid integer Java version." in (
+        exc_info.value.errors
+    )
+
+
+def test_java_upgrade_requires_lts_target_version() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("java-upgrade-non-lts-target.yml"))
+
+    assert (
+        "context.target_java_version must be one of the supported LTS targets: "
+        "17, 21, 25."
+    ) in exc_info.value.errors
+
+
+def test_java_upgrade_requires_forward_migration() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("java-upgrade-target-not-greater.yml"))
+
+    assert (
+        "context.target_java_version must be greater than "
+        "context.source_java_version."
+    ) in exc_info.value.errors
 
 
 def test_malformed_yaml_fails() -> None:
