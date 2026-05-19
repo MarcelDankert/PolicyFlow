@@ -178,6 +178,12 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
             "workflow before implementation started."
         )
 
+    if not _has_workflow_phase_confirmation(sections.get("Confirmation", "")):
+        errors.append(
+            "PR body must confirm that required workflow phases were executed as "
+            "visible working steps, not only documented after the fact."
+        )
+
     return errors
 
 
@@ -250,6 +256,16 @@ def _has_workflow_lock_confirmation(section_text: str) -> bool:
     return bool(
         re.search(
             r"^- \[[xX]\] Scope, non-goals, and risk were fixed in the workflow before implementation started\s*$",
+            section_text,
+            re.MULTILINE,
+        )
+    )
+
+
+def _has_workflow_phase_confirmation(section_text: str) -> bool:
+    return bool(
+        re.search(
+            r"^- \[[xX]\] Required workflow phases were executed as visible working steps, not only documented after the fact\s*$",
             section_text,
             re.MULTILINE,
         )
