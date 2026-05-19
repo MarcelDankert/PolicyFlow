@@ -63,15 +63,18 @@ Required order for every consumer repo:
 
 1. Create the workflow file first.
 2. Lock scope, non-goals, and risk before implementation.
-3. Implement inside the declared workflow.
-4. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
-5. Do not silently expand scope, risk, or non-goals.
-6. Review the PR body and delivery evidence against the workflow before merge.
+3. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
+4. Implement inside the declared workflow.
+5. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
+6. Do not silently expand scope, risk, or non-goals.
+7. Review the PR body and delivery evidence against the workflow before merge.
 
 Pragmatic-strict transition mode:
 
 - the workflow file is mandatory from the start of the work
 - the workflow guides the work from the beginning, not only in the PR write-up
+- workflow phases are operational steps, not only descriptive labels
+- `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
 - small same-scope clarifications in the same PR are allowed
 - hidden scope, risk, or non-goal expansion is not allowed
 - PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
@@ -145,6 +148,7 @@ Current validator scope:
   - a checked confirmation that the linked workflow governed the change
   - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
+  - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 
 This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer.
 

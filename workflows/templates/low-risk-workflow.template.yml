@@ -7,7 +7,8 @@ workflow:
   # Required default for all PolicyFlow consumer repos:
   # 1. Create this workflow before implementation.
   # 2. Fix scope, non_goals, and risk before writing code.
-  # 3. Use this workflow to steer execution, not only to document it afterwards.
+  # 3. Execute these workflow phases as real working steps.
+  # 4. Use this workflow to steer execution, not only to document it afterwards.
   # Allowed: small same-scope clarifications in the same PR.
   # Not allowed: silent scope, risk, or non_goals expansion.
 
@@ -43,6 +44,7 @@ forbidden_use_cases:
 steps:
   - step: plan
     agent: planning-agent
+    purpose: lock scope, non_goals, and fast-path risk before implementation starts
     input_artifacts:
       - approved issue
     output_artifacts:
@@ -65,6 +67,7 @@ steps:
       - risk upgrade required
   - step: implement
     agent: senior-dev-agent
+    purpose: implement only after the fast-path decision is explicit
     input_artifacts:
       - issue_brief
       - acceptance_criteria
@@ -89,6 +92,7 @@ steps:
       - must move to stricter workflow
   - step: review
     agent: review-agent
+    purpose: perform an explicit review phase before merge readiness
     input_artifacts:
       - implementation_summary
       - changed_files

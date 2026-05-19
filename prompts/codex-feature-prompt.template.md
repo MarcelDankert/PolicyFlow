@@ -10,6 +10,8 @@ Load target-project context first.
 
 Then:
 - follow PolicyFlow governance
+- execute workflow phases strictly, not only descriptively
+- treat `planning`, `architecture-check`, `review`, and `qa` as visible work phases
 - respect the risk-review matrix
 - escalate uncertainty
 - do not bypass human approval

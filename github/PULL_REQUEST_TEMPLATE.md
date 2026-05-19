@@ -6,6 +6,7 @@
 - Expected path format: `ai/workflows/<...>.yml`
 - This file must have existed before implementation and must have governed the work from the start.
 - This file is expected to have steered the implementation, not to be added only as retrospective documentation.
+- Required workflow phases should have been executed as real working steps, not only described after the work was done.
 
 ## Scope
 - In scope:
@@ -29,6 +30,7 @@
 - [ ] The linked workflow file governed this change
 - [ ] The workflow file existed before implementation and governed the work from the start
 - [ ] Scope, non-goals, and risk were fixed in the workflow before implementation started
+- [ ] Required workflow phases were executed as visible working steps, not only documented after the fact
 
 ## Tests
 ```text

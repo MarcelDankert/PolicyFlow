@@ -7,7 +7,8 @@ workflow:
   # Required default for all PolicyFlow consumer repos:
   # 1. Create this workflow before implementation.
   # 2. Fix scope, non_goals, and risk before writing code.
-  # 3. Use this workflow to steer execution, not only to document it afterwards.
+  # 3. Execute these workflow phases as real working steps.
+  # 4. Use this workflow to steer execution, not only to document it afterwards.
   # Allowed: small same-scope clarifications in the same PR.
   # Not allowed: silent scope, risk, or non_goals expansion.
 
@@ -31,6 +32,7 @@ context:
 steps:
   - step: change-plan
     agent: planning-agent
+    purpose: lock architecture change scope, non_goals, and risk before implementation starts
     input_artifacts:
       - approved architecture proposal
     output_artifacts:
@@ -52,6 +54,7 @@ steps:
       - risk unclear
   - step: architecture-review
     agent: architecture-agent
+    purpose: make the architecture decision and approval path explicit before coding
     input_artifacts:
       - issue_brief
       - acceptance_criteria
@@ -77,6 +80,7 @@ steps:
       - scope expands
   - step: human-approval-gate
     agent: human approval
+    purpose: record required approval before implementation starts
     input_artifacts:
       - architecture_assessment
       - approved_scope
@@ -97,6 +101,7 @@ steps:
       - approval narrower than scope
   - step: implement
     agent: senior-dev-agent
+    purpose: implement only after planning, architecture review, and approval are explicit
     input_artifacts:
       - architecture_assessment
       - approved_scope
@@ -122,6 +127,7 @@ steps:
       - architecture assumptions change
   - step: review
     agent: review-agent
+    purpose: perform an explicit review phase before QA and merge readiness
     input_artifacts:
       - implementation_summary
       - changed_files
@@ -147,6 +153,7 @@ steps:
       - approval path invalidated
   - step: qa
     agent: qa-agent
+    purpose: perform an explicit QA evidence pass before merge readiness
     input_artifacts:
       - review_approval
       - residual_risk
