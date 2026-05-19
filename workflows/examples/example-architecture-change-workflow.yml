@@ -1,11 +1,21 @@
 workflow:
   id: example-architecture-change-workflow
   type: architecture-change
+  # Example usage for all consumer repos:
+  # create the workflow before implementation
+  # use it to steer the work from the start
+  # allow only same-scope clarifications in the same PR
+  # do not silently expand scope, non_goals, or risk
 context:
   workflow_file: workflows/examples/example-architecture-change-workflow.yml
   change_goal: Split a boundary more explicitly
   current_state: Runtime and data responsibilities are too loosely described
   proposed_state: Responsibilities are explicitly separated
+  scope:
+    - boundary split
+    - handoff clarification
+  non_goals:
+    - no runtime behavior expansion
   affected_modules:
     - runtime layer
     - data layer

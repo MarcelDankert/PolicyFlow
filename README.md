@@ -53,7 +53,28 @@ PolicyFlow/
    - `ai/architecture.md`
    - `ai/rules/project-overrides.md`
    - `contracts/` if applicable
-5. Create workflow instances for real work under `ai/workflows/features/` or the target project's chosen workflow location.
+5. Create workflow instances for real work under `ai/workflows/features/` or the target project's chosen workflow location before implementation starts. This is required in every consumer repo.
+
+## Workflow-First Delivery Standard
+
+PolicyFlow treats `workflow-first delivery` as the required default process for all consumer repositories that adopt these templates. The workflow is not retrospective paperwork. It is created first and then used to steer implementation, review, and merge readiness.
+
+Required order for every consumer repo:
+
+1. Create the workflow file first.
+2. Lock scope, non-goals, and risk before implementation.
+3. Implement inside the declared workflow.
+4. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
+5. Do not silently expand scope, risk, or non-goals.
+6. Review the PR body and delivery evidence against the workflow before merge.
+
+Pragmatic-strict transition mode:
+
+- the workflow file is mandatory from the start of the work
+- the workflow guides the work from the beginning, not only in the PR write-up
+- small same-scope clarifications in the same PR are allowed
+- hidden scope, risk, or non-goal expansion is not allowed
+- PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
 
 ## Example Installation Approach
 
@@ -122,6 +143,8 @@ Current validator scope:
   - a `Workflow File` entry matching `context.workflow_file`
   - a `Declared risk level` entry matching `context.risk_level`
   - a checked confirmation that the linked workflow governed the change
+  - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
+  - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
 
 This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer.
 

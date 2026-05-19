@@ -4,6 +4,12 @@ workflow:
   version: 1
   type: bugfix
   status: template
+  # Required default for all PolicyFlow consumer repos:
+  # 1. Create this workflow before implementation.
+  # 2. Fix scope, non_goals, and risk before writing code.
+  # 3. Use this workflow to steer execution, not only to document it afterwards.
+  # Allowed: small same-scope clarifications in the same PR.
+  # Not allowed: silent scope, risk, or non_goals expansion.
 
 context:
   workflow_file: workflows/templates/bugfix-workflow.template.yml
@@ -28,6 +34,7 @@ steps:
     output_artifacts:
       - issue_brief
       - acceptance_criteria
+      - approved_scope
       - non_goals
       - initial_risk_level
       - protected_areas_touched
@@ -37,6 +44,7 @@ steps:
     handoff_conditions:
       - defect documented
       - workflow_file is declared
+      - scope and non_goals are declared before implementation
     stop_conditions:
       - defect not reproducible
     escalation_conditions:

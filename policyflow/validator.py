@@ -166,6 +166,18 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
             "PR body must confirm that the linked workflow file governed this change."
         )
 
+    if not _has_workflow_first_confirmation(sections.get("Confirmation", "")):
+        errors.append(
+            "PR body must confirm that the workflow file existed before implementation "
+            "and governed the work from the start."
+        )
+
+    if not _has_workflow_lock_confirmation(sections.get("Confirmation", "")):
+        errors.append(
+            "PR body must confirm that scope, non-goals, and risk were fixed in the "
+            "workflow before implementation started."
+        )
+
     return errors
 
 
@@ -218,6 +230,26 @@ def _has_workflow_confirmation(section_text: str) -> bool:
     return bool(
         re.search(
             r"^- \[[xX]\] The linked workflow file governed this change\s*$",
+            section_text,
+            re.MULTILINE,
+        )
+    )
+
+
+def _has_workflow_first_confirmation(section_text: str) -> bool:
+    return bool(
+        re.search(
+            r"^- \[[xX]\] The workflow file existed before implementation and governed the work from the start\s*$",
+            section_text,
+            re.MULTILINE,
+        )
+    )
+
+
+def _has_workflow_lock_confirmation(section_text: str) -> bool:
+    return bool(
+        re.search(
+            r"^- \[[xX]\] Scope, non-goals, and risk were fixed in the workflow before implementation started\s*$",
             section_text,
             re.MULTILINE,
         )
