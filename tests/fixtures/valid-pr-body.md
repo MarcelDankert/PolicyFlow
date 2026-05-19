@@ -29,6 +29,8 @@ No architecture boundary changes.
 - [x] The implementation matches the declared scope
 - [x] Non-goals were respected
 - [x] The linked workflow file governed this change
+- [x] The workflow file existed before implementation and governed the work from the start
+- [x] Scope, non-goals, and risk were fixed in the workflow before implementation started
 
 ## Tests
 ```text

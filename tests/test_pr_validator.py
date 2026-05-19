@@ -74,6 +74,34 @@ def test_pull_request_without_workflow_confirmation_fails() -> None:
     )
 
 
+def test_pull_request_without_workflow_first_confirmation_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-unchecked-workflow-first-confirmation.md"),
+        )
+
+    assert (
+        "PR body must confirm that the workflow file existed before implementation "
+        "and governed the work from the start."
+        in exc_info.value.errors
+    )
+
+
+def test_pull_request_without_workflow_lock_confirmation_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-unchecked-workflow-lock-confirmation.md"),
+        )
+
+    assert (
+        "PR body must confirm that scope, non-goals, and risk were fixed in the "
+        "workflow before implementation started."
+        in exc_info.value.errors
+    )
+
+
 def test_validate_pr_command_succeeds() -> None:
     result = runner.invoke(
         app,

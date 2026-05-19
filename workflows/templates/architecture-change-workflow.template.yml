@@ -4,6 +4,12 @@ workflow:
   version: 1
   type: architecture-change
   status: template
+  # Required default for all PolicyFlow consumer repos:
+  # 1. Create this workflow before implementation.
+  # 2. Fix scope, non_goals, and risk before writing code.
+  # 3. Use this workflow to steer execution, not only to document it afterwards.
+  # Allowed: small same-scope clarifications in the same PR.
+  # Not allowed: silent scope, risk, or non_goals expansion.
 
 context:
   workflow_file: workflows/templates/architecture-change-workflow.template.yml
@@ -39,6 +45,7 @@ steps:
     handoff_conditions:
       - current and proposed state are explicit
       - workflow_file is declared
+      - scope and non_goals are declared before implementation
     stop_conditions:
       - boundary impact undefined
     escalation_conditions:
