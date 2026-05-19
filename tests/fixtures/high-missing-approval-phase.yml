@@ -1,17 +1,23 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: high-missing-approval-phase
+  type: architecture-change
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
-  risk_level: MEDIUM
+  workflow_file: workflows/examples/high-missing-approval-phase.yml
+  risk_level: HIGH
 
 governance:
   required_reviews:
     - architecture-agent
     - review-agent
     - qa-agent
-  human_approval_required: false
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - database schema
+  approval_evidence:
+    - approved in architecture review
 
 execution:
   mode: strict

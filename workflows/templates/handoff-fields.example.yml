@@ -18,6 +18,19 @@ handoff_example:
     - none
   approval_evidence:
     - none required for current classification
+  execution:
+    mode: strict
+    phases:
+      - phase: planning
+        state: completed
+      - phase: architecture-check
+        state: completed
+      - phase: implementation
+        state: pending
+      - phase: review
+        state: pending
+      - phase: qa
+        state: pending
   step:
     agent: planning-agent
     input_artifacts:

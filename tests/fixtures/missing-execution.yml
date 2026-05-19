@@ -1,0 +1,12 @@
+workflow:
+  id: missing-execution
+  type: feature
+
+context:
+  workflow_file: workflows/examples/missing-execution.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false

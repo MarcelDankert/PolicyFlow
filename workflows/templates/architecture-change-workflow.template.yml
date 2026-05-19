@@ -29,6 +29,22 @@ context:
     - protected_areas_touched
     - approval_evidence
 
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: architecture-check
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
 steps:
   - step: change-plan
     agent: planning-agent
