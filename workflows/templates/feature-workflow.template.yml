@@ -72,6 +72,29 @@ contracts: {}
 #       - none
 # Completed phases must have the matching contract block with the expected owner agent.
 
+overrides: []
+# Add typed override blocks only for explicit, approved exceptions, for example:
+# overrides:
+#   - id: phase-bypass-1
+#     type: phase_bypass
+#     reason: Review starts with a bounded overlap for this slice.
+#     scope_impact: No scope expansion beyond parser validation.
+#     risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
+#     mitigations:
+#       - review findings must be resolved before QA completion
+#     approved_by: architecture-agent
+#     approval_reference: ARCH-OVERRIDE-1
+#     review_by: 2026-05-27
+#     bypassed_phase: review
+#     compensating_controls:
+#       - review findings tracked in the PR before QA sign-off
+# Supported types:
+# - scope_exception
+# - risk_exception
+# - phase_bypass
+# - approval_bypass
+# - non_goal_exception
+
 steps:
   - step: plan
     agent: planning-agent

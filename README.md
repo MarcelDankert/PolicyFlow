@@ -28,6 +28,7 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 - Workflow execution state
 - Phase evidence schema
 - Agent role contracts
+- Typed workflow overrides
 - Confidence governance
 - Explicit agent handoffs
 - Human-in-the-loop controls
@@ -69,11 +70,12 @@ Required order for every consumer repo:
 3. Declare the workflow execution state using canonical phases and states.
 4. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
 5. Record machine-readable role contracts as phases complete so each canonical phase has an explicit owner agent and output contract.
-6. Keep the execution state aligned with the current workflow phase.
-7. Implement inside the declared workflow.
-8. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
-9. Do not silently expand scope, risk, or non-goals.
-10. Review the PR body and delivery evidence against the workflow before merge.
+6. Record typed overrides only for explicit approved exceptions, and make them visible in the PR when they exist.
+7. Keep the execution state aligned with the current workflow phase.
+8. Implement inside the declared workflow.
+9. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
+10. Do not silently expand scope, risk, or non-goals.
+11. Review the PR body, delivery evidence, and any declared overrides against the workflow before merge.
 
 Pragmatic-strict transition mode:
 
@@ -83,6 +85,7 @@ Pragmatic-strict transition mode:
 - workflow phases are operational steps, not only descriptive labels
 - `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
 - completed canonical phases should also carry matching machine-readable role contracts with the expected owner agent
+- approved exceptions should be modeled as typed workflow overrides and explicitly confirmed in the PR
 - small same-scope clarifications in the same PR are allowed
 - hidden scope, risk, or non-goal expansion is not allowed
 - PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
@@ -103,6 +106,7 @@ Pragmatic-strict transition mode:
 - PR evidence mapping
 - GitHub governance workflow for PolicyFlow itself
 - Agent role contract schema for canonical workflow phases
+- Typed workflow override schema with PR visibility
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -148,6 +152,7 @@ Current validator scope:
 - requires `execution.phases`
 - accepts optional `evidence` blocks per workflow phase
 - accepts optional `contracts` blocks per canonical workflow phase
+- accepts optional typed `overrides` entries for approved exceptions
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
@@ -165,6 +170,13 @@ Current validator scope:
   - `implementation`: `owner_agent`, `implementation_summary`, `changed_files`, `test_summary`, `docs_updates`, `known_limitations`, `unresolved_questions`
   - `review`: `owner_agent`, `review_findings`, `required_fixes`, `severity`, `approval_status`, `review_approval`, `residual_risk`, `qa_focus_areas`, `test_expectations`
   - `qa`: `owner_agent`, `qa_report`, `quality_gate_status`, `unresolved_risks`, `approval_required`, `merge_readiness`
+- validates typed overrides when present:
+  - shared fields: `id`, `type`, `reason`, `scope_impact`, `risk_impact`, `mitigations`, `approved_by`, `approval_reference`, exactly one of `review_by` or `expires_on`
+  - `scope_exception`: `affected_scope_items`
+  - `risk_exception`: `original_risk`, `effective_risk`
+  - `phase_bypass`: `bypassed_phase`, `compensating_controls`
+  - `approval_bypass`: `approval_target`, `compensating_controls`
+  - `non_goal_exception`: `affected_non_goals`
 - enforces the first execution transition gates:
   - `implementation` cannot start before `planning` is completed
   - `MEDIUM`/`HIGH` implementation cannot start before `architecture-check` is completed
@@ -173,6 +185,8 @@ Current validator scope:
   - `approval` cannot start before `qa` is completed
 - requires matching evidence blocks for completed evidence-bearing phases
 - requires matching role contract blocks for completed canonical agent-owned phases
+- requires approval metadata for `risk_exception` and `approval_bypass`
+- requires PR-visible override references for declared workflow overrides
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
   - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`
@@ -189,12 +203,13 @@ Current validator scope:
   - a `Workflow File` entry matching `context.workflow_file`
   - a `Declared risk level` entry matching `context.risk_level`
   - evidence references that point to existing workflow evidence blocks
+  - override references that point to existing typed workflow overrides
   - a checked confirmation that the linked workflow governed the change
   - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 
-This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer. The new role contracts make phase ownership and outputs machine-checkable without introducing a runtime scheduler.
+This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer. The role contracts and typed overrides make phase ownership, outputs, and approved exceptions machine-checkable without introducing a runtime scheduler or approval engine.
 
 TODO:
 - Normalize the workflow schema into a single canonical governance block in a future PR after real usage validates the current field layout.

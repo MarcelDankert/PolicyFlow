@@ -97,6 +97,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     execution = data.get("execution")
     evidence = data.get("evidence")
     contracts = data.get("contracts")
+    overrides = data.get("overrides")
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -150,6 +151,8 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
             errors.append(
                 "Workflows touching protected areas must set escalation_required to true."
             )
+
+    _append_override_errors(errors, overrides)
 
     if not isinstance(execution, dict) or execution.get("mode") in (None, ""):
         errors.append("execution.mode is required")
@@ -327,6 +330,9 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
     _append_pr_evidence_reference_errors(
         errors, workflow, sections.get("Evidence", "")
     )
+    _append_pr_override_reference_errors(
+        errors, workflow, sections.get("Overrides", "")
+    )
 
     return errors
 
@@ -372,6 +378,23 @@ def _append_pr_evidence_reference_errors(
         elif actual_reference != expected_reference:
             errors.append(
                 f"PR body {label} must reference workflow {expected_reference}"
+            )
+
+
+def _append_pr_override_reference_errors(
+    errors: list[str], workflow: WorkflowDocument, overrides_section: str
+) -> None:
+    if not workflow.overrides:
+        return
+
+    for override in workflow.overrides:
+        actual_type = _extract_override_type(overrides_section, override.id)
+        if actual_type is None:
+            errors.append(f"PR body must reference workflow override: {override.id}")
+            continue
+        if actual_type != override.type:
+            errors.append(
+                f"PR body Override {override.id} must declare type {override.type}"
             )
 
 
@@ -429,6 +452,25 @@ def _extract_evidence_reference(section_text: str, label: str) -> str | None:
     if match is None:
         return None
     return match.group(1).strip("` ")
+
+
+def _extract_override_type(section_text: str, override_id: str) -> str | None:
+    lines = section_text.splitlines()
+    for index, raw_line in enumerate(lines):
+        match = re.match(r"^- Override ID:\s*([^\s]+)\s*$", raw_line.strip())
+        if match is None or match.group(1) != override_id:
+            continue
+        for candidate in lines[index + 1 :]:
+            candidate = candidate.strip()
+            if not candidate:
+                continue
+            type_match = re.match(r"^- Override type:\s*([^\s]+)\s*$", candidate)
+            if type_match is not None:
+                return type_match.group(1).strip("` ")
+            if candidate.startswith("- Override ID:"):
+                break
+        return None
+    return None
 
 
 def _has_workflow_confirmation(section_text: str) -> bool:
@@ -491,3 +533,30 @@ def _normalize_protected_areas(value: Any) -> list[str]:
             continue
         normalized.append(item)
     return normalized
+
+
+def _append_override_errors(errors: list[str], overrides: Any) -> None:
+    if not isinstance(overrides, list):
+        return
+
+    for override in overrides:
+        if not isinstance(override, dict):
+            continue
+
+        override_id = str(override.get("id", "")).strip()
+        override_type = str(override.get("type", "")).strip()
+
+        has_review_by = override.get("review_by") not in (None, "")
+        has_expires_on = override.get("expires_on") not in (None, "")
+        if has_review_by == has_expires_on:
+            errors.append(
+                f"Override '{override_id}' must declare exactly one of review_by or expires_on."
+            )
+
+        if override_type in {"risk_exception", "approval_bypass"} and (
+            override.get("approved_by") in (None, "")
+            or override.get("approval_reference") in (None, "")
+        ):
+            errors.append(
+                f"Override '{override_id}' of type '{override_type}' requires approved_by and approval_reference."
+            )
