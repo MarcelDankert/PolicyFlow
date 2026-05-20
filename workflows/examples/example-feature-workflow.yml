@@ -56,3 +56,38 @@ evidence:
     constraints:
       - keep the change inside the runtime layer
     approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the bounded reporting scope before implementation.
+    acceptance_criteria:
+      - reporting endpoint remains inside scope
+      - validation remains inside scope
+    approved_scope:
+      - reporting endpoint
+      - validation
+    non_goals:
+      - no protected business logic changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the change inside the runtime layer.
+    approved_scope:
+      - reporting endpoint
+      - validation
+    module_boundaries:
+      - runtime layer
+    contract_impact: No contract changes required.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the change inside the runtime layer

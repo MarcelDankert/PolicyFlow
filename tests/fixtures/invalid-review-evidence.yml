@@ -43,3 +43,61 @@ evidence:
   review:
     outcome: approved
     findings_summary: No blocking issues found.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock parser validation scope before coding.
+    acceptance_criteria:
+      - parser validation remains bounded
+    approved_scope:
+      - parser validation
+    non_goals:
+      - no contract changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable for implementation.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the change bounded.
+    approved_scope:
+      - parser validation
+    module_boundaries:
+      - parser module only
+    contract_impact: No contract changes required.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep scope bounded
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented the bounded parser validation change.
+    changed_files:
+      - policyflow/validator.py
+    test_summary: Validator checks passed for the implementation slice.
+    docs_updates:
+      - README.md
+    known_limitations:
+      - no contract changes
+    unresolved_questions:
+      - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - no blocking issues found
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Review approved for QA handoff.
+    residual_risk: bounded residual workflow risk only
+    qa_focus_areas:
+      - review evidence integrity
+    test_expectations:
+      - validator tests remain green

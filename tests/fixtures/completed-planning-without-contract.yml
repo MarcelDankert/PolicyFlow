@@ -1,9 +1,9 @@
 workflow:
-  id: valid-low
+  id: completed-planning-without-contract
   type: feature
 
 context:
-  workflow_file: workflows/examples/valid-low.yml
+  workflow_file: workflows/examples/completed-planning-without-contract.yml
   risk_level: LOW
 
 governance:
@@ -29,20 +29,3 @@ evidence:
     non_goals_locked:
       - no protected area changes
     risk_rationale: LOW-risk change with review-agent coverage.
-
-contracts:
-  planning:
-    owner_agent: planning-agent
-    issue_brief: Lock the low-risk scope before implementation.
-    acceptance_criteria:
-      - workflow scope is bounded
-    approved_scope:
-      - bounded feature change
-    non_goals:
-      - no protected area changes
-    initial_risk_level: LOW
-    protected_areas_touched:
-      - none
-    confidence_summary: High confidence in the bounded low-risk slice.
-    escalation_flags:
-      - none

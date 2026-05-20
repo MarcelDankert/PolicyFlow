@@ -68,3 +68,54 @@ evidence:
     constraints:
       - keep enforcement lightweight and file-based
     approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the PR evidence mapping scope before implementation.
+    acceptance_criteria:
+      - PR evidence references remain bounded
+      - PolicyFlow governance workflow remains bounded
+    approved_scope:
+      - PR evidence references
+      - PolicyFlow GitHub governance workflow
+    non_goals:
+      - no GitHub metadata deep integration
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept enforcement lightweight and file-based.
+    approved_scope:
+      - PR evidence references
+      - PolicyFlow GitHub governance workflow
+    module_boundaries:
+      - policyflow validator
+      - github workflow
+    contract_impact: No schema redesign required.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep enforcement lightweight and file-based
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented PR evidence references and the PolicyFlow governance workflow inside the approved scope.
+    changed_files:
+      - github/PULL_REQUEST_TEMPLATE.md
+      - policyflow/validator.py
+      - .github/workflows/policyflow-governance.yml
+    test_summary: PR validator tests and workflow validation stayed green for the implementation slice.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+    known_limitations:
+      - no GitHub metadata deep integration
+    unresolved_questions:
+      - none

@@ -40,3 +40,35 @@ evidence:
     constraints:
       - keep implementation bounded
     approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock parser validation scope before coding.
+    acceptance_criteria:
+      - parser validation remains bounded
+    approved_scope:
+      - parser validation
+    non_goals:
+      - no contract changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium-risk scope is stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture scope remains inside parser validation.
+    approved_scope:
+      - parser validation
+    module_boundaries:
+      - parser module only
+    contract_impact: No contract changes required.
+    risk_review_decision: MEDIUM risk path stays in place.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep implementation bounded

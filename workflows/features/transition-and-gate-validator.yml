@@ -67,3 +67,38 @@ evidence:
     constraints:
       - keep the slice inside validator logic
     approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the transition validator scope before implementation.
+    acceptance_criteria:
+      - transition rules remain bounded
+      - gate checks remain bounded
+    approved_scope:
+      - transition rules
+      - gate checks
+    non_goals:
+      - no GitHub integration
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the slice inside validator logic.
+    approved_scope:
+      - transition rules
+      - gate checks
+    module_boundaries:
+      - policyflow validator
+    contract_impact: No schema redesign required.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the slice inside validator logic

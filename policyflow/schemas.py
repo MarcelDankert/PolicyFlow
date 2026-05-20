@@ -14,6 +14,9 @@ def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
     )
     execution = data.get("execution") if isinstance(data.get("execution"), dict) else {}
     evidence = data.get("evidence") if isinstance(data.get("evidence"), dict) else None
+    contracts = (
+        data.get("contracts") if isinstance(data.get("contracts"), dict) else None
+    )
 
     return {
         "workflow": data.get("workflow"),
@@ -43,4 +46,5 @@ def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
             "phases": execution.get("phases"),
         },
         "evidence": evidence,
+        "contracts": contracts,
     }

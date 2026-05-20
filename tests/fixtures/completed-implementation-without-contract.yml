@@ -1,9 +1,9 @@
 workflow:
-  id: valid-complete-evidence
+  id: completed-implementation-without-contract
   type: feature
 
 context:
-  workflow_file: workflows/examples/valid-complete-evidence.yml
+  workflow_file: workflows/examples/completed-implementation-without-contract.yml
   risk_level: MEDIUM
 
 governance:
@@ -23,9 +23,9 @@ execution:
     - phase: implementation
       state: completed
     - phase: review
-      state: completed
+      state: pending
     - phase: qa
-      state: completed
+      state: pending
 
 evidence:
   planning:
@@ -41,15 +41,6 @@ evidence:
     constraints:
       - preserve module boundaries
     approval_path: architecture-agent review
-  review:
-    outcome: approved
-    findings_summary: No blocking review findings remain.
-    residual_risk: bounded residual documentation risk only
-  qa:
-    outcome: passed
-    evidence_summary: Validation commands passed with expected output.
-    unresolved_risks:
-      - none
 
 contracts:
   planning:
@@ -85,38 +76,3 @@ contracts:
       - qa-agent
     implementation_constraints:
       - preserve module boundaries
-  implementation:
-    owner_agent: senior-dev-agent
-    implementation_summary: Implemented the bounded reporting endpoint and validation updates.
-    changed_files:
-      - policyflow/validator.py
-      - tests/test_validator.py
-    test_summary: Validator and workflow tests passed for the implementation slice.
-    docs_updates:
-      - README.md
-    known_limitations:
-      - no GitHub API integration
-    unresolved_questions:
-      - none
-  review:
-    owner_agent: review-agent
-    review_findings:
-      - no blocking findings remain
-    required_fixes:
-      - none
-    severity: none
-    approval_status: approved
-    review_approval: Review approved for QA handoff.
-    residual_risk: bounded residual documentation risk only
-    qa_focus_areas:
-      - validator regression coverage
-    test_expectations:
-      - validator tests remain green
-  qa:
-    owner_agent: qa-agent
-    qa_report: QA evidence confirmed validator and workflow checks pass.
-    quality_gate_status: passed
-    unresolved_risks:
-      - none
-    approval_required: false
-    merge_readiness: true

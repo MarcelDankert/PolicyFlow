@@ -67,3 +67,37 @@ evidence:
     constraints:
       - keep the first evidence slice backward-compatible
     approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the evidence schema scope before implementation.
+    acceptance_criteria:
+      - evidence schema stays bounded
+    approved_scope:
+      - evidence schema for workflow phases
+      - minimum evidence fields
+    non_goals:
+      - no transition gate enforcement yet
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the first evidence slice backward-compatible.
+    approved_scope:
+      - evidence schema for workflow phases
+      - minimum evidence fields
+    module_boundaries:
+      - policyflow schema layer
+    contract_impact: No contract redesign required.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the first evidence slice backward-compatible

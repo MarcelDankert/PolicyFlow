@@ -27,6 +27,7 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 - Risk-aware workflows
 - Workflow execution state
 - Phase evidence schema
+- Agent role contracts
 - Confidence governance
 - Explicit agent handoffs
 - Human-in-the-loop controls
@@ -67,11 +68,12 @@ Required order for every consumer repo:
 2. Lock scope, non-goals, and risk before implementation.
 3. Declare the workflow execution state using canonical phases and states.
 4. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
-5. Keep the execution state aligned with the current workflow phase.
-6. Implement inside the declared workflow.
-7. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
-8. Do not silently expand scope, risk, or non-goals.
-9. Review the PR body and delivery evidence against the workflow before merge.
+5. Record machine-readable role contracts as phases complete so each canonical phase has an explicit owner agent and output contract.
+6. Keep the execution state aligned with the current workflow phase.
+7. Implement inside the declared workflow.
+8. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
+9. Do not silently expand scope, risk, or non-goals.
+10. Review the PR body and delivery evidence against the workflow before merge.
 
 Pragmatic-strict transition mode:
 
@@ -80,6 +82,7 @@ Pragmatic-strict transition mode:
 - the workflow declares canonical execution phases with explicit states such as `pending`, `in_progress`, `completed`, and `blocked`
 - workflow phases are operational steps, not only descriptive labels
 - `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
+- completed canonical phases should also carry matching machine-readable role contracts with the expected owner agent
 - small same-scope clarifications in the same PR are allowed
 - hidden scope, risk, or non-goal expansion is not allowed
 - PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
@@ -99,6 +102,7 @@ Pragmatic-strict transition mode:
 - Transition and gate validator
 - PR evidence mapping
 - GitHub governance workflow for PolicyFlow itself
+- Agent role contract schema for canonical workflow phases
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -143,6 +147,7 @@ Current validator scope:
 - requires `execution.mode`
 - requires `execution.phases`
 - accepts optional `evidence` blocks per workflow phase
+- accepts optional `contracts` blocks per canonical workflow phase
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
@@ -154,6 +159,12 @@ Current validator scope:
   - `review`: `outcome`, `findings_summary`, `residual_risk`
   - `qa`: `outcome`, `evidence_summary`, `unresolved_risks`
   - `approval`: `approved_by`, `reference`, `scope_confirmed`
+- validates canonical role contracts when present:
+  - `planning`: `owner_agent`, `issue_brief`, `acceptance_criteria`, `approved_scope`, `non_goals`, `initial_risk_level`, `protected_areas_touched`, `confidence_summary`, `escalation_flags`
+  - `architecture-check`: `owner_agent`, `architecture_assessment`, `approved_scope`, `module_boundaries`, `contract_impact`, `risk_review_decision`, `required_reviews`, `implementation_constraints`
+  - `implementation`: `owner_agent`, `implementation_summary`, `changed_files`, `test_summary`, `docs_updates`, `known_limitations`, `unresolved_questions`
+  - `review`: `owner_agent`, `review_findings`, `required_fixes`, `severity`, `approval_status`, `review_approval`, `residual_risk`, `qa_focus_areas`, `test_expectations`
+  - `qa`: `owner_agent`, `qa_report`, `quality_gate_status`, `unresolved_risks`, `approval_required`, `merge_readiness`
 - enforces the first execution transition gates:
   - `implementation` cannot start before `planning` is completed
   - `MEDIUM`/`HIGH` implementation cannot start before `architecture-check` is completed
@@ -161,6 +172,7 @@ Current validator scope:
   - `qa` cannot start before `review` is completed
   - `approval` cannot start before `qa` is completed
 - requires matching evidence blocks for completed evidence-bearing phases
+- requires matching role contract blocks for completed canonical agent-owned phases
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
   - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`
@@ -182,7 +194,7 @@ Current validator scope:
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 
-This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer.
+This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer. The new role contracts make phase ownership and outputs machine-checkable without introducing a runtime scheduler.
 
 TODO:
 - Normalize the workflow schema into a single canonical governance block in a future PR after real usage validates the current field layout.

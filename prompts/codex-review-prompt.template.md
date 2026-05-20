@@ -14,4 +14,5 @@ Then:
 - escalate uncertainty
 - do not bypass human approval
 - review scope and non-goals before suggesting fixes
+- verify that completed canonical phases have the expected role contract outputs
 - report assumptions explicitly
