@@ -30,10 +30,8 @@ No architecture boundary changes.
 - Architecture evidence: evidence.architecture-check
 
 ## Overrides
-- Override ID: phase-bypass-1
-- Override type: phase_bypass
-- Approval reference: ARCH-OVERRIDE-1
-- Mitigations confirmed: yes
+
+None.
 
 ## Confirmation
 - [x] The implementation matches the declared scope

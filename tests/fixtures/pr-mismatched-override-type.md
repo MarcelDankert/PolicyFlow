@@ -31,7 +31,7 @@ No architecture boundary changes.
 
 ## Overrides
 - Override ID: phase-bypass-1
-- Override type: phase_bypass
+- Override type: scope_exception
 - Approval reference: ARCH-OVERRIDE-1
 - Mitigations confirmed: yes
 

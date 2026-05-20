@@ -40,6 +40,7 @@ execution:
 evidence: {}
 # Add machine-readable role contracts as phases complete.
 contracts: {}
+overrides: []
 # Add machine-readable evidence blocks as phases complete, for example:
 # evidence:
 #   planning:

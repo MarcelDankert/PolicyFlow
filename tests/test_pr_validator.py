@@ -25,6 +25,32 @@ def test_valid_pull_request_passes() -> None:
     assert result.context.risk_level == "MEDIUM"
 
 
+def test_pull_request_without_override_reference_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-missing-override-reference.md"),
+        )
+
+    assert (
+        "PR body must reference workflow override: phase-bypass-1"
+        in exc_info.value.errors
+    )
+
+
+def test_pull_request_with_mismatched_override_type_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-mismatched-override-type.md"),
+        )
+
+    assert (
+        "PR body Override phase-bypass-1 must declare type phase_bypass"
+        in exc_info.value.errors
+    )
+
+
 def test_pull_request_without_linked_issue_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_pull_request(

@@ -1,0 +1,122 @@
+workflow:
+  id: typed-exception-and-override-handling
+  name: Typed Exception And Override Handling
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add typed workflow overrides with PR-visible confirmation and GitHub-enforced validation.
+
+context:
+  workflow_file: workflows/features/typed-exception-and-override-handling.yml
+  issue_key: PF-GOV-06
+  goal: Make approved process exceptions explicit, typed, auditable, and visible in PR governance without introducing a runtime approval engine.
+  scope:
+    - typed override schema for workflow exceptions
+    - validator checks for override completeness and approval metadata
+    - PR template and validate-pr support for visible override confirmation
+    - documentation, templates, examples, and fixtures for typed overrides
+  non_goals:
+    - no runtime approval engine
+    - no GitHub reviewer identity verification
+    - no automatic expiry or reapproval engine
+    - no runtime orchestration dispatch
+  affected_modules:
+    - policyflow
+    - github
+    - workflows
+    - tests
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Override scope and risk were locked before implementation.
+    scope_locked:
+      - typed override schema
+      - PR-visible override confirmation
+    non_goals_locked:
+      - no runtime approval engine
+    risk_rationale: Bounded MEDIUM-risk governance extension on top of execution, evidence, and contract checks.
+  architecture-check:
+    decision: Architecture check completed before coding.
+    constraints:
+      - keep the slice inside workflow schema, PR validation, and docs
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the typed override slice before implementation.
+    acceptance_criteria:
+      - approved exceptions are typed and visible in PRs
+      - override approvals are auditable
+    approved_scope:
+      - typed override schema
+      - PR-visible override confirmation
+    non_goals:
+      - no runtime approval engine
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the slice inside workflow schema, PR validation, and docs.
+    approved_scope:
+      - typed override schema
+      - PR-visible override confirmation
+    module_boundaries:
+      - policyflow schema layer
+      - policyflow validator
+      - PR template
+    contract_impact: No runtime approval engine is introduced.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the slice inside workflow schema, PR validation, and docs
+
+overrides:
+  - id: phase-bypass-1
+    type: phase_bypass
+    reason: PR template and validator updates can proceed while review guidance is finalized in the same bounded slice.
+    scope_impact: No scope expansion beyond typed override handling.
+    risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
+    mitigations:
+      - review findings must still be resolved before QA completion
+    approved_by: architecture-agent
+    approval_reference: ARCH-OVERRIDE-PR6
+    review_by: 2026-05-27
+    bypassed_phase: review
+    compensating_controls:
+      - review findings tracked in the PR before QA sign-off

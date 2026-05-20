@@ -46,6 +46,7 @@ def test_valid_medium_workflow_passes() -> None:
         "qa",
     ]
     assert result.contracts.architecture_check.owner_agent == "architecture-agent"
+    assert result.overrides[0].type == "phase_bypass"
 
 
 def test_valid_high_workflow_passes() -> None:
@@ -238,6 +239,26 @@ def test_completed_approval_requires_approval_evidence() -> None:
 
     assert (
         "Completed phase 'approval' requires matching evidence block: approval"
+        in exc_info.value.errors
+    )
+
+
+def test_risk_exception_requires_approval_metadata() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("risk-exception-without-approval.yml"))
+
+    assert (
+        "Override 'risk-exception-1' of type 'risk_exception' requires approved_by and approval_reference."
+        in exc_info.value.errors
+    )
+
+
+def test_override_requires_review_or_expiry() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("override-without-review-or-expiry.yml"))
+
+    assert (
+        "Override 'phase-bypass-1' must declare exactly one of review_by or expires_on."
         in exc_info.value.errors
     )
 

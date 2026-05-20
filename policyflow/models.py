@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from datetime import date
 from enum import Enum
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -40,6 +41,14 @@ class ReviewOutcome(str, Enum):
 class QaOutcome(str, Enum):
     PASSED = "passed"
     FAILED = "failed"
+
+
+class OverrideType(str, Enum):
+    SCOPE_EXCEPTION = "scope_exception"
+    RISK_EXCEPTION = "risk_exception"
+    PHASE_BYPASS = "phase_bypass"
+    APPROVAL_BYPASS = "approval_bypass"
+    NON_GOAL_EXCEPTION = "non_goal_exception"
 
 
 class WorkflowMetadata(BaseModel):
@@ -200,6 +209,57 @@ class WorkflowContracts(BaseModel):
     qa: QaContract | None = None
 
 
+class OverrideBase(BaseModel):
+    id: str = Field(min_length=1)
+    type: OverrideType
+    reason: str = Field(min_length=1)
+    scope_impact: str = Field(min_length=1)
+    risk_impact: str = Field(min_length=1)
+    mitigations: list[str]
+    approved_by: str | None = None
+    approval_reference: str | None = None
+    review_by: date | None = None
+    expires_on: date | None = None
+
+
+class ScopeExceptionOverride(OverrideBase):
+    type: Literal["scope_exception"]
+    affected_scope_items: list[str]
+
+
+class RiskExceptionOverride(OverrideBase):
+    type: Literal["risk_exception"]
+    original_risk: RiskLevel
+    effective_risk: RiskLevel
+
+
+class PhaseBypassOverride(OverrideBase):
+    type: Literal["phase_bypass"]
+    bypassed_phase: ExecutionPhaseName
+    compensating_controls: list[str]
+
+
+class ApprovalBypassOverride(OverrideBase):
+    type: Literal["approval_bypass"]
+    approval_target: str = Field(min_length=1)
+    compensating_controls: list[str]
+
+
+class NonGoalExceptionOverride(OverrideBase):
+    type: Literal["non_goal_exception"]
+    affected_non_goals: list[str]
+
+
+WorkflowOverride = Annotated[
+    ScopeExceptionOverride
+    | RiskExceptionOverride
+    | PhaseBypassOverride
+    | ApprovalBypassOverride
+    | NonGoalExceptionOverride,
+    Field(discriminator="type"),
+]
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
@@ -207,3 +267,4 @@ class WorkflowDocument(BaseModel):
     execution: WorkflowExecution
     evidence: WorkflowEvidence | None = None
     contracts: WorkflowContracts | None = None
+    overrides: list[WorkflowOverride] | None = None

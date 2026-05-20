@@ -1,9 +1,9 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: override-without-review-or-expiry
+  type: feature
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
+  workflow_file: workflows/examples/override-without-review-or-expiry.yml
   risk_level: MEDIUM
 
 governance:
@@ -83,7 +83,6 @@ overrides:
       - review findings must still be resolved before QA completion
     approved_by: architecture-agent
     approval_reference: ARCH-OVERRIDE-1
-    review_by: 2026-05-27
     bypassed_phase: review
     compensating_controls:
       - review findings tracked in the PR before QA sign-off

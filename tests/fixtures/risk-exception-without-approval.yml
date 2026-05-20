@@ -1,9 +1,9 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: risk-exception-without-approval
+  type: feature
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
+  workflow_file: workflows/examples/risk-exception-without-approval.yml
   risk_level: MEDIUM
 
 governance:
@@ -74,16 +74,13 @@ contracts:
       - keep implementation bounded
 
 overrides:
-  - id: phase-bypass-1
-    type: phase_bypass
-    reason: Review phase starts with a documented bounded overlap to preserve delivery cadence.
-    scope_impact: No scope expansion; overlap stays inside parser validation.
-    risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
+  - id: risk-exception-1
+    type: risk_exception
+    reason: Temporary risk posture clarification is needed for a bounded parser edge case.
+    scope_impact: No scope expansion beyond parser validation.
+    risk_impact: Effective risk behaves like HIGH until the follow-up review is complete.
     mitigations:
-      - review findings must still be resolved before QA completion
-    approved_by: architecture-agent
-    approval_reference: ARCH-OVERRIDE-1
+      - architecture and QA reviews remain mandatory
     review_by: 2026-05-27
-    bypassed_phase: review
-    compensating_controls:
-      - review findings tracked in the PR before QA sign-off
+    original_risk: MEDIUM
+    effective_risk: HIGH
