@@ -29,5 +29,6 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm the initial execution phases and states
 - confirm which evidence blocks should exist for the first completed phases
 - confirm which phase transitions are currently allowed or blocked
+- confirm which workflow evidence blocks must be referenced in the PR body
 - confirm human approval expectations
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR

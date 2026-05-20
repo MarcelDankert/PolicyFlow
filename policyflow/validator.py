@@ -300,7 +300,55 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
             "visible working steps, not only documented after the fact."
         )
 
+    _append_pr_evidence_reference_errors(
+        errors, workflow, sections.get("Evidence", "")
+    )
+
     return errors
+
+
+def _append_pr_evidence_reference_errors(
+    errors: list[str], workflow: WorkflowDocument, evidence_section: str
+) -> None:
+    if workflow.evidence is None:
+        return
+
+    expected_references = {
+        "Planning evidence": (
+            workflow.evidence.planning is not None,
+            "evidence.planning",
+        ),
+        "Architecture evidence": (
+            workflow.evidence.architecture_check is not None,
+            "evidence.architecture-check",
+        ),
+        "Review evidence": (
+            workflow.evidence.review is not None,
+            "evidence.review",
+        ),
+        "QA evidence": (
+            workflow.evidence.qa is not None,
+            "evidence.qa",
+        ),
+        "Approval evidence": (
+            workflow.evidence.approval is not None,
+            "evidence.approval",
+        ),
+    }
+
+    for label, (required, expected_reference) in expected_references.items():
+        if not required:
+            continue
+
+        actual_reference = _extract_evidence_reference(evidence_section, label)
+        if actual_reference is None:
+            errors.append(
+                f"PR body must reference workflow evidence block: {expected_reference}"
+            )
+        elif actual_reference != expected_reference:
+            errors.append(
+                f"PR body {label} must reference workflow {expected_reference}"
+            )
 
 
 def _parse_markdown_sections(markdown: str) -> dict[str, str]:
@@ -346,6 +394,17 @@ def _extract_declared_risk_level(section_text: str) -> str | None:
     if match is None:
         return None
     return match.group(1)
+
+
+def _extract_evidence_reference(section_text: str, label: str) -> str | None:
+    match = re.search(
+        rf"^- {re.escape(label)}:\s*([^\s]+)\s*$",
+        section_text,
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+    return match.group(1).strip("` ")
 
 
 def _has_workflow_confirmation(section_text: str) -> bool:

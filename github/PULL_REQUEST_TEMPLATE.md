@@ -24,6 +24,13 @@
 - Escalation notes:
 - Protected areas touched:
 
+## Evidence
+- Planning evidence: `evidence.<...>` if present in the workflow
+- Architecture evidence: `evidence.<...>` if present in the workflow
+- Review evidence: `evidence.<...>` if present in the workflow
+- QA evidence: `evidence.<...>` if present in the workflow
+- Approval evidence: `evidence.<...>` if present in the workflow
+
 ## Confirmation
 - [ ] The implementation matches the declared scope
 - [ ] Non-goals were respected

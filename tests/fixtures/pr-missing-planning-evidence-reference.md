@@ -26,7 +26,6 @@ No architecture boundary changes.
 - Protected areas touched: none
 
 ## Evidence
-- Planning evidence: evidence.planning
 - Architecture evidence: evidence.architecture-check
 
 ## Confirmation

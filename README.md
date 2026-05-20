@@ -97,6 +97,8 @@ Pragmatic-strict transition mode:
 - Workflow execution state schema
 - Phase evidence schema
 - Transition and gate validator
+- PR evidence mapping
+- GitHub governance workflow for PolicyFlow itself
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -174,6 +176,7 @@ Current validator scope:
   - a non-empty `Linked Issue` section
   - a `Workflow File` entry matching `context.workflow_file`
   - a `Declared risk level` entry matching `context.risk_level`
+  - evidence references that point to existing workflow evidence blocks
   - a checked confirmation that the linked workflow governed the change
   - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started

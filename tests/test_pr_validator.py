@@ -116,6 +116,32 @@ def test_pull_request_without_workflow_phase_confirmation_fails() -> None:
     )
 
 
+def test_pull_request_without_planning_evidence_reference_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-missing-planning-evidence-reference.md"),
+        )
+
+    assert (
+        "PR body must reference workflow evidence block: evidence.planning"
+        in exc_info.value.errors
+    )
+
+
+def test_pull_request_with_mismatched_architecture_evidence_reference_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-mismatched-architecture-evidence-reference.md"),
+        )
+
+    assert (
+        "PR body Architecture evidence must reference workflow evidence.architecture-check"
+        in exc_info.value.errors
+    )
+
+
 def test_validate_pr_command_succeeds() -> None:
     result = runner.invoke(
         app,
