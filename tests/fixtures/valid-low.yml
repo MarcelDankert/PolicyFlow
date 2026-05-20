@@ -20,3 +20,12 @@ execution:
       state: pending
     - phase: review
       state: pending
+
+evidence:
+  planning:
+    summary: Low-risk scope and non-goals locked before implementation.
+    scope_locked:
+      - bounded feature change
+    non_goals_locked:
+      - no protected area changes
+    risk_rationale: LOW-risk change with review-agent coverage.

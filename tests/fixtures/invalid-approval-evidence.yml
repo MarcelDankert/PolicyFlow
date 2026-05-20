@@ -1,9 +1,9 @@
 workflow:
-  id: valid-high
+  id: invalid-approval-evidence
   type: architecture-change
 
 context:
-  workflow_file: workflows/examples/valid-high.yml
+  workflow_file: workflows/examples/invalid-approval-evidence.yml
   risk_level: HIGH
 
 governance:
@@ -33,22 +33,21 @@ execution:
     - phase: qa
       state: pending
     - phase: approval
-      state: pending
+      state: completed
 
 evidence:
   planning:
-    summary: High-risk scope and protected-area context locked before coding.
+    summary: High-risk scope locked before coding.
     scope_locked:
-      - architecture boundary update
+      - schema change planning
     non_goals_locked:
-      - no runtime behavior expansion
-    risk_rationale: Protected area touched, so HIGH-risk path applies.
+      - no runtime implementation
+    risk_rationale: Protected area touched.
   architecture-check:
-    decision: Architecture review completed before implementation.
+    decision: High-risk architecture review completed.
     constraints:
-      - require explicit human approval
-    approval_path: architecture-agent review plus human approval
+      - preserve approval path
+    approval_path: human approval required
   approval:
     approved_by: architecture board
-    reference: ARCH-2026-05-19
-    scope_confirmed: true
+    reference: ADR-42

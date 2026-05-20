@@ -1,9 +1,9 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: invalid-review-evidence
+  type: feature
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
+  workflow_file: workflows/examples/invalid-review-evidence.yml
   risk_level: MEDIUM
 
 governance:
@@ -21,22 +21,25 @@ execution:
     - phase: architecture-check
       state: completed
     - phase: implementation
-      state: pending
+      state: completed
     - phase: review
-      state: pending
+      state: completed
     - phase: qa
       state: pending
 
 evidence:
   planning:
-    summary: Medium-risk scope and non-goals locked before coding.
+    summary: Scope and risk locked before coding.
     scope_locked:
       - parser validation
     non_goals_locked:
       - no contract changes
-    risk_rationale: MEDIUM risk due to cross-check needs.
+    risk_rationale: Bounded workflow-only change.
   architecture-check:
-    decision: Architecture check completed before implementation.
+    decision: Explicit architecture check required for MEDIUM risk.
     constraints:
-      - keep implementation bounded
+      - keep scope bounded
     approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: No blocking issues found.

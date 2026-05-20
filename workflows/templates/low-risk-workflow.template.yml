@@ -37,6 +37,17 @@ execution:
     - phase: review
       state: pending
 
+evidence: {}
+# Add machine-readable evidence blocks as phases complete, for example:
+# evidence:
+#   planning:
+#     summary: Low-risk scope was locked before implementation.
+#     scope_locked:
+#       - bounded docs update
+#     non_goals_locked:
+#       - no runtime changes
+#     risk_rationale: LOW-risk path remains valid.
+
 fast_path_allowed_when:
   - no protected areas
   - no contract changes

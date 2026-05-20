@@ -49,3 +49,22 @@ execution:
       state: pending
     - phase: approval
       state: completed
+
+evidence:
+  planning:
+    summary: Architecture change scope and non-goals were locked before implementation.
+    scope_locked:
+      - boundary split
+      - handoff clarification
+    non_goals_locked:
+      - no runtime behavior expansion
+    risk_rationale: HIGH-risk path due to architecture boundary impact.
+  architecture-check:
+    decision: Architecture review completed before implementation.
+    constraints:
+      - preserve approval path and explicit scope
+    approval_path: architecture-agent review plus human approval
+  approval:
+    approved_by: architecture board
+    reference: ARCH-2026-01
+    scope_confirmed: true

@@ -15,9 +15,10 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 1. create the workflow file before implementation
 2. lock scope, non-goals, and risk before code changes
 3. declare an `execution` block with canonical phases and states
-4. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
-5. treat the workflow as the steering artifact for the change, not as retrospective documentation
-6. keep same-PR workflow edits limited to same-scope clarifications
+4. add machine-readable `evidence` blocks as phases complete
+5. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
+6. treat the workflow as the steering artifact for the change, not as retrospective documentation
+7. keep same-PR workflow edits limited to same-scope clarifications
 
 ## First Recommended Checks
 
@@ -25,5 +26,6 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm risk classifications
 - confirm workflow instance paths
 - confirm the initial execution phases and states
+- confirm which evidence blocks should exist for the first completed phases
 - confirm human approval expectations
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR
