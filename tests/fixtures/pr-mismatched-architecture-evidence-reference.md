@@ -27,7 +27,7 @@ No architecture boundary changes.
 
 ## Evidence
 - Planning evidence: evidence.planning
-- Architecture evidence: evidence.architecture-check
+- Architecture evidence: evidence.review
 
 ## Confirmation
 - [x] The implementation matches the declared scope
