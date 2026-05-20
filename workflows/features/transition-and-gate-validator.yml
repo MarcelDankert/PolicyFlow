@@ -1,0 +1,69 @@
+workflow:
+  id: transition-and-gate-validator
+  name: Transition And Gate Validator
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add strict execution transition and gate validation on top of the workflow execution state and evidence schemas.
+
+context:
+  workflow_file: workflows/features/transition-and-gate-validator.yml
+  issue_key: PF-GOV-03
+  goal: Enforce the first real workflow progression rules so implementation, review, QA, and approval cannot advance without the prerequisite phases and evidence already being complete.
+  scope:
+    - transition validation for canonical execution phases
+    - prerequisite gate validation for implementation, review, qa, and approval
+    - evidence requirements for completed workflow phases
+    - validator fixtures and tests for allowed and blocked phase transitions
+  non_goals:
+    - no GitHub API integration yet
+    - no PR-body-to-evidence mapping yet
+    - no override or exception-handling mechanism
+    - no autonomous agent orchestration
+  affected_modules:
+    - policyflow
+    - tests
+    - workflows
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and risk are locked before implementation begins.
+    scope_locked:
+      - transition rules
+      - gate checks
+    non_goals_locked:
+      - no GitHub integration
+    risk_rationale: Bounded validator enhancement on top of the existing workflow schema.
+  architecture-check:
+    decision: Architecture check completed before coding.
+    constraints:
+      - keep the slice inside validator logic
+    approval_path: architecture-agent review

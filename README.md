@@ -96,6 +96,7 @@ Pragmatic-strict transition mode:
 - Lightweight governance validator
 - Workflow execution state schema
 - Phase evidence schema
+- Transition and gate validator
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -151,6 +152,13 @@ Current validator scope:
   - `review`: `outcome`, `findings_summary`, `residual_risk`
   - `qa`: `outcome`, `evidence_summary`, `unresolved_risks`
   - `approval`: `approved_by`, `reference`, `scope_confirmed`
+- enforces the first execution transition gates:
+  - `implementation` cannot start before `planning` is completed
+  - `MEDIUM`/`HIGH` implementation cannot start before `architecture-check` is completed
+  - `review` cannot start before `implementation` is completed
+  - `qa` cannot start before `review` is completed
+  - `approval` cannot start before `qa` is completed
+- requires matching evidence blocks for completed evidence-bearing phases
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
   - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`

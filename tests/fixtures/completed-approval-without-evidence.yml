@@ -1,9 +1,9 @@
 workflow:
-  id: invalid-approval-evidence
+  id: completed-approval-without-evidence
   type: architecture-change
 
 context:
-  workflow_file: workflows/examples/invalid-approval-evidence.yml
+  workflow_file: workflows/examples/completed-approval-without-evidence.yml
   risk_level: HIGH
 
 governance:
@@ -37,26 +37,23 @@ execution:
 
 evidence:
   planning:
-    summary: High-risk scope locked before coding.
+    summary: High-risk scope and protected-area context locked before coding.
     scope_locked:
-      - schema change planning
+      - architecture boundary update
     non_goals_locked:
-      - no runtime implementation
-    risk_rationale: Protected area touched.
+      - no runtime behavior expansion
+    risk_rationale: Protected area touched, so HIGH-risk path applies.
   architecture-check:
-    decision: High-risk architecture review completed.
+    decision: Architecture review completed before implementation.
     constraints:
-      - preserve approval path
-    approval_path: human approval required
+      - require explicit human approval
+    approval_path: architecture-agent review plus human approval
   review:
     outcome: approved
     findings_summary: Review completed with no blocking issues.
-    residual_risk: bounded residual approval risk only
+    residual_risk: bounded residual change-management risk only
   qa:
     outcome: passed
     evidence_summary: QA evidence completed successfully.
     unresolved_risks:
       - none
-  approval:
-    approved_by: architecture board
-    reference: ADR-42
