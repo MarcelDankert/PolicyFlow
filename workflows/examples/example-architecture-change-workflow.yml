@@ -33,3 +33,19 @@ governance:
     - architecture boundary
   approval_evidence:
     - human approval recorded before implementation
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: completed

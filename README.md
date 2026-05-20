@@ -25,6 +25,7 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 
 - Policy-as-code
 - Risk-aware workflows
+- Workflow execution state
 - Confidence governance
 - Explicit agent handoffs
 - Human-in-the-loop controls
@@ -63,16 +64,19 @@ Required order for every consumer repo:
 
 1. Create the workflow file first.
 2. Lock scope, non-goals, and risk before implementation.
-3. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
-4. Implement inside the declared workflow.
-5. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
-6. Do not silently expand scope, risk, or non-goals.
-7. Review the PR body and delivery evidence against the workflow before merge.
+3. Declare the workflow execution state using canonical phases and states.
+4. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
+5. Keep the execution state aligned with the current workflow phase.
+6. Implement inside the declared workflow.
+7. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
+8. Do not silently expand scope, risk, or non-goals.
+9. Review the PR body and delivery evidence against the workflow before merge.
 
 Pragmatic-strict transition mode:
 
 - the workflow file is mandatory from the start of the work
 - the workflow guides the work from the beginning, not only in the PR write-up
+- the workflow declares canonical execution phases with explicit states such as `pending`, `in_progress`, `completed`, and `blocked`
 - workflow phases are operational steps, not only descriptive labels
 - `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
 - small same-scope clarifications in the same PR are allowed
@@ -89,6 +93,7 @@ Pragmatic-strict transition mode:
 
 - Template and governance framework
 - Lightweight governance validator
+- Workflow execution state schema
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -130,10 +135,17 @@ Current validator scope:
 - requires `context.workflow_file`
 - requires `context.risk_level`
 - requires `governance.required_reviews`
+- requires `execution.mode`
+- requires `execution.phases`
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
 - requires `governance.required_reviews` to be a non-empty list
+- allows execution states `pending`, `in_progress`, `completed`, and `blocked`
+- requires canonical execution phases by risk:
+  - `LOW`: `planning`, `implementation`, `review`
+  - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`
+  - `HIGH`: `planning`, `architecture-check`, `implementation`, `review`, `qa`, `approval`
 - enforces minimum `required_reviews` from `rules/risk-review-matrix.md`
 - requires `governance.human_approval_required: true` for `HIGH` risk workflows
 - requires non-empty `governance.approval_evidence` for `HIGH` risk workflows

@@ -27,3 +27,17 @@ governance:
   escalation_required: false
   protected_areas_touched:
     - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending

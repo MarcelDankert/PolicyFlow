@@ -1,9 +1,9 @@
 workflow:
-  id: valid-low
+  id: invalid-execution-state
   type: feature
 
 context:
-  workflow_file: workflows/examples/valid-low.yml
+  workflow_file: workflows/examples/invalid-execution-state.yml
   risk_level: LOW
 
 governance:
@@ -15,7 +15,7 @@ execution:
   mode: strict
   phases:
     - phase: planning
-      state: completed
+      state: done
     - phase: implementation
       state: pending
     - phase: review

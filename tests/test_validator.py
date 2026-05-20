@@ -20,6 +20,12 @@ def test_valid_low_workflow_passes() -> None:
     assert result.context.risk_level == "LOW"
     assert result.governance.required_reviews == ["review-agent"]
     assert result.governance.human_approval_required is False
+    assert result.execution.mode == "strict"
+    assert [phase.phase for phase in result.execution.phases] == [
+        "planning",
+        "implementation",
+        "review",
+    ]
 
 
 def test_valid_medium_workflow_passes() -> None:
@@ -30,6 +36,13 @@ def test_valid_medium_workflow_passes() -> None:
         "architecture-agent",
         "review-agent",
         "qa-agent",
+    ]
+    assert [phase.phase for phase in result.execution.phases] == [
+        "planning",
+        "architecture-check",
+        "implementation",
+        "review",
+        "qa",
     ]
 
 
@@ -42,6 +55,14 @@ def test_valid_high_workflow_passes() -> None:
     assert result.governance.protected_areas_touched == ["database schema"]
     assert result.governance.approval_evidence == [
         "approved in architecture review"
+    ]
+    assert [phase.phase for phase in result.execution.phases] == [
+        "planning",
+        "architecture-check",
+        "implementation",
+        "review",
+        "qa",
+        "approval",
     ]
 
 
@@ -58,6 +79,40 @@ def test_missing_risk_level_fails() -> None:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))
 
     assert "context.risk_level is required" in exc_info.value.errors
+
+
+def test_missing_execution_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("missing-execution.yml"))
+
+    assert "execution.mode is required" in exc_info.value.errors
+
+
+def test_invalid_execution_state_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("invalid-execution-state.yml"))
+
+    assert "execution.phases.0.state: Input should be 'pending', 'in_progress', 'completed' or 'blocked'" in exc_info.value.errors
+
+
+def test_medium_risk_requires_architecture_check_phase() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("medium-missing-architecture-phase.yml"))
+
+    assert (
+        "MEDIUM risk workflows must declare execution phases: architecture-check"
+        in exc_info.value.errors
+    )
+
+
+def test_high_risk_requires_approval_phase() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("high-missing-approval-phase.yml"))
+
+    assert (
+        "HIGH risk workflows must declare execution phases: approval"
+        in exc_info.value.errors
+    )
 
 
 def test_invalid_risk_level_fails() -> None:

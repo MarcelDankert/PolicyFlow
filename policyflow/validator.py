@@ -17,6 +17,24 @@ REQUIRED_REVIEWS_BY_RISK: dict[str, set[str]] = {
     RiskLevel.MEDIUM.value: {"architecture-agent", "review-agent", "qa-agent"},
     RiskLevel.HIGH.value: {"architecture-agent", "review-agent", "qa-agent"},
 }
+REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
+    RiskLevel.LOW.value: {"planning", "implementation", "review"},
+    RiskLevel.MEDIUM.value: {
+        "planning",
+        "architecture-check",
+        "implementation",
+        "review",
+        "qa",
+    },
+    RiskLevel.HIGH.value: {
+        "planning",
+        "architecture-check",
+        "implementation",
+        "review",
+        "qa",
+        "approval",
+    },
+}
 
 
 def validate_workflow_file(path: str | Path) -> WorkflowDocument:
@@ -76,6 +94,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     workflow = data.get("workflow")
     context = data.get("context")
     governance = data.get("governance")
+    execution = data.get("execution")
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -128,6 +147,28 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
         if governance.get("escalation_required") is not True:
             errors.append(
                 "Workflows touching protected areas must set escalation_required to true."
+            )
+
+    if not isinstance(execution, dict) or execution.get("mode") in (None, ""):
+        errors.append("execution.mode is required")
+
+    phases = execution.get("phases") if isinstance(execution, dict) else None
+    if phases is None:
+        errors.append("execution.phases is required")
+    elif not isinstance(phases, list) or not phases:
+        errors.append("execution.phases must be a non-empty list")
+    elif risk_level in REQUIRED_PHASES_BY_RISK:
+        declared_phases = {
+            phase.get("phase")
+            for phase in phases
+            if isinstance(phase, dict) and isinstance(phase.get("phase"), str)
+        }
+        missing_phases = sorted(REQUIRED_PHASES_BY_RISK[risk_level] - declared_phases)
+        if missing_phases:
+            missing_phases_text = ", ".join(missing_phases)
+            errors.append(
+                f"{risk_level} risk workflows must declare execution phases: "
+                f"{missing_phases_text}"
             )
 
     return errors

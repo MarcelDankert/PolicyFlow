@@ -1,14 +1,16 @@
 workflow:
-  id: valid-low
-  type: feature
+  id: medium-missing-architecture-phase
+  type: bugfix
 
 context:
-  workflow_file: workflows/examples/valid-low.yml
-  risk_level: LOW
+  workflow_file: workflows/examples/medium-missing-architecture-phase.yml
+  risk_level: MEDIUM
 
 governance:
   required_reviews:
+    - architecture-agent
     - review-agent
+    - qa-agent
   human_approval_required: false
 
 execution:
@@ -19,4 +21,6 @@ execution:
     - phase: implementation
       state: pending
     - phase: review
+      state: pending
+    - phase: qa
       state: pending

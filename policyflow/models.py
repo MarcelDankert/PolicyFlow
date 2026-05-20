@@ -11,6 +11,26 @@ class RiskLevel(str, Enum):
     HIGH = "HIGH"
 
 
+class ExecutionMode(str, Enum):
+    STRICT = "strict"
+
+
+class ExecutionState(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+
+
+class ExecutionPhaseName(str, Enum):
+    PLANNING = "planning"
+    ARCHITECTURE_CHECK = "architecture-check"
+    IMPLEMENTATION = "implementation"
+    REVIEW = "review"
+    QA = "qa"
+    APPROVAL = "approval"
+
+
 class WorkflowMetadata(BaseModel):
     id: str = Field(min_length=1)
     type: str = Field(min_length=1)
@@ -36,7 +56,32 @@ class WorkflowGovernance(BaseModel):
         return value
 
 
+class WorkflowExecutionPhase(BaseModel):
+    phase: ExecutionPhaseName
+    state: ExecutionState
+
+
+class WorkflowExecution(BaseModel):
+    mode: ExecutionMode
+    phases: list[WorkflowExecutionPhase]
+
+    @field_validator("phases")
+    @classmethod
+    def validate_phases(
+        cls, value: list[WorkflowExecutionPhase]
+    ) -> list[WorkflowExecutionPhase]:
+        if not value:
+            raise ValueError("execution.phases must be a non-empty list")
+
+        phase_names = [phase.phase for phase in value]
+        if len(phase_names) != len(set(phase_names)):
+            raise ValueError("execution.phases must not repeat phase names")
+
+        return value
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
     governance: WorkflowGovernance
+    execution: WorkflowExecution

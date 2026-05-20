@@ -27,6 +27,16 @@ context:
     - protected_areas_touched
     - approval_evidence
 
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+
 fast_path_allowed_when:
   - no protected areas
   - no contract changes

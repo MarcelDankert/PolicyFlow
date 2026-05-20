@@ -7,3 +7,13 @@ risk_level: LOW
 required_reviews:
   - review-agent
 human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
