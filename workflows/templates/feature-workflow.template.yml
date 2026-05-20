@@ -41,6 +41,17 @@ execution:
     - phase: qa
       state: pending
 
+evidence: {}
+# Add machine-readable evidence blocks as phases complete, for example:
+# evidence:
+#   planning:
+#     summary: Scope and risk were locked before implementation.
+#     scope_locked:
+#       - reporting endpoint
+#     non_goals_locked:
+#       - no contract changes
+#     risk_rationale: Bounded MEDIUM-risk change.
+
 steps:
   - step: plan
     agent: planning-agent

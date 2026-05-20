@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class RiskLevel(str, Enum):
@@ -29,6 +29,16 @@ class ExecutionPhaseName(str, Enum):
     REVIEW = "review"
     QA = "qa"
     APPROVAL = "approval"
+
+
+class ReviewOutcome(str, Enum):
+    APPROVED = "approved"
+    CHANGES_REQUESTED = "changes_requested"
+
+
+class QaOutcome(str, Enum):
+    PASSED = "passed"
+    FAILED = "failed"
 
 
 class WorkflowMetadata(BaseModel):
@@ -80,8 +90,52 @@ class WorkflowExecution(BaseModel):
         return value
 
 
+class PlanningEvidence(BaseModel):
+    summary: str = Field(min_length=1)
+    scope_locked: list[str]
+    non_goals_locked: list[str]
+    risk_rationale: str = Field(min_length=1)
+
+
+class ArchitectureCheckEvidence(BaseModel):
+    decision: str = Field(min_length=1)
+    constraints: list[str]
+    approval_path: str = Field(min_length=1)
+
+
+class ReviewEvidence(BaseModel):
+    outcome: ReviewOutcome
+    findings_summary: str = Field(min_length=1)
+    residual_risk: str = Field(min_length=1)
+
+
+class QaEvidence(BaseModel):
+    outcome: QaOutcome
+    evidence_summary: str = Field(min_length=1)
+    unresolved_risks: list[str]
+
+
+class ApprovalEvidence(BaseModel):
+    approved_by: str = Field(min_length=1)
+    reference: str = Field(min_length=1)
+    scope_confirmed: bool
+
+
+class WorkflowEvidence(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    planning: PlanningEvidence | None = None
+    architecture_check: ArchitectureCheckEvidence | None = Field(
+        default=None, alias="architecture-check"
+    )
+    review: ReviewEvidence | None = None
+    qa: QaEvidence | None = None
+    approval: ApprovalEvidence | None = None
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
     governance: WorkflowGovernance
     execution: WorkflowExecution
+    evidence: WorkflowEvidence | None = None

@@ -26,6 +26,7 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 - Policy-as-code
 - Risk-aware workflows
 - Workflow execution state
+- Phase evidence schema
 - Confidence governance
 - Explicit agent handoffs
 - Human-in-the-loop controls
@@ -94,6 +95,7 @@ Pragmatic-strict transition mode:
 - Template and governance framework
 - Lightweight governance validator
 - Workflow execution state schema
+- Phase evidence schema
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
@@ -137,11 +139,18 @@ Current validator scope:
 - requires `governance.required_reviews`
 - requires `execution.mode`
 - requires `execution.phases`
+- accepts optional `evidence` blocks per workflow phase
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
 - requires `governance.required_reviews` to be a non-empty list
 - allows execution states `pending`, `in_progress`, `completed`, and `blocked`
+- validates canonical evidence blocks when present:
+  - `planning`: `summary`, `scope_locked`, `non_goals_locked`, `risk_rationale`
+  - `architecture-check`: `decision`, `constraints`, `approval_path`
+  - `review`: `outcome`, `findings_summary`, `residual_risk`
+  - `qa`: `outcome`, `evidence_summary`, `unresolved_risks`
+  - `approval`: `approved_by`, `reference`, `scope_confirmed`
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
   - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`

@@ -40,3 +40,17 @@ execution:
       state: pending
     - phase: qa
       state: pending
+
+evidence:
+  planning:
+    summary: Bugfix scope and non-goals were locked before implementation.
+    scope_locked:
+      - parser validation
+    non_goals_locked:
+      - no contract shape changes
+    risk_rationale: Bounded MEDIUM-risk bugfix.
+  architecture-check:
+    decision: Architecture impact check completed before coding.
+    constraints:
+      - keep the fix bounded to parser validation
+    approval_path: architecture-agent review

@@ -1,0 +1,52 @@
+workflow:
+  id: valid-complete-evidence
+  type: feature
+
+context:
+  workflow_file: workflows/examples/valid-complete-evidence.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Scope and risk were locked before implementation.
+    scope_locked:
+      - reporting endpoint
+      - validation
+    non_goals_locked:
+      - no contract changes
+    risk_rationale: Bounded MEDIUM-risk workflow change.
+  architecture-check:
+    decision: Architecture check completed before coding.
+    constraints:
+      - preserve module boundaries
+    approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: No blocking review findings remain.
+    residual_risk: bounded residual documentation risk only
+  qa:
+    outcome: passed
+    evidence_summary: Validation commands passed with expected output.
+    unresolved_risks:
+      - none

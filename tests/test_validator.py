@@ -64,6 +64,7 @@ def test_valid_high_workflow_passes() -> None:
         "qa",
         "approval",
     ]
+    assert result.evidence.approval.approved_by == "architecture board"
 
 
 def test_root_level_fallback_fields_are_accepted() -> None:
@@ -72,6 +73,13 @@ def test_root_level_fallback_fields_are_accepted() -> None:
     assert result.context.workflow_file == "workflows/examples/root-fallback.yml"
     assert result.context.risk_level == "LOW"
     assert result.governance.required_reviews == ["review-agent"]
+
+
+def test_valid_complete_evidence_workflow_passes() -> None:
+    result = validate_workflow_file(fixture_path("valid-complete-evidence.yml"))
+
+    assert result.evidence.review.outcome == "approved"
+    assert result.evidence.qa.outcome == "passed"
 
 
 def test_missing_risk_level_fails() -> None:
@@ -112,6 +120,24 @@ def test_high_risk_requires_approval_phase() -> None:
     assert (
         "HIGH risk workflows must declare execution phases: approval"
         in exc_info.value.errors
+    )
+
+
+def test_invalid_review_evidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("invalid-review-evidence.yml"))
+
+    assert (
+        "evidence.review.residual_risk: Field required" in exc_info.value.errors
+    )
+
+
+def test_invalid_approval_evidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("invalid-approval-evidence.yml"))
+
+    assert (
+        "evidence.approval.scope_confirmed: Field required" in exc_info.value.errors
     )
 
 

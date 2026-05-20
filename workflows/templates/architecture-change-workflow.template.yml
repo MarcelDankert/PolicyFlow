@@ -45,6 +45,14 @@ execution:
     - phase: approval
       state: pending
 
+evidence: {}
+# Add machine-readable evidence blocks as phases complete, for example:
+# evidence:
+#   approval:
+#     approved_by: architecture board
+#     reference: ADR-2026-01
+#     scope_confirmed: true
+
 steps:
   - step: change-plan
     agent: planning-agent

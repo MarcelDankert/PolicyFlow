@@ -1,0 +1,54 @@
+workflow:
+  id: evidence-schema-per-phase
+  name: Evidence Schema Per Phase
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add machine-readable evidence blocks per workflow phase on top of the execution state schema.
+
+context:
+  workflow_file: workflows/features/evidence-schema-per-phase.yml
+  issue_key: PF-GOV-02
+  goal: Add canonical evidence blocks per workflow phase so PolicyFlow can validate that planning, architecture, review, QA, and approval produce structured outputs instead of relying only on free-text claims.
+  scope:
+    - evidence schema for workflow phases
+    - minimum evidence fields for planning, architecture-check, review, qa, and approval
+    - backward-compatible validation rules for the first evidence slice
+    - template, example, and fixture updates for the new evidence shape
+  non_goals:
+    - no transition gate enforcement yet
+    - no GitHub API integration
+    - no deep PR-to-evidence mapping
+    - no autonomous agent orchestration
+  affected_modules:
+    - policyflow
+    - tests
+    - workflows
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
