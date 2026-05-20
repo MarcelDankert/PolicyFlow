@@ -38,6 +38,8 @@ execution:
       state: pending
 
 evidence: {}
+# Add machine-readable role contracts as phases complete.
+contracts: {}
 # Add machine-readable evidence blocks as phases complete, for example:
 # evidence:
 #   planning:

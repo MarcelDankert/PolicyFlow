@@ -52,6 +52,26 @@ evidence: {}
 #       - no contract changes
 #     risk_rationale: Bounded MEDIUM-risk change.
 
+contracts: {}
+# Add machine-readable role contracts as phases complete, for example:
+# contracts:
+#   planning:
+#     owner_agent: planning-agent
+#     issue_brief: Lock scope before implementation.
+#     acceptance_criteria:
+#       - reporting endpoint stays in scope
+#     approved_scope:
+#       - reporting endpoint
+#     non_goals:
+#       - no contract changes
+#     initial_risk_level: MEDIUM
+#     protected_areas_touched:
+#       - none
+#     confidence_summary: Scope and risk are stable for implementation.
+#     escalation_flags:
+#       - none
+# Completed phases must have the matching contract block with the expected owner agent.
+
 steps:
   - step: plan
     agent: planning-agent

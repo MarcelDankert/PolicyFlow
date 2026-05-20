@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -133,9 +134,76 @@ class WorkflowEvidence(BaseModel):
     approval: ApprovalEvidence | None = None
 
 
+class PlanningContract(BaseModel):
+    owner_agent: Literal["planning-agent"]
+    issue_brief: str = Field(min_length=1)
+    acceptance_criteria: list[str]
+    approved_scope: list[str]
+    non_goals: list[str]
+    initial_risk_level: RiskLevel
+    protected_areas_touched: list[str]
+    confidence_summary: str = Field(min_length=1)
+    escalation_flags: list[str]
+
+
+class ArchitectureCheckContract(BaseModel):
+    owner_agent: Literal["architecture-agent"]
+    architecture_assessment: str = Field(min_length=1)
+    approved_scope: list[str]
+    module_boundaries: list[str]
+    contract_impact: str = Field(min_length=1)
+    risk_review_decision: str = Field(min_length=1)
+    required_reviews: list[str]
+    implementation_constraints: list[str]
+
+
+class ImplementationContract(BaseModel):
+    owner_agent: Literal["senior-dev-agent"]
+    implementation_summary: str = Field(min_length=1)
+    changed_files: list[str]
+    test_summary: str = Field(min_length=1)
+    docs_updates: list[str]
+    known_limitations: list[str]
+    unresolved_questions: list[str]
+
+
+class ReviewContract(BaseModel):
+    owner_agent: Literal["review-agent"]
+    review_findings: list[str]
+    required_fixes: list[str]
+    severity: str = Field(min_length=1)
+    approval_status: str = Field(min_length=1)
+    review_approval: str = Field(min_length=1)
+    residual_risk: str = Field(min_length=1)
+    qa_focus_areas: list[str]
+    test_expectations: list[str]
+
+
+class QaContract(BaseModel):
+    owner_agent: Literal["qa-agent"]
+    qa_report: str = Field(min_length=1)
+    quality_gate_status: str = Field(min_length=1)
+    unresolved_risks: list[str]
+    approval_required: bool
+    merge_readiness: bool
+
+
+class WorkflowContracts(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    planning: PlanningContract | None = None
+    architecture_check: ArchitectureCheckContract | None = Field(
+        default=None, alias="architecture-check"
+    )
+    implementation: ImplementationContract | None = None
+    review: ReviewContract | None = None
+    qa: QaContract | None = None
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
     governance: WorkflowGovernance
     execution: WorkflowExecution
     evidence: WorkflowEvidence | None = None
+    contracts: WorkflowContracts | None = None

@@ -52,3 +52,36 @@ evidence:
     approved_by: architecture board
     reference: ARCH-2026-05-19
     scope_confirmed: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the high-risk architecture boundary change before coding.
+    acceptance_criteria:
+      - architecture boundary update stays explicit
+    approved_scope:
+      - architecture boundary update
+    non_goals:
+      - no runtime behavior expansion
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - database schema
+    confidence_summary: High-risk path is required because a protected area is touched.
+    escalation_flags:
+      - human approval required
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture review confirmed the protected-area change path.
+    approved_scope:
+      - architecture boundary update
+    module_boundaries:
+      - architecture boundary layer
+    contract_impact: No runtime contract expansion is allowed.
+    risk_review_decision: HIGH risk with explicit human approval.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - require explicit human approval

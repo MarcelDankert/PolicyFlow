@@ -1,0 +1,106 @@
+workflow:
+  id: agent-role-contract-execution
+  name: Agent Role Contract Execution
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Bind canonical workflow phases to explicit owner agents and machine-readable output contracts.
+
+context:
+  workflow_file: workflows/features/agent-role-contract-execution.yml
+  issue_key: PF-GOV-05
+  goal: Make planning, architecture-check, implementation, review, and QA phase ownership explicit and machine-checkable without introducing a runtime orchestration engine.
+  scope:
+    - workflow contract schema for canonical phase owners and outputs
+    - validator checks for completed-phase contracts and expected owner agents
+    - prompt, template, example, and fixture updates for role contracts
+  non_goals:
+    - no agent runtime or dispatch scheduler
+    - no identity verification of which agent physically ran
+    - no exception or override mechanism
+    - no GitHub metadata deep integration
+  affected_modules:
+    - policyflow
+    - prompts
+    - workflows
+    - tests
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and risk were locked before implementation.
+    scope_locked:
+      - workflow contract schema
+      - validator contract checks
+    non_goals_locked:
+      - no runtime orchestration engine
+    risk_rationale: Bounded MEDIUM-risk governance extension on top of the current execution and evidence model.
+  architecture-check:
+    decision: Architecture check completed before coding.
+    constraints:
+      - keep the slice inside workflow schema, validator, and prompts
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the agent contract slice before implementation.
+    acceptance_criteria:
+      - phase owners are explicit
+      - completed phases require machine-readable contracts
+    approved_scope:
+      - workflow contract schema
+      - validator contract checks
+    non_goals:
+      - no runtime orchestration engine
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept the slice inside workflow schema, validator, and prompts.
+    approved_scope:
+      - workflow contract schema
+      - validator contract checks
+    module_boundaries:
+      - policyflow schema layer
+      - policyflow validator
+      - prompt templates
+    contract_impact: No runtime dispatch system is introduced.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the slice inside workflow schema, validator, and prompts

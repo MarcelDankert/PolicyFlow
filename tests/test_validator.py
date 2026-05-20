@@ -26,6 +26,7 @@ def test_valid_low_workflow_passes() -> None:
         "implementation",
         "review",
     ]
+    assert result.contracts.planning.owner_agent == "planning-agent"
 
 
 def test_valid_medium_workflow_passes() -> None:
@@ -44,6 +45,7 @@ def test_valid_medium_workflow_passes() -> None:
         "review",
         "qa",
     ]
+    assert result.contracts.architecture_check.owner_agent == "architecture-agent"
 
 
 def test_valid_high_workflow_passes() -> None:
@@ -65,6 +67,7 @@ def test_valid_high_workflow_passes() -> None:
         "approval",
     ]
     assert result.evidence.approval.approved_by == "architecture board"
+    assert result.contracts.planning.owner_agent == "planning-agent"
 
 
 def test_root_level_fallback_fields_are_accepted() -> None:
@@ -80,6 +83,9 @@ def test_valid_complete_evidence_workflow_passes() -> None:
 
     assert result.evidence.review.outcome == "approved"
     assert result.evidence.qa.outcome == "passed"
+    assert result.contracts.implementation.owner_agent == "senior-dev-agent"
+    assert result.contracts.review.owner_agent == "review-agent"
+    assert result.contracts.qa.owner_agent == "qa-agent"
 
 
 def test_missing_risk_level_fails() -> None:
@@ -190,6 +196,38 @@ def test_completed_planning_requires_planning_evidence() -> None:
 
     assert (
         "Completed phase 'planning' requires matching evidence block: planning"
+        in exc_info.value.errors
+    )
+
+
+def test_completed_planning_requires_planning_contract() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("completed-planning-without-contract.yml"))
+
+    assert (
+        "Completed phase 'planning' requires matching contract block: planning"
+        in exc_info.value.errors
+    )
+
+
+def test_planning_contract_requires_planning_agent() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("planning-contract-wrong-agent.yml"))
+
+    assert (
+        "contracts.planning.owner_agent: Input should be 'planning-agent'"
+        in exc_info.value.errors
+    )
+
+
+def test_completed_implementation_requires_implementation_contract() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("completed-implementation-without-contract.yml")
+        )
+
+    assert (
+        "Completed phase 'implementation' requires matching contract block: implementation"
         in exc_info.value.errors
     )
 

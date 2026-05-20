@@ -60,3 +60,70 @@ evidence:
   approval:
     approved_by: architecture board
     reference: ADR-42
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the protected-area change scope before coding.
+    acceptance_criteria:
+      - schema change planning remains explicit
+    approved_scope:
+      - schema change planning
+    non_goals:
+      - no runtime implementation
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - database schema
+    confidence_summary: High-risk path is required because a protected area is touched.
+    escalation_flags:
+      - human approval required
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture review confirmed the protected-area path.
+    approved_scope:
+      - schema change planning
+    module_boundaries:
+      - database schema boundary
+    contract_impact: No runtime contract expansion is allowed.
+    risk_review_decision: HIGH risk with explicit human approval.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - preserve approval path
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Completed the bounded implementation path for the approved schema change.
+    changed_files:
+      - policyflow/validator.py
+    test_summary: High-risk validation path completed successfully.
+    docs_updates:
+      - README.md
+    known_limitations:
+      - no runtime implementation
+    unresolved_questions:
+      - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - no blocking issues found
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Review approved for QA handoff.
+    residual_risk: bounded residual approval risk only
+    qa_focus_areas:
+      - approval evidence integrity
+    test_expectations:
+      - validator tests remain green
+  qa:
+    owner_agent: qa-agent
+    qa_report: QA evidence completed successfully.
+    quality_gate_status: passed
+    unresolved_risks:
+      - none
+    approval_required: true
+    merge_readiness: false

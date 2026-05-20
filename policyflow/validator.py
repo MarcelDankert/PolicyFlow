@@ -96,6 +96,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     governance = data.get("governance")
     execution = data.get("execution")
     evidence = data.get("evidence")
+    contracts = data.get("contracts")
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -181,6 +182,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
             }
             _append_transition_errors(errors, risk_level, phase_states)
             _append_completed_evidence_errors(errors, phase_states, evidence)
+            _append_completed_contract_errors(errors, phase_states, contracts)
 
     return errors
 
@@ -238,6 +240,28 @@ def _append_completed_evidence_errors(
             errors.append(
                 f"Completed phase '{phase_name}' requires matching evidence block: "
                 f"{evidence_key}"
+            )
+
+
+def _append_completed_contract_errors(
+    errors: list[str], phase_states: dict[str, str], contracts: Any
+) -> None:
+    contract_blocks = contracts if isinstance(contracts, dict) else {}
+    contract_phase_map = {
+        "planning": "planning",
+        "architecture-check": "architecture-check",
+        "implementation": "implementation",
+        "review": "review",
+        "qa": "qa",
+    }
+
+    for phase_name, contract_key in contract_phase_map.items():
+        if _phase_completed(phase_states, phase_name) and contract_blocks.get(
+            contract_key
+        ) in (None, ""):
+            errors.append(
+                f"Completed phase '{phase_name}' requires matching contract block: "
+                f"{contract_key}"
             )
 
 

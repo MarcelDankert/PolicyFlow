@@ -77,3 +77,75 @@ evidence:
     approved_by: architecture board
     reference: ARCH-2026-01
     scope_confirmed: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the architecture boundary split before implementation.
+    acceptance_criteria:
+      - boundary split remains explicit
+      - handoff clarification stays inside scope
+    approved_scope:
+      - boundary split
+      - handoff clarification
+    non_goals:
+      - no runtime behavior expansion
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - architecture boundary
+    confidence_summary: HIGH-risk path is required because an architecture boundary is touched.
+    escalation_flags:
+      - human approval required
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture review confirmed the protected boundary split path.
+    approved_scope:
+      - boundary split
+      - handoff clarification
+    module_boundaries:
+      - runtime layer
+      - data layer
+    contract_impact: No runtime behavior expansion is allowed.
+    risk_review_decision: HIGH risk with explicit human approval.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - preserve approval path and explicit scope
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented the approved boundary split and handoff clarification.
+    changed_files:
+      - runtime/layer
+      - data/layer
+    test_summary: Implementation stayed within the approved architecture boundary scope.
+    docs_updates:
+      - architecture handoff documentation
+    known_limitations:
+      - no runtime behavior expansion
+    unresolved_questions:
+      - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - no blocking issues remain
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Review approved for QA handoff.
+    residual_risk: bounded residual change-management risk only
+    qa_focus_areas:
+      - architecture boundary regression coverage
+    test_expectations:
+      - QA evidence remains green
+  qa:
+    owner_agent: qa-agent
+    qa_report: QA evidence confirmed the approved architecture path.
+    quality_gate_status: passed
+    unresolved_risks:
+      - none
+    approval_required: true
+    merge_readiness: false
