@@ -42,11 +42,11 @@ execution:
     - phase: architecture-check
       state: completed
     - phase: implementation
-      state: pending
+      state: completed
     - phase: review
-      state: pending
+      state: completed
     - phase: qa
-      state: pending
+      state: completed
     - phase: approval
       state: completed
 
@@ -64,6 +64,15 @@ evidence:
     constraints:
       - preserve approval path and explicit scope
     approval_path: architecture-agent review plus human approval
+  review:
+    outcome: approved
+    findings_summary: Review completed with no blocking issues.
+    residual_risk: bounded residual change-management risk only
+  qa:
+    outcome: passed
+    evidence_summary: QA evidence completed successfully.
+    unresolved_risks:
+      - none
   approval:
     approved_by: architecture board
     reference: ARCH-2026-01

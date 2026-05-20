@@ -95,6 +95,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     context = data.get("context")
     governance = data.get("governance")
     execution = data.get("execution")
+    evidence = data.get("evidence")
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -170,8 +171,82 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
                 f"{risk_level} risk workflows must declare execution phases: "
                 f"{missing_phases_text}"
             )
+        else:
+            phase_states = {
+                phase.get("phase"): phase.get("state")
+                for phase in phases
+                if isinstance(phase, dict)
+                and isinstance(phase.get("phase"), str)
+                and isinstance(phase.get("state"), str)
+            }
+            _append_transition_errors(errors, risk_level, phase_states)
+            _append_completed_evidence_errors(errors, phase_states, evidence)
 
     return errors
+
+
+def _append_transition_errors(
+    errors: list[str], risk_level: str, phase_states: dict[str, str]
+) -> None:
+    if _phase_started(phase_states, "implementation") and not _phase_completed(
+        phase_states, "planning"
+    ):
+        errors.append("implementation cannot start until planning is completed.")
+
+    if (
+        risk_level in {RiskLevel.MEDIUM.value, RiskLevel.HIGH.value}
+        and _phase_started(phase_states, "implementation")
+        and not _phase_completed(phase_states, "architecture-check")
+    ):
+        errors.append(
+            f"{risk_level} risk implementation cannot start until "
+            "architecture-check is completed."
+        )
+
+    if _phase_started(phase_states, "review") and not _phase_completed(
+        phase_states, "implementation"
+    ):
+        errors.append("review cannot start until implementation is completed.")
+
+    if _phase_started(phase_states, "qa") and not _phase_completed(
+        phase_states, "review"
+    ):
+        errors.append("qa cannot start until review is completed.")
+
+    if _phase_started(phase_states, "approval") and not _phase_completed(
+        phase_states, "qa"
+    ):
+        errors.append("approval cannot start until qa is completed.")
+
+
+def _append_completed_evidence_errors(
+    errors: list[str], phase_states: dict[str, str], evidence: Any
+) -> None:
+    evidence_blocks = evidence if isinstance(evidence, dict) else {}
+    evidence_phase_map = {
+        "planning": "planning",
+        "architecture-check": "architecture-check",
+        "review": "review",
+        "qa": "qa",
+        "approval": "approval",
+    }
+
+    for phase_name, evidence_key in evidence_phase_map.items():
+        if _phase_completed(phase_states, phase_name) and evidence_blocks.get(
+            evidence_key
+        ) in (None, ""):
+            errors.append(
+                f"Completed phase '{phase_name}' requires matching evidence block: "
+                f"{evidence_key}"
+            )
+
+
+def _phase_started(phase_states: dict[str, str], phase_name: str) -> bool:
+    return phase_states.get(phase_name) in {"in_progress", "completed"}
+
+
+def _phase_completed(phase_states: dict[str, str], phase_name: str) -> bool:
+    return phase_states.get(phase_name) == "completed"
 
 
 def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> list[str]:

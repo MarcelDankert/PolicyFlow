@@ -1,0 +1,31 @@
+workflow:
+  id: implementation-before-planning
+  type: feature
+
+context:
+  workflow_file: workflows/examples/implementation-before-planning.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope was drafted but planning is not complete yet.
+    scope_locked:
+      - bounded feature change
+    non_goals_locked:
+      - no runtime changes
+    risk_rationale: LOW-risk path remains valid.

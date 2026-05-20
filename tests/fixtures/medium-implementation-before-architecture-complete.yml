@@ -1,0 +1,37 @@
+workflow:
+  id: medium-implementation-before-architecture-complete
+  type: bugfix
+
+context:
+  workflow_file: workflows/examples/medium-implementation-before-architecture-complete.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: in_progress
+    - phase: implementation
+      state: in_progress
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and risk were locked before implementation.
+    scope_locked:
+      - parser validation
+    non_goals_locked:
+      - no contract changes
+    risk_rationale: MEDIUM risk due to cross-check needs.

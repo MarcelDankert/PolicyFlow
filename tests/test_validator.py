@@ -141,6 +141,69 @@ def test_invalid_approval_evidence_fails() -> None:
     )
 
 
+def test_implementation_cannot_start_before_planning_completes() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("implementation-before-planning.yml"))
+
+    assert (
+        "implementation cannot start until planning is completed."
+        in exc_info.value.errors
+    )
+
+
+def test_medium_implementation_requires_completed_architecture_check() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("medium-implementation-before-architecture-complete.yml")
+        )
+
+    assert (
+        "MEDIUM risk implementation cannot start until architecture-check is completed."
+        in exc_info.value.errors
+    )
+
+
+def test_review_cannot_complete_before_implementation_completes() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("review-before-implementation-complete.yml")
+        )
+
+    assert (
+        "review cannot start until implementation is completed."
+        in exc_info.value.errors
+    )
+
+
+def test_qa_cannot_complete_before_review_completes() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("qa-before-review-complete.yml"))
+
+    assert (
+        "qa cannot start until review is completed." in exc_info.value.errors
+    )
+
+
+def test_completed_planning_requires_planning_evidence() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("completed-planning-without-evidence.yml"))
+
+    assert (
+        "Completed phase 'planning' requires matching evidence block: planning"
+        in exc_info.value.errors
+    )
+
+
+def test_completed_approval_requires_approval_evidence() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("completed-approval-without-evidence.yml"))
+
+    assert (
+        "Completed phase 'approval' requires matching evidence block: approval"
+        in exc_info.value.errors
+    )
+
+
 def test_invalid_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("invalid-risk-level.yml"))
