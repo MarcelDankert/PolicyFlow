@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+import policyflow.validator as validator_module
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.validator import validate_workflow_file
 
@@ -283,6 +284,36 @@ def test_handoff_requires_concrete_output_artifacts() -> None:
 
     assert (
         "handoffs.0.produced_outputs must be a non-empty list"
+        in exc_info.value.errors
+    )
+
+
+def test_expired_override_requires_revalidation(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        validator_module, "_current_date", lambda: validator_module.date(2026, 5, 21)
+    )
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("expired-override.yml"))
+
+    assert (
+        "Override 'phase-bypass-1' requires revalidation because review_by has passed."
+        in exc_info.value.errors
+    )
+
+
+def test_handoff_cannot_reference_override_requiring_revalidation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        validator_module, "_current_date", lambda: validator_module.date(2026, 5, 21)
+    )
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("handoff-with-expired-override.yml"))
+
+    assert (
+        "handoff override reference requires revalidation and cannot remain active: phase-bypass-1"
         in exc_info.value.errors
     )
 

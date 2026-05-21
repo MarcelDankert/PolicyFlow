@@ -6,6 +6,7 @@ import yaml
 from typer.testing import CliRunner
 
 from policyflow.cli import app
+import policyflow.validator as validator_module
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -139,3 +140,22 @@ def test_handoff_status_lists_recorded_handoffs(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "architecture-check -> implementation [pending]" in result.stdout
+
+
+def test_validate_reports_expiring_override_warning(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        validator_module, "_current_date", lambda: validator_module.date(2026, 5, 21)
+    )
+    workflow_path = tmp_path / "expiring-override.yml"
+    workflow_path.write_text(
+        fixture_path("expiring-override.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["validate", str(workflow_path)])
+
+    assert result.exit_code == 0
+    assert "[WARN]" in result.stdout
+    assert "Override 'phase-bypass-1' is expiring soon" in result.stdout

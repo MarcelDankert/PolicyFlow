@@ -192,6 +192,7 @@ Current validator scope:
   - `phase_bypass`: `bypassed_phase`, `compensating_controls`
   - `approval_bypass`: `approval_target`, `compensating_controls`
   - `non_goal_exception`: `affected_non_goals`
+  - override lifecycle: `active` until the declared review/expiry window closes, `expiring` during the last 7 days before it closes, `revalidation_required` after it has passed
 - validates runtime orchestration when present:
   - `runtime.status`: `idle`, `in_progress`, `handoff_pending`, `blocked`, `completed`
   - `runtime.current_phase`, `runtime.active_agent`, `runtime.last_transition`, `runtime.block_reason`
@@ -205,8 +206,10 @@ Current validator scope:
 - requires matching evidence blocks for completed evidence-bearing phases
 - requires matching role contract blocks for completed canonical agent-owned phases
 - requires approval metadata for `risk_exception` and `approval_bypass`
+- emits non-blocking warnings for `expiring` overrides and blocks workflows that reach `revalidation_required`
 - requires PR-visible override references for declared workflow overrides
 - requires runtime `handoff_pending` states to point to an open pending handoff
+- blocks handoffs that still reference overrides requiring revalidation
 - requires concrete handoff input and output artifact lists
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
