@@ -70,7 +70,7 @@ def test_valid_high_workflow_passes() -> None:
         "qa",
         "approval",
     ]
-    assert result.evidence.approval.approved_by == "architecture board"
+    assert result.evidence.approval.approved_by == "arch-board"
     assert result.contracts.planning.owner_agent == "planning-agent"
 
 

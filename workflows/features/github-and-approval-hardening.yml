@@ -1,0 +1,119 @@
+workflow:
+  id: github-and-approval-hardening
+  name: GitHub And Approval Hardening
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Bind workflow approval claims to concrete GitHub reviewer logins and real APPROVED PR reviews.
+
+context:
+  workflow_file: workflows/features/github-and-approval-hardening.yml
+  issue_key: PF-GOV-09
+  goal: Strengthen PolicyFlow approval handling by making approval logins explicit in the workflow and PR body, then matching them against live GitHub PR reviews.
+  scope:
+    - PR-body validation for human approval login and override approved_by login claims
+    - GitHub review metadata validation for required approved_by logins
+    - governance action update to fetch live PR reviews and enforce approval matching
+    - docs and template updates for login-based approval handling
+  non_goals:
+    - no re-approval logic after later commits
+    - no team or org-role mapping
+    - no GitHub app
+    - no multi-approval policy engine
+  affected_modules:
+    - policyflow
+    - .github/workflows
+    - github/PULL_REQUEST_TEMPLATE.md
+    - workflows
+    - tests
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: PR 9 scope and non-goals were locked before code changes.
+    scope_locked:
+      - PR-body approval login claims
+      - GitHub review approval matching
+      - governance action hardening
+    non_goals_locked:
+      - no re-approval logic
+      - no GitHub app
+    risk_rationale: MEDIUM risk because merge gating becomes stricter, but the slice stays bounded to approval enforcement.
+  architecture-check:
+    decision: Keep approval matching login-based and limited to explicit approved_by claims in the workflow and PR body.
+    constraints:
+      - match only GitHub logins
+      - require real APPROVED reviews
+      - do not add re-approval logic yet
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock approval-hardening scope before implementation.
+    acceptance_criteria:
+      - PR body must surface required approval logins
+      - GitHub review metadata must satisfy declared approval logins
+      - governance action must enforce approval login matching
+    approved_scope:
+      - PR-body approval login claims
+      - GitHub review approval matching
+      - governance action hardening
+    non_goals:
+      - no re-approval logic
+      - no GitHub app
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Login-based approval matching is a bounded extension of the current governance checks.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Approval matching should stay lightweight by using explicit GitHub logins rather than broader identity mapping.
+    approved_scope:
+      - PR-body approval login claims
+      - GitHub review approval matching
+      - governance action hardening
+    module_boundaries:
+      - policyflow validator
+      - policyflow GitHub approval helper
+      - policyflow CLI
+      - governance action
+    contract_impact: No GitHub app or approval-policy engine is introduced.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - match only GitHub logins
+      - require real APPROVED reviews
+      - do not add re-approval logic yet

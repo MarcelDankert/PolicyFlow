@@ -49,7 +49,7 @@ evidence:
       - require explicit human approval
     approval_path: architecture-agent review plus human approval
   approval:
-    approved_by: architecture board
+    approved_by: arch-board
     reference: ARCH-2026-05-19
     scope_confirmed: true
 

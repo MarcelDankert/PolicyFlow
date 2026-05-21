@@ -39,6 +39,7 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which workflow overrides must be referenced in the PR body
 - confirm whether any declared override is already `expiring` or `revalidation_required`
 - confirm human approval expectations
+- confirm which GitHub login must appear in `approved_by` and must produce the real PR approval
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR
 - confirm which owner agent and output contract each completed phase must carry
 - confirm which CLI orchestration commands should be used to advance the workflow state

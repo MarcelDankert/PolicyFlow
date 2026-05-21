@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 
 from policyflow.exceptions import WorkflowValidationError
+from policyflow.github_approval import validate_github_pr_approvals
 from policyflow.runtime import (
     block_phase as block_workflow_phase,
     complete_phase as complete_workflow_phase,
@@ -59,6 +60,23 @@ def validate_pr(workflow_path: Path, pr_body_path: Path) -> None:
         raise typer.Exit(code=1) from exc
 
     console.print("[green][SUCCESS][/green] Pull request validation passed.")
+
+
+@app.command("validate-github-approvals")
+def validate_github_approvals(
+    workflow_path: Path, pr_body_path: Path, reviews_path: Path
+) -> None:
+    """Validate PR approval logins against GitHub review metadata."""
+
+    try:
+        validate_github_pr_approvals(workflow_path, pr_body_path, reviews_path)
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] GitHub approval validation failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    console.print("[green][SUCCESS][/green] GitHub approval validation passed.")
 
 
 @app.command("next-step")

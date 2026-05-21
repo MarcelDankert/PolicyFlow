@@ -74,7 +74,7 @@ evidence:
     unresolved_risks:
       - none
   approval:
-    approved_by: architecture board
+    approved_by: arch-board
     reference: ARCH-2026-01
     scope_confirmed: true
 

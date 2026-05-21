@@ -406,6 +406,7 @@ def _phase_completed(phase_states: dict[str, str], phase_name: str) -> bool:
 def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> list[str]:
     errors: list[str] = []
     sections = _parse_markdown_sections(pr_body)
+    governance_section = sections.get("Governance", "")
 
     linked_issue = sections.get("Linked Issue", "").strip()
     if not linked_issue:
@@ -420,7 +421,7 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
             f"{workflow.context.workflow_file}"
         )
 
-    declared_risk_level = _extract_declared_risk_level(sections.get("Governance", ""))
+    declared_risk_level = _extract_declared_risk_level(governance_section)
     if not declared_risk_level:
         errors.append(
             "PR body must include Declared risk level in the Governance section."
@@ -457,6 +458,7 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
     _append_pr_evidence_reference_errors(
         errors, workflow, sections.get("Evidence", "")
     )
+    _append_pr_human_approval_errors(errors, workflow, governance_section)
     _append_pr_override_reference_errors(
         errors, workflow, sections.get("Overrides", "")
     )
@@ -523,6 +525,74 @@ def _append_pr_override_reference_errors(
             errors.append(
                 f"PR body Override {override.id} must declare type {override.type}"
             )
+        if override.approved_by is not None:
+            actual_login = _extract_override_field(
+                overrides_section, override.id, "Approved by login"
+            )
+            if actual_login is None:
+                errors.append(
+                    f"PR body Override {override.id} must declare approved_by login "
+                    f"{override.approved_by}"
+                )
+            elif actual_login != override.approved_by:
+                errors.append(
+                    f"PR body Override {override.id} must declare approved_by login "
+                    f"{override.approved_by}"
+                )
+        if override.approval_reference is not None:
+            actual_reference = _extract_override_field(
+                overrides_section, override.id, "Approval reference"
+            )
+            if actual_reference is None:
+                errors.append(
+                    f"PR body Override {override.id} must declare approval reference "
+                    f"{override.approval_reference}"
+                )
+            elif actual_reference != override.approval_reference:
+                errors.append(
+                    f"PR body Override {override.id} must declare approval reference "
+                    f"{override.approval_reference}"
+                )
+
+
+def _append_pr_human_approval_errors(
+    errors: list[str], workflow: WorkflowDocument, governance_section: str
+) -> None:
+    if not workflow.governance.human_approval_required:
+        return
+
+    approval_evidence = workflow.evidence.approval if workflow.evidence else None
+    if approval_evidence is None:
+        errors.append(
+            "Workflow with human approval required must declare evidence.approval."
+        )
+        return
+
+    expected_login = approval_evidence.approved_by
+    if expected_login in (None, ""):
+        errors.append(
+            "Workflow with human approval required must declare "
+            "evidence.approval.approved_by as a GitHub login."
+        )
+    else:
+        actual_login = _extract_governance_value(
+            governance_section, "Human approval login if required"
+        )
+        if actual_login is None or actual_login != expected_login:
+            errors.append(
+                f"PR body must declare Human approval login if required: "
+                f"{expected_login}"
+            )
+
+    expected_reference = approval_evidence.reference
+    actual_reference = _extract_governance_value(
+        governance_section, "Human approval reference if required"
+    )
+    if actual_reference is None or actual_reference != expected_reference:
+        errors.append(
+            f"PR body must declare Human approval reference if required: "
+            f"{expected_reference}"
+        )
 
 
 def _parse_markdown_sections(markdown: str) -> dict[str, str]:
@@ -582,6 +652,15 @@ def _extract_evidence_reference(section_text: str, label: str) -> str | None:
 
 
 def _extract_override_type(section_text: str, override_id: str) -> str | None:
+    field_value = _extract_override_field(section_text, override_id, "Override type")
+    if field_value is None:
+        return None
+    return field_value.strip("` ")
+
+
+def _extract_override_field(
+    section_text: str, override_id: str, field_label: str
+) -> str | None:
     lines = section_text.splitlines()
     for index, raw_line in enumerate(lines):
         match = re.match(r"^- Override ID:\s*([^\s]+)\s*$", raw_line.strip())
@@ -591,13 +670,29 @@ def _extract_override_type(section_text: str, override_id: str) -> str | None:
             candidate = candidate.strip()
             if not candidate:
                 continue
-            type_match = re.match(r"^- Override type:\s*([^\s]+)\s*$", candidate)
-            if type_match is not None:
-                return type_match.group(1).strip("` ")
+            field_match = re.match(
+                rf"^- {re.escape(field_label)}:\s*(.+?)\s*$", candidate
+            )
+            if field_match is not None:
+                return field_match.group(1).strip("` ")
             if candidate.startswith("- Override ID:"):
                 break
         return None
     return None
+
+
+def _extract_governance_value(section_text: str, label: str) -> str | None:
+    match = re.search(
+        rf"^- {re.escape(label)}:\s*(.+?)\s*$",
+        section_text,
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+    value = match.group(1).strip("` ")
+    if not value:
+        return None
+    return value
 
 
 def _has_workflow_confirmation(section_text: str) -> bool:

@@ -137,6 +137,12 @@ Validate a PR body markdown file against a workflow:
 policyflow validate-pr workflows/examples/example-feature-workflow.yml path/to/pull-request.md
 ```
 
+Validate PR approval logins against GitHub review metadata:
+
+```bash
+policyflow validate-github-approvals workflows/examples/example-architecture-change-workflow.yml path/to/pull-request.md path/to/pr-reviews.json
+```
+
 Runtime orchestration helpers:
 
 ```bash
@@ -226,12 +232,15 @@ Current validator scope:
   - a non-empty `Linked Issue` section
   - a `Workflow File` entry matching `context.workflow_file`
   - a `Declared risk level` entry matching `context.risk_level`
+  - a `Human approval login if required` entry matching `evidence.approval.approved_by` for approval-gated workflows
+  - override `Approved by login` entries matching workflow `approved_by` logins when present
   - evidence references that point to existing workflow evidence blocks
   - override references that point to existing typed workflow overrides
   - a checked confirmation that the linked workflow governed the change
   - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
+- validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
 
 This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
 

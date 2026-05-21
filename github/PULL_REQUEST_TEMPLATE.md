@@ -20,6 +20,7 @@
 - Declared risk level:
 - Confidence summary:
 - Required reviews completed:
+- Human approval login if required:
 - Human approval reference if required:
 - Escalation notes:
 - Protected areas touched:
@@ -34,6 +35,7 @@
 ## Overrides
 - Override ID: `<override-id>` if present in the workflow
 - Override type: `<scope_exception|risk_exception|phase_bypass|approval_bypass|non_goal_exception>` if present in the workflow
+- Approved by login: `<github-login>` if present in the workflow
 - Approval reference: `<approval-ref>` if present in the workflow
 - Mitigations confirmed: `yes` if present in the workflow
 
