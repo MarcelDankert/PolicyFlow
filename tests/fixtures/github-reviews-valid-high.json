@@ -1,0 +1,10 @@
+[
+  {
+    "state": "COMMENTED",
+    "user": {"login": "review-bot"}
+  },
+  {
+    "state": "APPROVED",
+    "user": {"login": "arch-board"}
+  }
+]

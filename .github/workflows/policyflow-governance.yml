@@ -40,7 +40,7 @@ jobs:
         run: python -m pip install -e .[dev]
 
       - name: Run validator test suite
-        run: pytest -q tests/test_pr_validator.py tests/test_validator.py
+        run: pytest -q tests/test_pr_validator.py tests/test_validator.py tests/test_runtime_cli.py tests/test_github_approval.py
 
       - name: Validate published workflow examples and features
         shell: bash
@@ -66,6 +66,15 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .body > pr-body.md
+
+      - name: Fetch PR reviews
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" > pr-reviews.json
 
       - name: Validate PR body governance
         if: github.event_name == 'pull_request'
@@ -104,3 +113,4 @@ jobs:
           fi
 
           policyflow validate-pr "$workflow_path" pr-body.md
+          policyflow validate-github-approvals "$workflow_path" pr-body.md pr-reviews.json

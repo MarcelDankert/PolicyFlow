@@ -33,7 +33,7 @@ No architecture boundary changes.
 ## Overrides
 - Override ID: phase-bypass-1
 - Override type: phase_bypass
-- Approved by login: architecture-agent
+- Approved by login: wrong-login
 - Approval reference: ARCH-OVERRIDE-1
 - Mitigations confirmed: yes
 

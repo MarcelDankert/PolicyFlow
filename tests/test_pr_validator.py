@@ -168,6 +168,40 @@ def test_pull_request_with_mismatched_architecture_evidence_reference_fails() ->
     )
 
 
+def test_high_risk_pull_request_requires_human_approval_login() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-high.yml"),
+            fixture_path("pr-missing-human-approval-login.md"),
+        )
+
+    assert (
+        "PR body must declare Human approval login if required: arch-board"
+        in exc_info.value.errors
+    )
+
+
+def test_pull_request_with_mismatched_override_approval_login_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-mismatched-override-approval-login.md"),
+        )
+
+    assert (
+        "PR body Override phase-bypass-1 must declare approved_by login architecture-agent"
+        in exc_info.value.errors
+    )
+
+
+def test_high_risk_pull_request_with_approval_login_passes() -> None:
+    result = validate_pull_request(
+        fixture_path("valid-high.yml"), fixture_path("valid-high-pr-body.md")
+    )
+
+    assert result.context.risk_level == "HIGH"
+
+
 def test_validate_pr_command_succeeds() -> None:
     result = runner.invoke(
         app,

@@ -1,41 +1,37 @@
 ## Summary
 
-Bounded parser validation update.
+Bounded architecture boundary update.
 
 ## Linked Issue
 
-#32
+#64
 
 ## Workflow File
-- workflows/examples/valid-medium.yml
+- workflows/examples/valid-high.yml
 
 ## Scope
-- In scope: parser validation
-- Out of scope: contract changes
+- In scope: architecture boundary update
+- Out of scope: runtime behavior expansion
 
 ## Non-Goals
 
-No architecture boundary changes.
+No runtime behavior expansion.
 
 ## Governance
-- Declared risk level: MEDIUM
-- Confidence summary: bounded change with direct tests
-- Required reviews completed: architecture-agent, review-agent, qa-agent
-- Human approval login if required: not required
-- Human approval reference if required: not required
-- Escalation notes: none
-- Protected areas touched: none
+- Declared risk level: HIGH
+- Confidence summary: protected-area change kept on the high-risk path
+- Required reviews completed: architecture-agent, review-agent, qa-agent, human approval
+- Human approval login if required:
+- Human approval reference if required: ARCH-2026-05-19
+- Escalation notes: protected area approved through high-risk path
+- Protected areas touched: database schema
 
 ## Evidence
 - Planning evidence: evidence.planning
 - Architecture evidence: evidence.architecture-check
+- Approval evidence: evidence.approval
 
 ## Overrides
-- Override ID: phase-bypass-1
-- Override type: phase_bypass
-- Approved by login: architecture-agent
-- Approval reference: ARCH-OVERRIDE-1
-- Mitigations confirmed: yes
 
 ## Confirmation
 - [x] The implementation matches the declared scope
