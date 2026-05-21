@@ -17,7 +17,7 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 3. declare an `execution` block with canonical phases and states
 4. add machine-readable `evidence` blocks as phases complete
 5. add matching machine-readable `contracts` blocks as completed agent-owned phases finish
-6. add typed `overrides` only for explicit approved exceptions, and surface them in the PR when present
+6. add typed `overrides` only for explicit approved exceptions, surface them in the PR when present, and keep their `review_by` or `expires_on` dates current
 7. use `runtime` and `handoffs` to persist the current orchestration state as the workflow advances
 8. advance phases only when their prerequisite workflow phases are completed
 9. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
@@ -37,6 +37,7 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which phase transitions are currently allowed or blocked
 - confirm which workflow evidence blocks must be referenced in the PR body
 - confirm which workflow overrides must be referenced in the PR body
+- confirm whether any declared override is already `expiring` or `revalidation_required`
 - confirm human approval expectations
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR
 - confirm which owner agent and output contract each completed phase must carry

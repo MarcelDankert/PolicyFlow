@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 import re
 from pathlib import Path
 from typing import Any
@@ -35,22 +36,33 @@ REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
         "approval",
     },
 }
+EXPIRING_OVERRIDE_WINDOW_DAYS = 7
+
+
+def inspect_workflow_file(path: str | Path) -> tuple[WorkflowDocument, list[str]]:
+    raw_data = _load_workflow_yaml(Path(path))
+    return inspect_workflow_data(raw_data)
 
 
 def validate_workflow_file(path: str | Path) -> WorkflowDocument:
-    raw_data = _load_workflow_yaml(Path(path))
-    return validate_workflow_data(raw_data)
+    workflow, _warnings = inspect_workflow_file(path)
+    return workflow
 
 
 def validate_workflow_data(raw_data: dict[str, Any]) -> WorkflowDocument:
+    workflow, _warnings = inspect_workflow_data(raw_data)
+    return workflow
+
+
+def inspect_workflow_data(raw_data: dict[str, Any]) -> tuple[WorkflowDocument, list[str]]:
     normalized_data = normalize_workflow_payload(raw_data)
-    errors = _collect_validation_errors(normalized_data)
+    errors, warnings = _collect_validation_findings(normalized_data)
 
     if errors:
         raise WorkflowValidationError(errors)
 
     try:
-        return WorkflowDocument.model_validate(normalized_data)
+        return WorkflowDocument.model_validate(normalized_data), warnings
     except ValidationError as exc:
         raise WorkflowValidationError(_format_pydantic_errors(exc)) from exc
 
@@ -93,8 +105,9 @@ def _load_markdown_file(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
+def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[str]]:
     errors: list[str] = []
+    warnings: list[str] = []
     workflow = data.get("workflow")
     context = data.get("context")
     governance = data.get("governance")
@@ -104,6 +117,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     overrides = data.get("overrides")
     runtime = data.get("runtime")
     handoffs = data.get("handoffs")
+    override_lifecycle = _collect_override_lifecycle_statuses(overrides)
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -158,7 +172,7 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
                 "Workflows touching protected areas must set escalation_required to true."
             )
 
-    _append_override_errors(errors, overrides)
+    _append_override_errors(errors, warnings, overrides, override_lifecycle)
 
     if not isinstance(execution, dict) or execution.get("mode") in (None, ""):
         errors.append("execution.mode is required")
@@ -192,10 +206,12 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
             _append_transition_errors(errors, risk_level, phase_states)
             _append_completed_evidence_errors(errors, phase_states, evidence)
             _append_completed_contract_errors(errors, phase_states, contracts)
-            _append_handoff_errors(errors, phase_states, handoffs, overrides)
+            _append_handoff_errors(
+                errors, phase_states, handoffs, overrides, override_lifecycle
+            )
             _append_runtime_errors(errors, phase_states, runtime, handoffs)
 
-    return errors
+    return errors, warnings
 
 
 def _append_transition_errors(
@@ -281,6 +297,7 @@ def _append_handoff_errors(
     phase_states: dict[str, str],
     handoffs: Any,
     overrides: Any,
+    override_lifecycle: dict[str, str],
 ) -> None:
     if not isinstance(handoffs, list):
         return
@@ -315,6 +332,11 @@ def _append_handoff_errors(
                 if override_ref not in override_ids:
                     errors.append(
                         f"handoff override reference not found in workflow overrides: {override_ref}"
+                    )
+                elif override_lifecycle.get(override_ref) == "revalidation_required":
+                    errors.append(
+                        "handoff override reference requires revalidation and cannot "
+                        f"remain active: {override_ref}"
                     )
 
 
@@ -640,7 +662,12 @@ def _normalize_protected_areas(value: Any) -> list[str]:
     return normalized
 
 
-def _append_override_errors(errors: list[str], overrides: Any) -> None:
+def _append_override_errors(
+    errors: list[str],
+    warnings: list[str],
+    overrides: Any,
+    override_lifecycle: dict[str, str],
+) -> None:
     if not isinstance(overrides, list):
         return
 
@@ -665,3 +692,84 @@ def _append_override_errors(errors: list[str], overrides: Any) -> None:
             errors.append(
                 f"Override '{override_id}' of type '{override_type}' requires approved_by and approval_reference."
             )
+
+        lifecycle_status = override_lifecycle.get(override_id)
+        if lifecycle_status == "expiring":
+            warnings.append(
+                f"Override '{override_id}' is expiring soon and should be revalidated by "
+                f"{_override_deadline_text(override)}."
+            )
+        elif lifecycle_status == "revalidation_required":
+            errors.append(
+                f"Override '{override_id}' requires revalidation because "
+                f"{_override_deadline_field(override)} has passed."
+            )
+
+
+def _collect_override_lifecycle_statuses(overrides: Any) -> dict[str, str]:
+    if not isinstance(overrides, list):
+        return {}
+
+    statuses: dict[str, str] = {}
+    today = _current_date()
+    expiring_threshold = today + timedelta(days=EXPIRING_OVERRIDE_WINDOW_DAYS)
+
+    for override in overrides:
+        if not isinstance(override, dict):
+            continue
+
+        override_id = str(override.get("id", "")).strip()
+        if not override_id:
+            continue
+
+        deadline = _override_deadline(override)
+        if deadline is None:
+            continue
+
+        if deadline < today:
+            statuses[override_id] = "revalidation_required"
+        elif deadline <= expiring_threshold:
+            statuses[override_id] = "expiring"
+        else:
+            statuses[override_id] = "active"
+
+    return statuses
+
+
+def _override_deadline(override: dict[str, Any]) -> date | None:
+    review_by = _coerce_date(override.get("review_by"))
+    expires_on = _coerce_date(override.get("expires_on"))
+
+    if review_by is not None and expires_on is None:
+        return review_by
+    if expires_on is not None and review_by is None:
+        return expires_on
+    return None
+
+
+def _override_deadline_field(override: dict[str, Any]) -> str:
+    if override.get("review_by") not in (None, ""):
+        return "review_by"
+    return "expires_on"
+
+
+def _override_deadline_text(override: dict[str, Any]) -> str:
+    deadline = _override_deadline(override)
+    if deadline is None:
+        return "the declared review window"
+    return deadline.isoformat()
+
+
+def _coerce_date(value: Any) -> date | None:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _current_date() -> date:
+    return date.today()

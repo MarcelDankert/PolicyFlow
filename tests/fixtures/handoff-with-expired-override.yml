@@ -1,21 +1,9 @@
 workflow:
-  id: example-feature-workflow
+  id: handoff-with-expired-override
   type: feature
-  # Example usage for all consumer repos:
-  # create the workflow before implementation
-  # use it to steer the work from the start
-  # allow only same-scope clarifications in the same PR
-  # do not silently expand scope, non_goals, or risk
+
 context:
-  workflow_file: workflows/examples/example-feature-workflow.yml
-  goal: Add a bounded reporting capability
-  scope:
-    - reporting endpoint
-    - validation
-  non_goals:
-    - no protected business logic changes
-  affected_modules:
-    - runtime layer
+  workflow_file: workflows/examples/handoff-with-expired-override.yml
   risk_level: MEDIUM
 
 governance:
@@ -24,9 +12,6 @@ governance:
     - review-agent
     - qa-agent
   human_approval_required: false
-  escalation_required: false
-  protected_areas_touched:
-    - none
 
 execution:
   mode: strict
@@ -36,7 +21,7 @@ execution:
     - phase: architecture-check
       state: completed
     - phase: implementation
-      state: in_progress
+      state: pending
     - phase: review
       state: pending
     - phase: qa
@@ -44,65 +29,61 @@ execution:
 
 evidence:
   planning:
-    summary: Scope and non-goals were locked before implementation.
+    summary: Medium-risk scope and non-goals locked before coding.
     scope_locked:
-      - reporting endpoint
-      - validation
+      - parser validation
     non_goals_locked:
-      - no protected business logic changes
-    risk_rationale: Bounded MEDIUM-risk workflow update.
+      - no contract changes
+    risk_rationale: MEDIUM risk due to cross-check needs.
   architecture-check:
-    decision: Architecture check completed before coding.
+    decision: Architecture check completed before implementation.
     constraints:
-      - keep the change inside the runtime layer
+      - keep implementation bounded
     approval_path: architecture-agent review
 
 contracts:
   planning:
     owner_agent: planning-agent
-    issue_brief: Lock the bounded reporting scope before implementation.
+    issue_brief: Lock parser validation scope before coding.
     acceptance_criteria:
-      - reporting endpoint remains inside scope
-      - validation remains inside scope
+      - parser validation remains bounded
     approved_scope:
-      - reporting endpoint
-      - validation
+      - parser validation
     non_goals:
-      - no protected business logic changes
+      - no contract changes
     initial_risk_level: MEDIUM
     protected_areas_touched:
       - none
-    confidence_summary: Scope and risk are stable enough for architecture review.
+    confidence_summary: Medium-risk scope is stable enough for architecture review.
     escalation_flags:
       - none
   architecture-check:
     owner_agent: architecture-agent
-    architecture_assessment: Architecture check kept the change inside the runtime layer.
+    architecture_assessment: Architecture scope remains inside parser validation.
     approved_scope:
-      - reporting endpoint
-      - validation
+      - parser validation
     module_boundaries:
-      - runtime layer
+      - parser module only
     contract_impact: No contract changes required.
-    risk_review_decision: MEDIUM risk path approved.
+    risk_review_decision: MEDIUM risk path stays in place.
     required_reviews:
       - architecture-agent
       - review-agent
       - qa-agent
     implementation_constraints:
-      - keep the change inside the runtime layer
+      - keep implementation bounded
 
 overrides:
   - id: phase-bypass-1
     type: phase_bypass
-    reason: Review begins with a bounded overlap so validation can start earlier without widening scope.
-    scope_impact: No scope expansion beyond the reporting endpoint and validation slice.
+    reason: Review phase starts with a documented bounded overlap to preserve delivery cadence.
+    scope_impact: No scope expansion; overlap stays inside parser validation.
     risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
     mitigations:
       - review findings must still be resolved before QA completion
     approved_by: architecture-agent
     approval_reference: ARCH-OVERRIDE-1
-    review_by: 2026-06-30
+    review_by: 2026-05-20
     bypassed_phase: review
     compensating_controls:
       - review findings tracked in the PR before QA sign-off
@@ -112,7 +93,6 @@ runtime:
   current_phase: architecture-check
   active_agent: senior-dev-agent
   last_transition: architecture-check completed and ready for implementation handoff
-  block_reason:
 
 handoffs:
   - from_phase: architecture-check
@@ -120,10 +100,8 @@ handoffs:
     status: pending
     required_inputs:
       - architecture_assessment
-      - implementation_constraints
     produced_outputs:
       - implementation_summary
-      - test_summary
     blockers: []
     override_refs:
       - phase-bypass-1

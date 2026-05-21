@@ -14,7 +14,10 @@ from policyflow.runtime import (
     record_handoff as record_workflow_handoff,
     start_phase as start_workflow_phase,
 )
-from policyflow.validator import validate_pull_request, validate_workflow_file
+from policyflow.validator import (
+    inspect_workflow_file,
+    validate_pull_request,
+)
 
 
 app = typer.Typer(help="PolicyFlow governance validator.")
@@ -31,13 +34,15 @@ def validate(workflow_path: Path) -> None:
     """Validate a workflow file against lightweight governance rules."""
 
     try:
-        validate_workflow_file(workflow_path)
+        _workflow, warnings = inspect_workflow_file(workflow_path)
     except WorkflowValidationError as exc:
         console.print("[red][ERROR][/red] Workflow validation failed.")
         for error in exc.errors:
             console.print(f"  - {error}")
         raise typer.Exit(code=1) from exc
 
+    for warning in warnings:
+        console.print(f"[yellow][WARN][/yellow] {warning}")
     console.print("[green][SUCCESS][/green] Workflow validation passed.")
 
 
