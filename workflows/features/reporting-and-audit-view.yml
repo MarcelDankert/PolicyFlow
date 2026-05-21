@@ -1,0 +1,116 @@
+workflow:
+  id: reporting-and-audit-view
+  name: Reporting And Audit View
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add workflow status and audit reporting views with human-readable and JSON output.
+
+context:
+  workflow_file: workflows/features/reporting-and-audit-view.yml
+  issue_key: PF-GOV-10
+  goal: Make workflow health, blockers, open handoffs, override lifecycle, and merge readiness visible both for a single workflow and across a directory of workflows.
+  scope:
+    - detailed status reporting for a single workflow file
+    - audit reporting across a workflow directory tree
+    - json output for status and audit commands
+    - explicit invalid-workflow entries in audit output
+  non_goals:
+    - no web dashboard
+    - no multi-repo reporting
+    - no new orchestration or approval logic
+    - no complex filtering or sorting engine
+  affected_modules:
+    - policyflow
+    - tests
+    - workflows
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: PR 10 scope and non-goals were locked before implementation.
+    scope_locked:
+      - single-workflow status view
+      - directory audit view
+      - json output for both commands
+    non_goals_locked:
+      - no dashboard
+      - no new orchestration rules
+    risk_rationale: MEDIUM risk because reporting now influences operator visibility, but it remains read-only over existing workflow data.
+  architecture-check:
+    decision: Reporting should derive from the current workflow model without introducing a second governance state machine.
+    constraints:
+      - keep reporting read-only
+      - reuse existing validation and runtime data
+      - keep json output aligned with the human-readable view
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the reporting slice before implementation.
+    acceptance_criteria:
+      - status shows runtime state, blockers, handoffs, overrides, and merge readiness
+      - audit shows valid and invalid workflow entries across a directory
+      - status and audit both provide json output
+    approved_scope:
+      - single-workflow status view
+      - directory audit view
+      - json output for both commands
+    non_goals:
+      - no dashboard
+      - no new orchestration rules
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Reporting can stay bounded by deriving directly from validated workflows.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Reporting should remain a thin read layer over validated workflows so it cannot drift from the governance model.
+    approved_scope:
+      - single-workflow status view
+      - directory audit view
+      - json output for both commands
+    module_boundaries:
+      - policyflow reporting helper
+      - policyflow CLI
+      - tests
+    contract_impact: No new workflow lifecycle or approval semantics are introduced.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep reporting read-only
+      - reuse existing validation and runtime data
+      - keep json output aligned with the human-readable view

@@ -43,3 +43,4 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR
 - confirm which owner agent and output contract each completed phase must carry
 - confirm which CLI orchestration commands should be used to advance the workflow state
+- confirm which reporting views should be used to check merge readiness and blocked workflows

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import yaml
@@ -159,3 +160,93 @@ def test_validate_reports_expiring_override_warning(
     assert result.exit_code == 0
     assert "[WARN]" in result.stdout
     assert "Override 'phase-bypass-1' is expiring soon" in result.stdout
+
+
+def test_status_reports_handoff_and_merge_readiness(tmp_path: Path) -> None:
+    workflow_path = tmp_path / "runtime-startable-medium.yml"
+    workflow_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["status", str(workflow_path)])
+
+    assert result.exit_code == 0
+    assert "Workflow ID: runtime-startable-medium" in result.stdout
+    assert "Runtime status: handoff_pending" in result.stdout
+    assert "Open handoffs: 1" in result.stdout
+    assert "Merge ready: no" in result.stdout
+
+
+def test_status_json_reports_blocked_workflow(tmp_path: Path) -> None:
+    workflow_path = tmp_path / "runtime-blockable-medium.yml"
+    workflow_path.write_text(
+        fixture_path("runtime-blockable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "block-phase",
+            str(workflow_path),
+            "implementation",
+            "--reason",
+            "runtime contract uncertainty",
+        ],
+    )
+    assert result.exit_code == 0
+
+    status_result = runner.invoke(app, ["status", str(workflow_path), "--json"])
+
+    assert status_result.exit_code == 0
+    payload = json.loads(status_result.stdout)
+    assert payload["workflow_id"] == "runtime-blockable-medium"
+    assert payload["runtime_status"] == "blocked"
+    assert payload["blocked"] is True
+    assert payload["merge_ready"] is False
+    assert payload["blockers"] == ["runtime contract uncertainty"]
+
+
+def test_audit_reports_multiple_workflows_and_invalid_entries(tmp_path: Path) -> None:
+    valid_path = tmp_path / "runtime-startable-medium.yml"
+    valid_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    invalid_path = tmp_path / "invalid-risk-level.yml"
+    invalid_path.write_text(
+        fixture_path("invalid-risk-level.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["audit", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert "runtime-startable-medium" in result.stdout
+    assert "invalid-risk-level.yml" in result.stdout
+    assert "invalid" in result.stdout
+
+
+def test_audit_json_reports_invalid_workflow_entry(tmp_path: Path) -> None:
+    valid_path = tmp_path / "runtime-startable-medium.yml"
+    valid_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    invalid_path = tmp_path / "invalid-risk-level.yml"
+    invalid_path.write_text(
+        fixture_path("invalid-risk-level.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["audit", str(tmp_path), "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert len(payload["workflows"]) == 2
+    invalid_entry = next(
+        entry for entry in payload["workflows"] if entry["path"].endswith("invalid-risk-level.yml")
+    )
+    assert invalid_entry["valid"] is False
+    assert "risk_level must be one of: LOW, MEDIUM, HIGH" in invalid_entry["errors"]
