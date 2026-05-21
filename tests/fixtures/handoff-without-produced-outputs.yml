@@ -1,9 +1,9 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: handoff-without-produced-outputs
+  type: feature
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
+  workflow_file: workflows/examples/handoff-without-produced-outputs.yml
   risk_level: MEDIUM
 
 governance:
@@ -73,37 +73,12 @@ contracts:
     implementation_constraints:
       - keep implementation bounded
 
-overrides:
-  - id: phase-bypass-1
-    type: phase_bypass
-    reason: Review phase starts with a documented bounded overlap to preserve delivery cadence.
-    scope_impact: No scope expansion; overlap stays inside parser validation.
-    risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
-    mitigations:
-      - review findings must still be resolved before QA completion
-    approved_by: architecture-agent
-    approval_reference: ARCH-OVERRIDE-1
-    review_by: 2026-05-27
-    bypassed_phase: review
-    compensating_controls:
-      - review findings tracked in the PR before QA sign-off
-
-runtime:
-  status: handoff_pending
-  current_phase: architecture-check
-  active_agent: senior-dev-agent
-  last_transition: architecture-check completed and ready for implementation handoff
-
 handoffs:
   - from_phase: architecture-check
     to_phase: implementation
     status: pending
     required_inputs:
       - architecture_assessment
-      - implementation_constraints
-    produced_outputs:
-      - implementation_summary
-      - test_summary
+    produced_outputs: []
     blockers: []
-    override_refs:
-      - phase-bypass-1
+    override_refs: []

@@ -47,6 +47,8 @@ def test_valid_medium_workflow_passes() -> None:
     ]
     assert result.contracts.architecture_check.owner_agent == "architecture-agent"
     assert result.overrides[0].type == "phase_bypass"
+    assert result.runtime.status == "handoff_pending"
+    assert result.handoffs[0].to_phase == "implementation"
 
 
 def test_valid_high_workflow_passes() -> None:
@@ -259,6 +261,28 @@ def test_override_requires_review_or_expiry() -> None:
 
     assert (
         "Override 'phase-bypass-1' must declare exactly one of review_by or expires_on."
+        in exc_info.value.errors
+    )
+
+
+def test_runtime_handoff_pending_requires_matching_handoff() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("runtime-handoff-pending-without-handoff.yml")
+        )
+
+    assert (
+        "runtime.status handoff_pending requires an open pending handoff from the current phase."
+        in exc_info.value.errors
+    )
+
+
+def test_handoff_requires_concrete_output_artifacts() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("handoff-without-produced-outputs.yml"))
+
+    assert (
+        "handoffs.0.produced_outputs must be a non-empty list"
         in exc_info.value.errors
     )
 

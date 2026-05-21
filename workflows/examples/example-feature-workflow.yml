@@ -106,3 +106,24 @@ overrides:
     bypassed_phase: review
     compensating_controls:
       - review findings tracked in the PR before QA sign-off
+
+runtime:
+  status: handoff_pending
+  current_phase: architecture-check
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed and ready for implementation handoff
+  block_reason:
+
+handoffs:
+  - from_phase: architecture-check
+    to_phase: implementation
+    status: pending
+    required_inputs:
+      - architecture_assessment
+      - implementation_constraints
+    produced_outputs:
+      - implementation_summary
+      - test_summary
+    blockers: []
+    override_refs:
+      - phase-bypass-1

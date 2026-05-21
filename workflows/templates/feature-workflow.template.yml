@@ -95,6 +95,33 @@ overrides: []
 # - approval_bypass
 # - non_goal_exception
 
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition:
+  block_reason:
+
+handoffs: []
+# Record concrete handoffs as the workflow advances, for example:
+# handoffs:
+#   - from_phase: architecture-check
+#     to_phase: implementation
+#     status: pending
+#     required_inputs:
+#       - architecture_assessment
+#       - implementation_constraints
+#     produced_outputs:
+#       - implementation_summary
+#       - test_summary
+#     blockers: []
+#     override_refs: []
+# Runtime orchestration commands may mutate these fields directly:
+# - policyflow start-phase
+# - policyflow complete-phase
+# - policyflow block-phase
+# - policyflow record-handoff
+
 steps:
   - step: plan
     agent: planning-agent
