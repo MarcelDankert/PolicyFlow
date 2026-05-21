@@ -1,0 +1,148 @@
+workflow:
+  id: runtime-agent-orchestration
+  name: Runtime Agent Orchestration
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add runtime workflow state, concrete handoffs, and CLI-driven orchestration commands that mutate the workflow file directly.
+
+context:
+  workflow_file: workflows/features/runtime-agent-orchestration.yml
+  issue_key: PF-GOV-07
+  goal: Move PolicyFlow from governance validation to lightweight runtime orchestration by persisting workflow runtime state and handoffs directly in the workflow file.
+  scope:
+    - runtime state schema for current phase and workflow status
+    - concrete handoff schema with required input and produced output artifacts
+    - validator checks for runtime and handoff consistency
+    - CLI commands for next-step, handoff-status, start-phase, complete-phase, block-phase, and record-handoff
+  non_goals:
+    - no real agent execution
+    - no scheduler or dispatch engine
+    - no GitHub-based runtime orchestration
+    - no multi-repo orchestration
+  affected_modules:
+    - policyflow
+    - workflows
+    - tests
+    - README.md
+    - docs/getting-started.md
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Runtime orchestration scope and risk were locked before implementation.
+    scope_locked:
+      - runtime state schema
+      - concrete handoff schema
+      - CLI runtime commands
+    non_goals_locked:
+      - no real agent execution
+    risk_rationale: Bounded MEDIUM-risk governance extension that introduces controlled workflow mutation commands.
+  architecture-check:
+    decision: Architecture check completed before coding.
+    constraints:
+      - keep orchestration state inside the workflow file
+      - keep commands tightly scoped to known runtime fields
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the runtime orchestration slice before implementation.
+    acceptance_criteria:
+      - runtime state is machine-readable
+      - handoffs carry concrete input and output artifact lists
+      - CLI mutates only controlled workflow fields
+    approved_scope:
+      - runtime state schema
+      - concrete handoff schema
+      - CLI runtime commands
+    non_goals:
+      - no real agent execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Scope and risk are stable enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture check kept orchestration state inside the workflow file and constrained CLI mutation to a small set of fields.
+    approved_scope:
+      - runtime state schema
+      - concrete handoff schema
+      - CLI runtime commands
+    module_boundaries:
+      - policyflow runtime helper
+      - policyflow validator
+      - policyflow CLI
+    contract_impact: No scheduler or real agent runtime is introduced.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep orchestration state inside the workflow file
+      - keep commands tightly scoped to known runtime fields
+
+overrides:
+  - id: phase-bypass-1
+    type: phase_bypass
+    reason: Review guidance may be finished while the runtime command surface is still being finalized in the same bounded slice.
+    scope_impact: No scope expansion beyond runtime orchestration.
+    risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
+    mitigations:
+      - review findings must still be resolved before QA completion
+    approved_by: architecture-agent
+    approval_reference: ARCH-OVERRIDE-PR7
+    review_by: 2026-05-27
+    bypassed_phase: review
+    compensating_controls:
+      - review findings tracked in the PR before QA sign-off
+
+runtime:
+  status: handoff_pending
+  current_phase: architecture-check
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed and ready for implementation handoff
+  block_reason:
+
+handoffs:
+  - from_phase: architecture-check
+    to_phase: implementation
+    status: pending
+    required_inputs:
+      - architecture_assessment
+      - implementation_constraints
+    produced_outputs:
+      - implementation_summary
+      - test_summary
+    blockers: []
+    override_refs:
+      - phase-bypass-1

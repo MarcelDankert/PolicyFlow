@@ -1,9 +1,9 @@
 workflow:
-  id: valid-medium
-  type: bugfix
+  id: runtime-handoff-record
+  type: feature
 
 context:
-  workflow_file: workflows/examples/valid-medium.yml
+  workflow_file: workflows/examples/runtime-handoff-record.yml
   risk_level: MEDIUM
 
 governance:
@@ -21,7 +21,7 @@ execution:
     - phase: architecture-check
       state: completed
     - phase: implementation
-      state: pending
+      state: completed
     - phase: review
       state: pending
     - phase: qa
@@ -72,38 +72,23 @@ contracts:
       - qa-agent
     implementation_constraints:
       - keep implementation bounded
-
-overrides:
-  - id: phase-bypass-1
-    type: phase_bypass
-    reason: Review phase starts with a documented bounded overlap to preserve delivery cadence.
-    scope_impact: No scope expansion; overlap stays inside parser validation.
-    risk_impact: MEDIUM risk remains unchanged because compensating controls are explicit.
-    mitigations:
-      - review findings must still be resolved before QA completion
-    approved_by: architecture-agent
-    approval_reference: ARCH-OVERRIDE-1
-    review_by: 2026-05-27
-    bypassed_phase: review
-    compensating_controls:
-      - review findings tracked in the PR before QA sign-off
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented the bounded parser validation change.
+    changed_files:
+      - policyflow/validator.py
+    test_summary: Validator checks passed for the implementation slice.
+    docs_updates:
+      - README.md
+    known_limitations:
+      - no contract changes
+    unresolved_questions:
+      - none
 
 runtime:
-  status: handoff_pending
-  current_phase: architecture-check
+  status: idle
+  current_phase: implementation
   active_agent: senior-dev-agent
-  last_transition: architecture-check completed and ready for implementation handoff
+  last_transition: implementation completed
 
-handoffs:
-  - from_phase: architecture-check
-    to_phase: implementation
-    status: pending
-    required_inputs:
-      - architecture_assessment
-      - implementation_constraints
-    produced_outputs:
-      - implementation_summary
-      - test_summary
-    blockers: []
-    override_refs:
-      - phase-bypass-1
+handoffs: []

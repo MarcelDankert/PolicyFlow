@@ -39,6 +39,10 @@ REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
 
 def validate_workflow_file(path: str | Path) -> WorkflowDocument:
     raw_data = _load_workflow_yaml(Path(path))
+    return validate_workflow_data(raw_data)
+
+
+def validate_workflow_data(raw_data: dict[str, Any]) -> WorkflowDocument:
     normalized_data = normalize_workflow_payload(raw_data)
     errors = _collect_validation_errors(normalized_data)
 
@@ -98,6 +102,8 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
     evidence = data.get("evidence")
     contracts = data.get("contracts")
     overrides = data.get("overrides")
+    runtime = data.get("runtime")
+    handoffs = data.get("handoffs")
 
     if not isinstance(workflow, dict):
         errors.append("workflow metadata is required")
@@ -186,6 +192,8 @@ def _collect_validation_errors(data: dict[str, Any]) -> list[str]:
             _append_transition_errors(errors, risk_level, phase_states)
             _append_completed_evidence_errors(errors, phase_states, evidence)
             _append_completed_contract_errors(errors, phase_states, contracts)
+            _append_handoff_errors(errors, phase_states, handoffs, overrides)
+            _append_runtime_errors(errors, phase_states, runtime, handoffs)
 
     return errors
 
@@ -265,6 +273,103 @@ def _append_completed_contract_errors(
             errors.append(
                 f"Completed phase '{phase_name}' requires matching contract block: "
                 f"{contract_key}"
+            )
+
+
+def _append_handoff_errors(
+    errors: list[str],
+    phase_states: dict[str, str],
+    handoffs: Any,
+    overrides: Any,
+) -> None:
+    if not isinstance(handoffs, list):
+        return
+
+    override_ids = {
+        override.get("id")
+        for override in (overrides if isinstance(overrides, list) else [])
+        if isinstance(override, dict)
+    }
+
+    for index, handoff in enumerate(handoffs):
+        if not isinstance(handoff, dict):
+            continue
+
+        required_inputs = handoff.get("required_inputs")
+        if not isinstance(required_inputs, list) or not required_inputs:
+            errors.append(f"handoffs.{index}.required_inputs must be a non-empty list")
+
+        produced_outputs = handoff.get("produced_outputs")
+        if not isinstance(produced_outputs, list) or not produced_outputs:
+            errors.append(f"handoffs.{index}.produced_outputs must be a non-empty list")
+
+        from_phase = handoff.get("from_phase")
+        if isinstance(from_phase, str) and not _phase_completed(phase_states, from_phase):
+            errors.append(
+                f"handoff from phase '{from_phase}' requires the phase to be completed."
+            )
+
+        override_refs = handoff.get("override_refs")
+        if isinstance(override_refs, list):
+            for override_ref in override_refs:
+                if override_ref not in override_ids:
+                    errors.append(
+                        f"handoff override reference not found in workflow overrides: {override_ref}"
+                    )
+
+
+def _append_runtime_errors(
+    errors: list[str],
+    phase_states: dict[str, str],
+    runtime: Any,
+    handoffs: Any,
+) -> None:
+    if not isinstance(runtime, dict):
+        return
+
+    status = runtime.get("status")
+    current_phase = runtime.get("current_phase")
+    active_agent = runtime.get("active_agent")
+
+    if status in {"in_progress", "handoff_pending", "blocked"}:
+        if current_phase in (None, ""):
+            errors.append("runtime.current_phase is required when runtime.status is active.")
+        if active_agent in (None, ""):
+            errors.append("runtime.active_agent is required when runtime.status is active.")
+
+    if status == "in_progress" and isinstance(current_phase, str):
+        if phase_states.get(current_phase) != "in_progress":
+            errors.append(
+                "runtime.status in_progress requires runtime.current_phase to be in_progress in execution.phases."
+            )
+
+    if status == "blocked":
+        if runtime.get("block_reason") in (None, ""):
+            errors.append("runtime.block_reason is required when runtime.status is blocked.")
+        if isinstance(current_phase, str) and phase_states.get(current_phase) != "blocked":
+            errors.append(
+                "runtime.status blocked requires runtime.current_phase to be blocked in execution.phases."
+            )
+
+    if status == "handoff_pending":
+        has_open_handoff = False
+        if isinstance(handoffs, list) and isinstance(current_phase, str):
+            for handoff in handoffs:
+                if not isinstance(handoff, dict):
+                    continue
+                if (
+                    handoff.get("from_phase") == current_phase
+                    and handoff.get("status") == "pending"
+                ):
+                    has_open_handoff = True
+                    break
+        if not has_open_handoff:
+            errors.append(
+                "runtime.status handoff_pending requires an open pending handoff from the current phase."
+            )
+        elif phase_states.get(current_phase) != "completed":
+            errors.append(
+                "runtime.status handoff_pending requires runtime.current_phase to be completed in execution.phases."
             )
 
 

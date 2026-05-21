@@ -18,10 +18,11 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 4. add machine-readable `evidence` blocks as phases complete
 5. add matching machine-readable `contracts` blocks as completed agent-owned phases finish
 6. add typed `overrides` only for explicit approved exceptions, and surface them in the PR when present
-7. advance phases only when their prerequisite workflow phases are completed
-8. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
-9. treat the workflow as the steering artifact for the change, not as retrospective documentation
-10. keep same-PR workflow edits limited to same-scope clarifications
+7. use `runtime` and `handoffs` to persist the current orchestration state as the workflow advances
+8. advance phases only when their prerequisite workflow phases are completed
+9. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
+10. treat the workflow as the steering artifact for the change, not as retrospective documentation
+11. keep same-PR workflow edits limited to same-scope clarifications
 
 ## First Recommended Checks
 
@@ -32,9 +33,11 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which evidence blocks should exist for the first completed phases
 - confirm which role contract blocks should exist for the first completed phases
 - confirm whether any typed override is truly needed, and if so which override type applies
+- confirm which handoffs require concrete input and output artifact lists
 - confirm which phase transitions are currently allowed or blocked
 - confirm which workflow evidence blocks must be referenced in the PR body
 - confirm which workflow overrides must be referenced in the PR body
 - confirm human approval expectations
 - confirm how planning, architecture, review, and QA evidence will be made visible in the PR
 - confirm which owner agent and output contract each completed phase must carry
+- confirm which CLI orchestration commands should be used to advance the workflow state

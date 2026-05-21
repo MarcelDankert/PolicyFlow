@@ -51,6 +51,20 @@ class OverrideType(str, Enum):
     NON_GOAL_EXCEPTION = "non_goal_exception"
 
 
+class RuntimeStatus(str, Enum):
+    IDLE = "idle"
+    IN_PROGRESS = "in_progress"
+    HANDOFF_PENDING = "handoff_pending"
+    BLOCKED = "blocked"
+    COMPLETED = "completed"
+
+
+class HandoffStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+
+
 class WorkflowMetadata(BaseModel):
     id: str = Field(min_length=1)
     type: str = Field(min_length=1)
@@ -98,6 +112,14 @@ class WorkflowExecution(BaseModel):
             raise ValueError("execution.phases must not repeat phase names")
 
         return value
+
+
+class WorkflowRuntime(BaseModel):
+    status: RuntimeStatus
+    current_phase: ExecutionPhaseName | None = None
+    active_agent: str | None = None
+    last_transition: str | None = None
+    block_reason: str | None = None
 
 
 class PlanningEvidence(BaseModel):
@@ -260,6 +282,25 @@ WorkflowOverride = Annotated[
 ]
 
 
+class WorkflowHandoff(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    from_phase: ExecutionPhaseName
+    to_phase: ExecutionPhaseName
+    status: HandoffStatus
+    required_inputs: list[str]
+    produced_outputs: list[str]
+    blockers: list[str] | None = None
+    override_refs: list[str] | None = None
+
+    @field_validator("required_inputs", "produced_outputs")
+    @classmethod
+    def validate_artifacts(cls, value: list[str], info) -> list[str]:
+        if not value:
+            raise ValueError(f"{info.field_name} must be a non-empty list")
+        return value
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
@@ -268,3 +309,5 @@ class WorkflowDocument(BaseModel):
     evidence: WorkflowEvidence | None = None
     contracts: WorkflowContracts | None = None
     overrides: list[WorkflowOverride] | None = None
+    runtime: WorkflowRuntime | None = None
+    handoffs: list[WorkflowHandoff] | None = None

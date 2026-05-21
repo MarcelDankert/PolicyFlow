@@ -29,6 +29,7 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 - Phase evidence schema
 - Agent role contracts
 - Typed workflow overrides
+- Runtime workflow orchestration
 - Confidence governance
 - Explicit agent handoffs
 - Human-in-the-loop controls
@@ -71,11 +72,11 @@ Required order for every consumer repo:
 4. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
 5. Record machine-readable role contracts as phases complete so each canonical phase has an explicit owner agent and output contract.
 6. Record typed overrides only for explicit approved exceptions, and make them visible in the PR when they exist.
-7. Keep the execution state aligned with the current workflow phase.
+7. Keep the execution state aligned with the current workflow phase, runtime status, and recorded handoffs.
 8. Implement inside the declared workflow.
 9. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
 10. Do not silently expand scope, risk, or non-goals.
-11. Review the PR body, delivery evidence, and any declared overrides against the workflow before merge.
+11. Review the PR body, delivery evidence, declared overrides, and runtime handoffs against the workflow before merge.
 
 Pragmatic-strict transition mode:
 
@@ -86,6 +87,7 @@ Pragmatic-strict transition mode:
 - `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
 - completed canonical phases should also carry matching machine-readable role contracts with the expected owner agent
 - approved exceptions should be modeled as typed workflow overrides and explicitly confirmed in the PR
+- runtime status and handoffs should be persisted as the workflow advances
 - small same-scope clarifications in the same PR are allowed
 - hidden scope, risk, or non-goal expansion is not allowed
 - PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
@@ -107,10 +109,11 @@ Pragmatic-strict transition mode:
 - GitHub governance workflow for PolicyFlow itself
 - Agent role contract schema for canonical workflow phases
 - Typed workflow override schema with PR visibility
+- Runtime and handoff orchestration state with CLI mutation support
 - Risk-review matrix enforcement
 - Approval evidence enforcement for `HIGH` risk
 - Protected-area escalation enforcement
-- No runtime agent orchestration
+- Lightweight runtime workflow orchestration with direct YAML mutation commands
 
 ## Validator
 
@@ -134,6 +137,17 @@ Validate a PR body markdown file against a workflow:
 policyflow validate-pr workflows/examples/example-feature-workflow.yml path/to/pull-request.md
 ```
 
+Runtime orchestration helpers:
+
+```bash
+policyflow next-step workflows/examples/example-feature-workflow.yml
+policyflow handoff-status workflows/examples/example-feature-workflow.yml
+policyflow start-phase workflows/examples/example-feature-workflow.yml implementation
+policyflow complete-phase workflows/examples/example-feature-workflow.yml implementation
+policyflow block-phase workflows/examples/example-feature-workflow.yml implementation --reason "runtime contract uncertainty"
+policyflow record-handoff workflows/examples/example-feature-workflow.yml --from-phase implementation --to-phase review --required-input implementation_summary --produced-output review_findings
+```
+
 Successful validation prints:
 
 ```text
@@ -153,6 +167,7 @@ Current validator scope:
 - accepts optional `evidence` blocks per workflow phase
 - accepts optional `contracts` blocks per canonical workflow phase
 - accepts optional typed `overrides` entries for approved exceptions
+- accepts optional `runtime` and `handoffs` blocks for lightweight workflow orchestration
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
@@ -177,6 +192,10 @@ Current validator scope:
   - `phase_bypass`: `bypassed_phase`, `compensating_controls`
   - `approval_bypass`: `approval_target`, `compensating_controls`
   - `non_goal_exception`: `affected_non_goals`
+- validates runtime orchestration when present:
+  - `runtime.status`: `idle`, `in_progress`, `handoff_pending`, `blocked`, `completed`
+  - `runtime.current_phase`, `runtime.active_agent`, `runtime.last_transition`, `runtime.block_reason`
+  - `handoffs`: `from_phase`, `to_phase`, `status`, `required_inputs`, `produced_outputs`, `blockers`, `override_refs`
 - enforces the first execution transition gates:
   - `implementation` cannot start before `planning` is completed
   - `MEDIUM`/`HIGH` implementation cannot start before `architecture-check` is completed
@@ -187,6 +206,8 @@ Current validator scope:
 - requires matching role contract blocks for completed canonical agent-owned phases
 - requires approval metadata for `risk_exception` and `approval_bypass`
 - requires PR-visible override references for declared workflow overrides
+- requires runtime `handoff_pending` states to point to an open pending handoff
+- requires concrete handoff input and output artifact lists
 - requires canonical execution phases by risk:
   - `LOW`: `planning`, `implementation`, `review`
   - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`
@@ -209,7 +230,9 @@ Current validator scope:
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 
-This is intentionally a lightweight governance validator, not a workflow engine, orchestration runtime, or GitHub integration layer. The role contracts and typed overrides make phase ownership, outputs, and approved exceptions machine-checkable without introducing a runtime scheduler or approval engine.
+This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
+
+PolicyFlow now acts as a lightweight workflow orchestration layer as well as a governance validator, but it is still not a full orchestration platform, scheduler, or agent runtime.
 
 TODO:
 - Normalize the workflow schema into a single canonical governance block in a future PR after real usage validates the current field layout.
