@@ -1,0 +1,27 @@
+default_runner: codex
+
+runners:
+  codex:
+    type: codex
+    # Replace this command with the repo-local Codex wrapper your team uses.
+    # The wrapper must read the PolicyFlow input JSON and write a PolicyFlow
+    # result JSON to the provided output path.
+    command:
+      - python
+      - scripts/policyflow_codex_wrapper.py
+      - --input
+      - "{input_path}"
+      - --output
+      - "{output_path}"
+    prompt_paths:
+      planning: prompts/planning-agent.prompt.md
+      architecture-check: prompts/architecture-agent.prompt.md
+      implementation: prompts/senior-dev-agent.prompt.md
+      review: prompts/review-agent.prompt.md
+      qa: prompts/qa-agent.prompt.md
+    agent_paths:
+      planning: agents/planning-agent.md
+      architecture-check: agents/architecture-agent.md
+      implementation: agents/senior-dev-agent.md
+      review: agents/review-agent.md
+      qa: agents/qa-agent.md

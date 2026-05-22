@@ -152,6 +152,13 @@ policyflow audit workflows/features
 policyflow audit workflows/features --json
 ```
 
+Central runner configuration:
+
+```bash
+policyflow run-phase workflows/examples/example-feature-workflow.yml implementation
+policyflow run-phase workflows/examples/example-feature-workflow.yml implementation --runner-config policyflow.runners.yml
+```
+
 Runtime orchestration helpers:
 
 ```bash
@@ -251,6 +258,7 @@ Current validator scope:
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 - validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
 - exposes workflow reporting views for a single workflow (`status`) and a directory tree (`audit`) with optional JSON output
+- supports synchronous external agent execution for canonical agent-owned phases through a central runner config and JSON result contract
 
 This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
 
