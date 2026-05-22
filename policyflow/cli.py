@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -15,6 +16,7 @@ from policyflow.runtime import (
     record_handoff as record_workflow_handoff,
     start_phase as start_workflow_phase,
 )
+from policyflow.reporting import audit_directory, audit_lines, status_lines, workflow_status
 from policyflow.validator import (
     inspect_workflow_file,
     validate_pull_request,
@@ -77,6 +79,40 @@ def validate_github_approvals(
         raise typer.Exit(code=1) from exc
 
     console.print("[green][SUCCESS][/green] GitHub approval validation passed.")
+
+
+@app.command("status")
+def status(workflow_path: Path, json_output: bool = typer.Option(False, "--json")) -> None:
+    """Show a detailed workflow status and merge-readiness view."""
+
+    try:
+        payload = workflow_status(workflow_path)
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] Workflow status query failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    for line in status_lines(payload):
+        console.print(line, markup=False)
+
+
+@app.command("audit")
+def audit(directory: Path, json_output: bool = typer.Option(False, "--json")) -> None:
+    """Show an audit overview for workflow files in a directory tree."""
+
+    payload = audit_directory(directory)
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    for line in audit_lines(payload):
+        console.print(line, markup=False)
 
 
 @app.command("next-step")

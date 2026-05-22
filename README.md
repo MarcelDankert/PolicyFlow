@@ -143,6 +143,15 @@ Validate PR approval logins against GitHub review metadata:
 policyflow validate-github-approvals workflows/examples/example-architecture-change-workflow.yml path/to/pull-request.md path/to/pr-reviews.json
 ```
 
+Workflow reporting helpers:
+
+```bash
+policyflow status workflows/examples/example-feature-workflow.yml
+policyflow status workflows/examples/example-feature-workflow.yml --json
+policyflow audit workflows/features
+policyflow audit workflows/features --json
+```
+
 Runtime orchestration helpers:
 
 ```bash
@@ -241,6 +250,7 @@ Current validator scope:
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 - validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
+- exposes workflow reporting views for a single workflow (`status`) and a directory tree (`audit`) with optional JSON output
 
 This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
 
