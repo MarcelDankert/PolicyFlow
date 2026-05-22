@@ -6,6 +6,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from policyflow.agent_execution import run_phase_with_runner
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.github_approval import validate_github_pr_approvals
 from policyflow.runtime import (
@@ -113,6 +114,25 @@ def audit(directory: Path, json_output: bool = typer.Option(False, "--json")) ->
 
     for line in audit_lines(payload):
         console.print(line, markup=False)
+
+
+@app.command("run-phase")
+def run_phase(
+    workflow_path: Path,
+    phase: str,
+    runner_config: Path = typer.Option(Path("policyflow.runners.yml"), "--runner-config"),
+) -> None:
+    """Run one agent-owned workflow phase through the configured external runner."""
+
+    try:
+        run_phase_with_runner(workflow_path, phase, runner_config)
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] Agent phase execution failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    console.print(f"[green][SUCCESS][/green] Executed phase {phase}.")
 
 
 @app.command("next-step")

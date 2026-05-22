@@ -21,6 +21,7 @@ on:
       - "workflows/**/*.yml"
       - "README.md"
       - "docs/**/*.md"
+      - "policyflow.runners.yml"
       - "pyproject.toml"
 
 jobs:

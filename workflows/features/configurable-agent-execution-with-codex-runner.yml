@@ -1,0 +1,118 @@
+workflow:
+  id: configurable-agent-execution-with-codex-runner
+  name: Configurable Agent Execution With Codex Runner
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add synchronous external agent execution with a centrally configured Codex runner and structured JSON outputs.
+
+context:
+  workflow_file: workflows/features/configurable-agent-execution-with-codex-runner.yml
+  issue_key: PF-GOV-11
+  goal: Let PolicyFlow start one canonical phase through a configured external Codex runner, read the runner's structured JSON result, and write the resulting workflow state back safely.
+  scope:
+    - central runner configuration for agent execution
+    - synchronous run-phase command for agent-owned phases
+    - structured JSON input and output contract for the runner
+    - workflow mutation for contract updates, evidence updates, and next handoff creation
+  non_goals:
+    - no async execution
+    - no multiple runner adapters in the first slice
+    - no approval automation
+    - no retry or resume engine
+  affected_modules:
+    - policyflow
+    - agents
+    - prompts
+    - tests
+    - README.md
+    - docs/getting-started.md
+    - policyflow.runners.yml
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: PR 11 scope and non-goals were locked before implementation.
+    scope_locked:
+      - central runner configuration
+      - synchronous run-phase execution
+      - json runner contract
+    non_goals_locked:
+      - no async execution
+      - no retry engine
+    risk_rationale: MEDIUM risk because PolicyFlow will execute an external agent command and persist its outputs back into the workflow state.
+  architecture-check:
+    decision: Start with a centrally configured Codex runner and a strict JSON contract so PolicyFlow can remain configurable without supporting multiple adapters yet.
+    constraints:
+      - keep execution synchronous
+      - keep approval phase human-only
+      - require structured json output from the runner
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the first external agent execution slice before implementation.
+    acceptance_criteria:
+      - run-phase starts a valid pending phase through the configured runner
+      - runner json can update workflow contracts and evidence
+      - successful execution can record the next handoff
+    approved_scope:
+      - central runner configuration
+      - synchronous run-phase execution
+      - json runner contract
+    non_goals:
+      - no async execution
+      - no retry engine
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: The slice is bounded because PolicyFlow controls the workflow mutation and treats the external runner as a strict JSON contract boundary.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: External execution should stay centrally configured and synchronous so the workflow state remains inspectable and the failure modes stay small.
+    approved_scope:
+      - central runner configuration
+      - synchronous run-phase execution
+      - json runner contract
+    module_boundaries:
+      - policyflow agent execution helper
+      - policyflow runtime helper
+      - policyflow cli
+    contract_impact: No async orchestration, no approval automation, and no second runner adapter are introduced in this slice.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep execution synchronous
+      - keep approval human-only
+      - require structured json output from the runner

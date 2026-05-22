@@ -23,6 +23,7 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 9. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
 10. treat the workflow as the steering artifact for the change, not as retrospective documentation
 11. keep same-PR workflow edits limited to same-scope clarifications
+12. keep the repo-level runner configuration current if you use external agent execution
 
 ## First Recommended Checks
 
@@ -44,3 +45,4 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which owner agent and output contract each completed phase must carry
 - confirm which CLI orchestration commands should be used to advance the workflow state
 - confirm which reporting views should be used to check merge readiness and blocked workflows
+- confirm which central runner config should execute canonical phases and where its JSON contract output is written
