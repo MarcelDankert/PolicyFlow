@@ -1,0 +1,107 @@
+workflow:
+  id: repository-agents-guidance
+  type: documentation
+
+context:
+  workflow_file: workflows/features/repository-agents-guidance.yml
+  goal: Add root AGENTS.md guidance for contributors and coding agents working on PolicyFlow itself.
+  scope:
+    - root repository agent guidance
+    - README discoverability link
+    - documentation validation test
+    - date-stable valid medium fixture for CI
+  non_goals:
+    - no changes to consumer agent role definitions
+    - no runtime or validator behavior changes
+    - no new agent role definitions
+  affected_modules:
+    - AGENTS.md
+    - README.md
+    - tests
+    - tests/fixtures/valid-medium.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding repository-level agent guidance.
+    scope_locked:
+      - root AGENTS.md
+      - README discoverability link
+      - documentation validation test
+      - date-stable valid medium fixture for CI
+    non_goals_locked:
+      - no role-agent rewrites
+      - no runtime behavior changes
+      - no validator schema changes
+    risk_rationale: LOW-risk documentation-only change with a small documentation test.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add repository-level guidance for agents working on PolicyFlow itself.
+    acceptance_criteria:
+      - root AGENTS.md exists and is discoverable
+      - guidance distinguishes PolicyFlow repo development from consumer workflow execution
+      - required validation commands are listed
+      - README mentions the guidance file
+    approved_scope:
+      - root AGENTS.md
+      - README discoverability link
+      - documentation validation test
+      - date-stable valid medium fixture for CI
+    non_goals:
+      - no rewrite of existing role-agent files
+      - no new agent role definitions
+      - no full contributor guide replacement
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence because this is a bounded documentation update with no runtime impact.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added root AGENTS.md guidance, README discoverability text, documentation validation tests that keep public docs discoverable and free of machine-local paths, and restored the valid medium fixture to an active override date for CI.
+    changed_files:
+      - AGENTS.md
+      - README.md
+      - tests/test_repository_docs.py
+      - tests/fixtures/valid-medium.yml
+      - workflows/features/repository-agents-guidance.yml
+    test_summary: Added and ran tests/test_repository_docs.py after confirming failures for missing AGENTS.md and machine-local public doc paths; restored valid-medium.yml so full CI no longer fails on an expired valid fixture.
+    docs_updates:
+      - AGENTS.md
+      - README.md
+    known_limitations:
+      - none
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: planning completed
+  block_reason:
+
+handoffs: []
