@@ -48,6 +48,11 @@ PolicyFlow/
 └── examples/
 ```
 
+## Repository Agent Guidance
+
+See [AGENTS.md](AGENTS.md) for PolicyFlow repository guidance for Codex and
+other coding agents working on this framework.
+
 ## How To Use It In A Target Project
 
 1. Copy `github/ISSUE_TEMPLATE/*` and `github/PULL_REQUEST_TEMPLATE.md` into the target repo's `.github/`.
