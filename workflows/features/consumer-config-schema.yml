@@ -1,0 +1,152 @@
+workflow:
+  id: consumer-config-schema
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-config-schema.yml
+  goal: Add a canonical Consumer-Repo config schema and examples for PolicyFlow adoption.
+  scope:
+    - consumer config schema and loader
+    - config-check CLI command
+    - minimal and GitHub-governed config examples
+    - getting-started documentation
+    - tests for defaults, overrides, malformed config, and CLI behavior
+  non_goals:
+    - no bootstrap command implementation
+    - no doctor command implementation
+    - no sync or migration engine
+    - no large plugin system
+  affected_modules:
+    - policyflow
+    - examples
+    - docs
+    - tests
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding the consumer config schema.
+    scope_locked:
+      - consumer config schema and loader
+      - config-check CLI command
+      - minimal and GitHub-governed config examples
+      - getting-started documentation
+      - tests for defaults, overrides, malformed config, and CLI behavior
+    non_goals_locked:
+      - no bootstrap command implementation
+      - no doctor command implementation
+      - no sync or migration engine
+      - no large plugin system
+    risk_rationale: MEDIUM risk because this introduces a consumer-facing configuration contract used by future bootstrap and doctor work.
+  architecture-check:
+    decision: Use a small root `policyflow.yml` contract backed by Pydantic models and a reusable loader.
+    constraints:
+      - keep config defaults explicit and relative-path based
+      - keep bootstrap and doctor integration out of this slice
+      - expose a CLI validation command so the schema can be exercised now
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a canonical Consumer-Repo config schema and examples for PolicyFlow adoption.
+    acceptance_criteria:
+      - Consumer-Repos have one documented config entry point
+      - invalid config produces actionable validation errors
+      - examples cover minimal and GitHub-governed usage
+      - tests cover defaults, overrides, malformed config, and CLI behavior
+    approved_scope:
+      - consumer config schema and loader
+      - config-check CLI command
+      - minimal and GitHub-governed config examples
+      - getting-started documentation
+      - tests for defaults, overrides, malformed config, and CLI behavior
+    non_goals:
+      - no bootstrap command implementation
+      - no doctor command implementation
+      - no sync or migration engine
+      - no large plugin system
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium-high confidence; the contract is small, explicit, and covered by focused tests before implementation.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A dedicated consumer_config module keeps the config contract reusable by future bootstrap and doctor commands without coupling it to workflow validation internals.
+    approved_scope:
+      - consumer config schema and loader
+      - config-check CLI command
+      - minimal and GitHub-governed config examples
+      - getting-started documentation
+      - tests for defaults, overrides, malformed config, and CLI behavior
+    module_boundaries:
+      - policyflow.consumer_config owns config models and loading
+      - policyflow.cli exposes validation command only
+      - examples and docs describe consumer usage
+    contract_impact: Introduces the initial consumer config contract at version 1.
+    risk_review_decision: MEDIUM risk path approved with explicit tests and docs.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - validate relative paths to avoid machine-local public config
+      - keep defaults stable for bootstrap and doctor follow-up issues
+      - do not implement bootstrap or doctor behavior in this issue
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added the consumer config schema, reusable loader, config-check CLI command, minimal and GitHub-governed examples, and getting-started documentation.
+    changed_files:
+      - policyflow/consumer_config.py
+      - policyflow/cli.py
+      - examples/policyflow.minimal.yml
+      - examples/policyflow.github-governed.yml
+      - docs/getting-started.md
+      - tests/test_consumer_config.py
+      - workflows/features/consumer-config-schema.yml
+    test_summary: Added red-first tests for defaults, overrides, malformed config, missing files, config-check CLI behavior, and published examples; all pass after implementation.
+    docs_updates:
+      - docs/getting-started.md
+      - examples/policyflow.minimal.yml
+      - examples/policyflow.github-governed.yml
+    known_limitations:
+      - bootstrap and doctor consume this schema in follow-up issues
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []

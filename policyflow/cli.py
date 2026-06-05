@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 
 from policyflow.agent_execution import run_phase_with_runner
+from policyflow.consumer_config import load_consumer_config
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.github_approval import validate_github_pr_approvals
 from policyflow.runtime import (
@@ -48,6 +49,21 @@ def validate(workflow_path: Path) -> None:
     for warning in warnings:
         console.print(f"[yellow][WARN][/yellow] {warning}")
     console.print("[green][SUCCESS][/green] Workflow validation passed.")
+
+
+@app.command("config-check")
+def config_check(config_path: Path = typer.Argument(Path("policyflow.yml"))) -> None:
+    """Validate a Consumer-Repo PolicyFlow config file."""
+
+    try:
+        load_consumer_config(config_path)
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] Consumer config validation failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    console.print("[green][SUCCESS][/green] Consumer config validation passed.")
 
 
 @app.command("validate-pr")
