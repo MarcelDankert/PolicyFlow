@@ -1,4 +1,4 @@
-workflow:
+﻿workflow:
   id: evidence-schema-per-phase
   name: Evidence Schema Per Phase
   version: 1
@@ -28,7 +28,11 @@ context:
     - README.md
     - docs/getting-started.md
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -101,3 +105,4 @@ contracts:
       - qa-agent
     implementation_constraints:
       - keep the first evidence slice backward-compatible
+

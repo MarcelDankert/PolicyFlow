@@ -19,6 +19,7 @@
 ## Governance
 - Declared risk level:
 - Confidence summary:
+  - Summarize `context.confidence.planning`, `context.confidence.implementation`, `context.confidence.tests`, and `context.confidence.residual_uncertainty`.
 - Required reviews completed:
 - Human approval login if required:
 - Human approval reference if required:

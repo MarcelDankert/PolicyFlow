@@ -200,6 +200,12 @@ def _starter_workflow_content() -> str:
         "context": {
             "workflow_file": "ai/workflows/features/starter-workflow.yml",
             "risk_level": "MEDIUM",
+            "confidence": {
+                "planning": "Starter scope and non-goals are fixed before implementation.",
+                "implementation": "Starter implementation is bounded to validation of the generated workflow.",
+                "tests": "Starter validation uses PolicyFlow workflow validation as the first test path.",
+                "residual_uncertainty": "Consumer-specific overlays must still be reviewed by the target project.",
+            },
         },
         "governance": {
             "required_reviews": [

@@ -75,6 +75,23 @@ features:
   bootstrap_managed_assets: true
 ```
 
+Every workflow file must declare confidence in `context.confidence` before
+implementation starts:
+
+```yaml
+context:
+  workflow_file: ai/workflows/features/example.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope, non-goals, and risk are stable enough for implementation.
+    implementation: Implementation is bounded by the declared module constraints.
+    tests: Direct validation and regression checks are planned.
+    residual_uncertainty: Review must confirm no hidden contract impact.
+```
+
+The PR `Confidence summary` should summarize these four fields instead of
+introducing a separate confidence claim.
+
 Validate the config before wiring deeper governance:
 
 ```bash

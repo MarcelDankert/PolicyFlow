@@ -1,0 +1,22 @@
+workflow:
+  id: missing-confidence
+  type: feature
+
+context:
+  workflow_file: workflows/examples/missing-confidence.yml
+  risk_level: LOW
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending

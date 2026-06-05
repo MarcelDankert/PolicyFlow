@@ -1,4 +1,4 @@
-workflow:
+﻿workflow:
   id: example-architecture-change-workflow
   type: architecture-change
   # Example usage for all consumer repos:
@@ -20,7 +20,11 @@ context:
     - runtime layer
     - data layer
   risk_level: HIGH
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -149,3 +153,4 @@ contracts:
       - none
     approval_required: true
     merge_readiness: false
+

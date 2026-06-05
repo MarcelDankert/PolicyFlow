@@ -1,12 +1,17 @@
-workflow:
+﻿workflow:
   id: invalid-risk-level
   type: feature
 
 context:
   workflow_file: workflows/examples/invalid-risk-level.yml
   risk_level: CRITICAL
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - review-agent
   human_approval_required: false
+

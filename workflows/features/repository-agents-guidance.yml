@@ -1,4 +1,4 @@
-workflow:
+﻿workflow:
   id: repository-agents-guidance
   type: documentation
 
@@ -20,7 +20,11 @@ context:
     - tests
     - tests/fixtures/valid-medium.yml
   risk_level: LOW
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - review-agent
@@ -105,3 +109,4 @@ runtime:
   block_reason:
 
 handoffs: []
+

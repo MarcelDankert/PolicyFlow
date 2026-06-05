@@ -1,9 +1,14 @@
-workflow:
+﻿workflow:
   id: valid-root-fallback
   type: feature
 
 workflow_file: workflows/examples/root-fallback.yml
 risk_level: LOW
+confidence:
+  planning: Root fallback planning confidence is documented.
+  implementation: Root fallback implementation confidence is bounded.
+  tests: Root fallback test confidence is documented.
+  residual_uncertainty: Root fallback residual uncertainty is tracked.
 required_reviews:
   - review-agent
 human_approval_required: false
@@ -43,3 +48,4 @@ contracts:
     confidence_summary: High confidence in the bounded low-risk fallback slice.
     escalation_flags:
       - none
+

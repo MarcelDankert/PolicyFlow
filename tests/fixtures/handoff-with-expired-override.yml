@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: handoff-with-expired-override
   type: feature
 
 context:
   workflow_file: workflows/examples/handoff-with-expired-override.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -105,3 +109,4 @@ handoffs:
     blockers: []
     override_refs:
       - phase-bypass-1
+
