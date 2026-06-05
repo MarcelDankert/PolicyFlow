@@ -93,6 +93,21 @@ referenced prompt and agent files, project context, and GitHub governance
 templates. Missing local PolicyFlow assets fail readiness. External GitHub
 tooling is reported separately so local setup gaps are actionable.
 
+Preview managed asset changes after upgrading the PolicyFlow package:
+
+```bash
+policyflow sync .
+```
+
+Apply safe upstream asset updates when no local modifications block the change:
+
+```bash
+policyflow sync . --apply
+```
+
+Use `--force` only when the Consumer-Repo intentionally accepts overwriting
+locally modified managed assets.
+
 The installed GitHub Actions workflow uses read-only `contents` and
 `pull-requests` permissions, fetches the live PR body and review metadata with
 the built-in `github.token`, and runs `policyflow validate-pr` plus

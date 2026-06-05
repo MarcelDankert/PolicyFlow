@@ -16,16 +16,20 @@ bootstrap assets can change between commits.
 1. Pick the target PolicyFlow version from the release notes.
 2. Update the local, CI, and GitHub Actions package pin to the same version.
 3. Run `policyflow doctor .` in the Consumer-Repo.
-4. Preview bootstrap asset changes with `policyflow init . --dry-run`.
+4. Preview managed asset changes with `policyflow sync .`.
 5. Review changed governance assets before overwriting existing Consumer-Repo
    files.
-6. Use `policyflow init . --force` only when the repo intentionally accepts the
-   packaged asset version.
-7. Revalidate active workflow files and PR bodies after the upgrade.
+6. Use `policyflow sync . --apply` for safe managed asset updates.
+7. Use `policyflow sync . --apply --force` only when the repo intentionally accepts
+   overwriting locally modified managed assets with the packaged asset version.
+8. Use `policyflow init . --force` only when the repo intentionally runs bootstrap
+   again with the packaged asset version.
+9. Revalidate active workflow files and PR bodies after the upgrade.
 
-PolicyFlow does not currently provide automatic asset sync or migration tooling.
-Consumer repos remain responsible for reviewing local overlays before replacing
-managed assets.
+PolicyFlow sync reports unchanged, added, changed, locally modified, and removed
+managed assets. It does not merge project-specific customizations. Consumer
+repos remain responsible for reviewing local overlays before replacing managed
+assets.
 
 ## Release Notes Expectations
 

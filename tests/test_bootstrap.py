@@ -39,6 +39,8 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     assert "policyflow.yml" in metadata["managed_assets"]
     assert "ai/workflows/templates/feature-workflow.template.yml" in metadata["managed_assets"]
     assert "ai/workflows/features/starter-workflow.yml" in metadata["managed_assets"]
+    assert metadata["asset_hashes"]["policyflow.yml"]
+    assert metadata["asset_hashes"]["ai/workflows/templates/feature-workflow.template.yml"]
 
 
 def test_bootstrap_dry_run_does_not_write_files(tmp_path: Path) -> None:

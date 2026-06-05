@@ -1,0 +1,196 @@
+workflow:
+  id: consumer-asset-sync
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-asset-sync.yml
+  goal: Add a safe sync and upgrade path for bootstrapped Consumer-Repo assets.
+  scope:
+    - record managed asset hashes in bootstrap metadata
+    - add a sync command for managed Consumer-Repo assets
+    - compare local files, installed asset hashes, and current packaged assets
+    - report added, changed, locally modified, removed, and unchanged assets
+    - support dry-run preview by default and explicit apply or force modes
+    - document sync usage in onboarding and release guidance
+  non_goals:
+    - no automatic merge conflict resolver
+    - no remote update bot
+    - no cross-repository fleet management
+    - no automatic preservation of arbitrary project-specific customizations
+  affected_modules:
+    - policyflow/bootstrap.py
+    - policyflow/sync.py
+    - policyflow/cli.py
+    - docs
+    - tests
+    - workflows
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding Consumer-Repo asset sync.
+    scope_locked:
+      - record managed asset hashes in bootstrap metadata
+      - add a sync command for managed Consumer-Repo assets
+      - compare local files, installed asset hashes, and current packaged assets
+      - report added, changed, locally modified, removed, and unchanged assets
+      - support dry-run preview by default and explicit apply or force modes
+      - document sync usage in onboarding and release guidance
+    non_goals_locked:
+      - no automatic merge conflict resolver
+      - no remote update bot
+      - no cross-repository fleet management
+      - no automatic preservation of arbitrary project-specific customizations
+    risk_rationale: MEDIUM risk because sync can overwrite Consumer-Repo managed assets when explicitly applied with force.
+  architecture-check:
+    decision: Use bootstrap metadata asset hashes as the installed baseline and compare them with local files and current packaged assets.
+    constraints:
+      - sync must default to preview mode
+      - local modifications must not be overwritten without explicit force
+      - removed upstream assets must be reported but not deleted automatically
+      - metadata must remain backward-compatible with existing managed_assets entries
+    approval_path: architecture-agent review
+  implementation:
+    summary: PolicyFlow now records asset hashes during bootstrap and exposes sync preview/apply behavior through CLI and library APIs.
+    changed_files:
+      - policyflow/bootstrap.py
+      - policyflow/sync.py
+      - policyflow/cli.py
+      - tests/test_asset_sync.py
+      - tests/test_bootstrap.py
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - README.md
+      - workflows/features/consumer-asset-sync.yml
+    test_summary: Tests cover unchanged assets, upstream-changed assets, local modifications, removed assets, dry-run CLI output, and apply behavior.
+    docs_updates:
+      - getting started documents sync preview and apply commands
+      - release and upgrade guidance uses sync as the managed asset upgrade path
+      - README lists managed asset upgrade helper commands
+    known_limitations:
+      - no automatic merge conflict resolver
+      - removed upstream assets are reported but not deleted automatically
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a safe sync and upgrade path for bootstrapped Consumer-Repo assets.
+    acceptance_criteria:
+      - a Consumer-Repo can tell which PolicyFlow-managed assets are outdated
+      - local modifications are detected before any overwrite
+      - sync output gives actionable next steps for manual or forced update
+      - bootstrap-created metadata is sufficient for later asset comparison
+      - tests cover unchanged assets, upstream-changed assets, locally modified assets, and dry-run behavior
+    approved_scope:
+      - record managed asset hashes in bootstrap metadata
+      - add a sync command for managed Consumer-Repo assets
+      - compare local files, installed asset hashes, and current packaged assets
+      - report added, changed, locally modified, removed, and unchanged assets
+      - support dry-run preview by default and explicit apply or force modes
+      - document sync usage in onboarding and release guidance
+    non_goals:
+      - no automatic merge conflict resolver
+      - no remote update bot
+      - no cross-repository fleet management
+      - no automatic preservation of arbitrary project-specific customizations
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; hash-based sync decisions are covered by focused tests and full suite validation.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Hash metadata provides a deterministic installed baseline without requiring remote state or package registry lookups.
+    approved_scope:
+      - record managed asset hashes in bootstrap metadata
+      - add a sync command for managed Consumer-Repo assets
+      - compare local files, installed asset hashes, and current packaged assets
+      - report added, changed, locally modified, removed, and unchanged assets
+      - support dry-run preview by default and explicit apply or force modes
+      - document sync usage in onboarding and release guidance
+    module_boundaries:
+      - policyflow.bootstrap owns bootstrap asset definitions and metadata writes
+      - policyflow.sync owns comparison and apply behavior
+      - policyflow.cli owns command output
+    contract_impact: Bootstrap metadata adds asset_hashes while preserving managed_assets for backward compatibility.
+    risk_review_decision: MEDIUM risk path approved with preview-by-default and explicit force controls.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - sync must default to preview mode
+      - local modifications must not be overwritten without explicit force
+      - removed upstream assets must be reported but not deleted automatically
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added hash-backed managed asset sync with preview, apply, and force modes.
+    changed_files:
+      - policyflow/bootstrap.py
+      - policyflow/sync.py
+      - policyflow/cli.py
+      - tests/test_asset_sync.py
+      - tests/test_bootstrap.py
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - README.md
+      - workflows/features/consumer-asset-sync.yml
+    test_summary: Tests cover unchanged assets, upstream-changed assets, local modifications, removed assets, dry-run CLI output, and apply behavior.
+    docs_updates:
+      - getting started documents sync preview and apply commands
+      - release and upgrade guidance uses sync as the managed asset upgrade path
+      - README lists managed asset upgrade helper commands
+    known_limitations:
+      - no automatic merge conflict resolver
+      - removed upstream assets are reported but not deleted automatically
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []
