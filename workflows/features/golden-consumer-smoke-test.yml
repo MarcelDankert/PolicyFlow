@@ -1,0 +1,153 @@
+workflow:
+  id: golden-consumer-smoke-test
+  type: feature
+
+context:
+  workflow_file: workflows/features/golden-consumer-smoke-test.yml
+  goal: Add a golden Consumer-Repo smoke test proving the plug-and-play path works end to end.
+  scope:
+    - generate a minimal Consumer-Repo in a temporary directory
+    - run bootstrap through policyflow init
+    - run policyflow doctor
+    - validate a bootstrapped starter workflow
+    - exercise status and audit against bootstrapped workflows
+    - simulate PR body validation without real GitHub network calls
+    - tests stay cross-platform and path-stable
+  non_goals:
+    - no real GitHub network calls
+    - no real Codex execution
+    - no exhaustive consumer project matrix
+    - no hosted service or external fixture repository
+  affected_modules:
+    - policyflow
+    - tests
+    - workflows
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding the golden Consumer-Repo smoke test.
+    scope_locked:
+      - generate a minimal Consumer-Repo in a temporary directory
+      - run bootstrap through policyflow init
+      - run policyflow doctor
+      - validate a bootstrapped starter workflow
+      - exercise status and audit against bootstrapped workflows
+      - simulate PR body validation without real GitHub network calls
+    non_goals_locked:
+      - no real GitHub network calls
+      - no real Codex execution
+      - no exhaustive consumer project matrix
+      - no hosted service or external fixture repository
+    risk_rationale: MEDIUM risk because this adds the canonical productization integration test and may expose bootstrap contract gaps.
+  architecture-check:
+    decision: Use a generated temporary Consumer-Repo fixture in tests instead of a committed nested repository.
+    constraints:
+      - keep the fixture independent from external services
+      - drive the path through public CLI commands where practical
+      - keep the bootstrapped starter workflow valid and PR-referenceable
+      - avoid absolute machine-local paths
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a canonical plug-and-play Consumer-Repo smoke test.
+    acceptance_criteria:
+      - one test proves bootstrap, doctor, workflow validation, status, audit, and PR validation
+      - the test fails if bootstrap assets are missing
+      - paths are Windows-friendly and POSIX-friendly
+      - no real GitHub or Codex execution is required
+    approved_scope:
+      - generate a minimal Consumer-Repo in a temporary directory
+      - run bootstrap through policyflow init
+      - run policyflow doctor
+      - validate a bootstrapped starter workflow
+      - exercise status and audit against bootstrapped workflows
+      - simulate PR body validation without real GitHub network calls
+    non_goals:
+      - no real GitHub network calls
+      - no real Codex execution
+      - no exhaustive consumer project matrix
+      - no hosted service or external fixture repository
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; the path is broad but testable with local temp directories and CLI commands.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A generated temporary fixture keeps the smoke test isolated while exercising the same CLI and bootstrap paths real consumers use.
+    approved_scope:
+      - generate a minimal Consumer-Repo in a temporary directory
+      - run bootstrap through policyflow init
+      - run policyflow doctor
+      - validate a bootstrapped starter workflow
+      - exercise status and audit against bootstrapped workflows
+      - simulate PR body validation without real GitHub network calls
+    module_boundaries:
+      - tests own the golden smoke flow
+      - bootstrap owns starter workflow scaffolding
+      - validator/reporting commands remain unchanged behaviorally
+    contract_impact: Adds a bootstrapped starter workflow as part of the consumer bootstrap contract.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no external network dependency
+      - no machine-local absolute paths
+      - starter workflow must validate under the bootstrapped consumer path
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added the golden Consumer-Repo smoke test and bootstrapped starter workflow asset so init, doctor, workflow validation, status, audit, and PR validation run end to end.
+    changed_files:
+      - policyflow/bootstrap.py
+      - tests/test_bootstrap.py
+      - tests/test_golden_consumer_smoke.py
+      - workflows/features/golden-consumer-smoke-test.yml
+    test_summary: Added a red-first golden smoke test that initially failed because bootstrap did not create a starter workflow; added the starter workflow asset and reran the smoke and bootstrap tests successfully.
+    docs_updates:
+      - none
+    known_limitations:
+      - no real GitHub network calls
+      - no real Codex execution
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []

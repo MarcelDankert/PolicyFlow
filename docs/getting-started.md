@@ -25,7 +25,9 @@ policyflow init . --force
 
 The bootstrap command writes the standard consumer layout under `ai/`, GitHub
 templates under `.github/`, `policyflow.yml`, `policyflow.runners.yml`, and
-`.policyflow/bootstrap.json` metadata for future sync support.
+`.policyflow/bootstrap.json` metadata for future sync support. It also creates
+`ai/workflows/features/starter-workflow.yml` so the first validation path is
+available immediately.
 
 Minimal local-only config:
 
