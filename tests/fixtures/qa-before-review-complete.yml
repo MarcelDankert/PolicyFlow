@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: qa-before-review-complete
   type: feature
 
 context:
   workflow_file: workflows/examples/qa-before-review-complete.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -49,3 +53,4 @@ evidence:
     evidence_summary: QA was marked complete too early.
     unresolved_risks:
       - review not complete
+

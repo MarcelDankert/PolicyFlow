@@ -14,6 +14,11 @@ workflow:
 
 context:
   workflow_file: workflows/templates/low-risk-workflow.template.yml
+  confidence:
+    planning: Document why the LOW-risk fast path is stable before implementation.
+    implementation: Document how confident the team is that implementation stays inside the fast-path constraints.
+    tests: Document expected lightweight validation and any known test gaps.
+    residual_uncertainty: Document remaining uncertainty that review must resolve.
   required_fields:
     - goal
     - scope

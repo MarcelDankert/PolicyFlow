@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: valid-low
   type: feature
 
 context:
   workflow_file: workflows/examples/valid-low.yml
   risk_level: LOW
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - review-agent
@@ -46,3 +50,4 @@ contracts:
     confidence_summary: High confidence in the bounded low-risk slice.
     escalation_flags:
       - none
+

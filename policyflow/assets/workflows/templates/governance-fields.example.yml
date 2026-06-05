@@ -1,13 +1,13 @@
-governance:
+context:
   workflow_file: workflows/examples/example-feature-workflow.yml
   risk_level: MEDIUM
   confidence:
-    overall: 0.85
-    implementation: 0.86
-    architecture_alignment: 0.88
-    test_completeness: 0.80
-    contract_safety: 0.85
-    rationale: bounded cross-module change with direct validation evidence
+    planning: Scope and risk are stable enough for architecture review.
+    implementation: Implementation is bounded by the declared module constraints.
+    tests: Direct workflow validation and focused regression checks are planned.
+    residual_uncertainty: Review must confirm no hidden contract impact.
+
+governance:
   required_reviews:
     - architecture-agent
     - review-agent

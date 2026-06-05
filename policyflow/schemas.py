@@ -26,6 +26,7 @@ def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
         "context": {
             "workflow_file": context.get("workflow_file", data.get("workflow_file")),
             "risk_level": context.get("risk_level", data.get("risk_level")),
+            "confidence": context.get("confidence", data.get("confidence")),
         },
         "governance": {
             "required_reviews": governance.get(

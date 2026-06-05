@@ -131,6 +131,8 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
     elif risk_level not in {level.value for level in RiskLevel}:
         errors.append("risk_level must be one of: LOW, MEDIUM, HIGH")
 
+    _append_confidence_errors(errors, context.get("confidence"))
+
     required_reviews = governance.get("required_reviews")
     if required_reviews is None:
         errors.append("governance.required_reviews is required")
@@ -212,6 +214,26 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
             _append_runtime_errors(errors, phase_states, runtime, handoffs)
 
     return errors, warnings
+
+
+def _append_confidence_errors(errors: list[str], confidence: Any) -> None:
+    if confidence in (None, ""):
+        errors.append("context.confidence is required")
+        return
+
+    if not isinstance(confidence, dict):
+        errors.append("context.confidence must be a mapping")
+        return
+
+    for field_name in (
+        "planning",
+        "implementation",
+        "tests",
+        "residual_uncertainty",
+    ):
+        value = confidence.get(field_name)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"context.confidence.{field_name} is required")
 
 
 def _append_transition_errors(
@@ -430,6 +452,11 @@ def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> li
         errors.append(
             "PR body Declared risk level must match context.risk_level: "
             f"{workflow.context.risk_level.value}"
+        )
+
+    if _extract_governance_value(governance_section, "Confidence summary") is None:
+        errors.append(
+            "PR body must include Confidence summary in the Governance section."
         )
 
     if not _has_workflow_confirmation(sections.get("Confirmation", "")):

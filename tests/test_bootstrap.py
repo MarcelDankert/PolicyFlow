@@ -28,6 +28,11 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     assert (tmp_path / "ai/workflows/features/starter-workflow.yml").exists()
     assert (tmp_path / ".github/PULL_REQUEST_TEMPLATE.md").exists()
     assert (tmp_path / ".github/ISSUE_TEMPLATE/feature.yml").exists()
+    starter_workflow = (tmp_path / "ai/workflows/features/starter-workflow.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "confidence:" in starter_workflow
+    assert "residual_uncertainty:" in starter_workflow
 
     config = load_consumer_config(tmp_path / "policyflow.yml")
     assert config.paths.workflows == Path("ai/workflows")

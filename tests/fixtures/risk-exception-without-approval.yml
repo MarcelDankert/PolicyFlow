@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: risk-exception-without-approval
   type: feature
 
 context:
   workflow_file: workflows/examples/risk-exception-without-approval.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -84,3 +88,4 @@ overrides:
     review_by: 2026-05-27
     original_risk: MEDIUM
     effective_risk: HIGH
+

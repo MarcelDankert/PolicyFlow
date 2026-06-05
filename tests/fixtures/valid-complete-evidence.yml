@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: valid-complete-evidence
   type: feature
 
 context:
   workflow_file: workflows/examples/valid-complete-evidence.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -120,3 +124,4 @@ contracts:
       - none
     approval_required: false
     merge_readiness: true
+

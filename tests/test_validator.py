@@ -19,6 +19,8 @@ def test_valid_low_workflow_passes() -> None:
 
     assert result.context.workflow_file == "workflows/examples/valid-low.yml"
     assert result.context.risk_level == "LOW"
+    assert result.context.confidence.planning
+    assert result.context.confidence.residual_uncertainty
     assert result.governance.required_reviews == ["review-agent"]
     assert result.governance.human_approval_required is False
     assert result.execution.mode == "strict"
@@ -34,6 +36,7 @@ def test_valid_medium_workflow_passes() -> None:
     result = validate_workflow_file(fixture_path("valid-medium.yml"))
 
     assert result.context.risk_level == "MEDIUM"
+    assert result.context.confidence.implementation
     assert result.governance.required_reviews == [
         "architecture-agent",
         "review-agent",
@@ -56,6 +59,7 @@ def test_valid_high_workflow_passes() -> None:
     result = validate_workflow_file(fixture_path("valid-high.yml"))
 
     assert result.context.risk_level == "HIGH"
+    assert result.context.confidence.tests
     assert result.governance.human_approval_required is True
     assert result.governance.escalation_required is True
     assert result.governance.protected_areas_touched == ["database schema"]
@@ -79,6 +83,7 @@ def test_root_level_fallback_fields_are_accepted() -> None:
 
     assert result.context.workflow_file == "workflows/examples/root-fallback.yml"
     assert result.context.risk_level == "LOW"
+    assert result.context.confidence.planning == "Root fallback planning confidence is documented."
     assert result.governance.required_reviews == ["review-agent"]
 
 
@@ -97,6 +102,21 @@ def test_missing_risk_level_fails() -> None:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))
 
     assert "context.risk_level is required" in exc_info.value.errors
+
+
+def test_missing_confidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("missing-confidence.yml"))
+
+    assert "context.confidence is required" in exc_info.value.errors
+
+
+def test_malformed_confidence_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("malformed-confidence.yml"))
+
+    assert "context.confidence.implementation is required" in exc_info.value.errors
+    assert "context.confidence.residual_uncertainty is required" in exc_info.value.errors
 
 
 def test_missing_execution_fails() -> None:

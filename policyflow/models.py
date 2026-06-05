@@ -70,9 +70,17 @@ class WorkflowMetadata(BaseModel):
     type: str = Field(min_length=1)
 
 
+class WorkflowConfidence(BaseModel):
+    planning: str = Field(min_length=1)
+    implementation: str = Field(min_length=1)
+    tests: str = Field(min_length=1)
+    residual_uncertainty: str = Field(min_length=1)
+
+
 class WorkflowContext(BaseModel):
     workflow_file: str = Field(min_length=1)
     risk_level: RiskLevel
+    confidence: WorkflowConfidence
 
 
 class WorkflowGovernance(BaseModel):

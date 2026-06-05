@@ -1,4 +1,4 @@
-workflow:
+﻿workflow:
   id: configurable-agent-execution-with-codex-runner
   name: Configurable Agent Execution With Codex Runner
   version: 1
@@ -30,7 +30,11 @@ context:
     - docs/getting-started.md
     - policyflow.runners.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -116,3 +120,4 @@ contracts:
       - keep execution synchronous
       - keep approval human-only
       - require structured json output from the runner
+

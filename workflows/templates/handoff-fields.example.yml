@@ -2,12 +2,10 @@ handoff_example:
   workflow_file: workflows/examples/example-feature-workflow.yml
   risk_level: MEDIUM
   confidence:
-    overall: 0.86
-    implementation: 0.84
-    architecture_alignment: 0.89
-    test_completeness: 0.81
-    contract_safety: 0.87
-    rationale: bounded workflow and documentation change with direct file validation
+    planning: Scope and risk are stable enough for architecture review.
+    implementation: Implementation is bounded by the declared module constraints.
+    tests: Direct workflow validation and focused regression checks are planned.
+    residual_uncertainty: Review must confirm no hidden contract impact.
   required_reviews:
     - architecture-agent
     - review-agent

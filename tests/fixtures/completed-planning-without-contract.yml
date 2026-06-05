@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: completed-planning-without-contract
   type: feature
 
 context:
   workflow_file: workflows/examples/completed-planning-without-contract.yml
   risk_level: LOW
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - review-agent
@@ -29,3 +33,4 @@ evidence:
     non_goals_locked:
       - no protected area changes
     risk_rationale: LOW-risk change with review-agent coverage.
+

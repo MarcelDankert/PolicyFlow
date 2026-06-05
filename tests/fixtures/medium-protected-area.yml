@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: medium-protected-area
   type: bugfix
 
 context:
   workflow_file: workflows/examples/medium-protected-area.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -15,3 +19,4 @@ governance:
   escalation_required: true
   protected_areas_touched:
     - contracts
+

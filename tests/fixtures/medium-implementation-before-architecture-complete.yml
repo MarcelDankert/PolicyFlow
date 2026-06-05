@@ -1,11 +1,15 @@
-workflow:
+﻿workflow:
   id: medium-implementation-before-architecture-complete
   type: bugfix
 
 context:
   workflow_file: workflows/examples/medium-implementation-before-architecture-complete.yml
   risk_level: MEDIUM
-
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
 governance:
   required_reviews:
     - architecture-agent
@@ -35,3 +39,4 @@ evidence:
     non_goals_locked:
       - no contract changes
     risk_rationale: MEDIUM risk due to cross-check needs.
+

@@ -87,6 +87,19 @@ def test_pull_request_with_mismatched_risk_level_fails() -> None:
     )
 
 
+def test_pull_request_without_confidence_summary_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(
+            fixture_path("valid-medium.yml"),
+            fixture_path("pr-missing-confidence-summary.md"),
+        )
+
+    assert (
+        "PR body must include Confidence summary in the Governance section."
+        in exc_info.value.errors
+    )
+
+
 def test_pull_request_without_workflow_confirmation_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_pull_request(

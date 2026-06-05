@@ -213,6 +213,7 @@ Current validator scope:
 - requires `workflow` metadata
 - requires `context.workflow_file`
 - requires `context.risk_level`
+- requires `context.confidence` with `planning`, `implementation`, `tests`, and `residual_uncertainty`
 - requires `governance.required_reviews`
 - requires `execution.mode`
 - requires `execution.phases`
@@ -223,6 +224,7 @@ Current validator scope:
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only
+- requires workflow confidence to be explicit before implementation starts and treats PR `Confidence summary` as a summary of `context.confidence`
 - requires `governance.required_reviews` to be a non-empty list
 - allows execution states `pending`, `in_progress`, `completed`, and `blocked`
 - validates canonical evidence blocks when present:

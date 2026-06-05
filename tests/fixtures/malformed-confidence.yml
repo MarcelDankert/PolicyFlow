@@ -1,0 +1,26 @@
+workflow:
+  id: malformed-confidence
+  type: feature
+
+context:
+  workflow_file: workflows/examples/malformed-confidence.yml
+  risk_level: LOW
+  confidence:
+    planning: Planning confidence is documented.
+    implementation: ""
+    tests: Test confidence is documented.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
