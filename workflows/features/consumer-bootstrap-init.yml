@@ -1,0 +1,160 @@
+workflow:
+  id: consumer-bootstrap-init
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-bootstrap-init.yml
+  goal: Add a bootstrap/init command so Consumer-Repos can adopt PolicyFlow without manual copy-and-wire setup.
+  scope:
+    - bootstrap service for consumer layout scaffolding
+    - init CLI command with target path
+    - dry-run and force overwrite behavior
+    - managed asset metadata for later sync support
+    - tests for fresh install, dry-run, skip, force, and CLI reporting
+    - getting-started documentation
+  non_goals:
+    - no doctor command implementation
+    - no full sync/update command
+    - no package registry changes
+    - no automatic merge/update bot
+    - no consumer GitHub Actions workflow template installation until that template exists
+  affected_modules:
+    - policyflow
+    - docs
+    - tests
+    - workflows
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding the consumer bootstrap command.
+    scope_locked:
+      - bootstrap service for consumer layout scaffolding
+      - init CLI command with target path
+      - dry-run and force overwrite behavior
+      - managed asset metadata for later sync support
+      - tests for fresh install, dry-run, skip, force, and CLI reporting
+      - getting-started documentation
+    non_goals_locked:
+      - no doctor command implementation
+      - no full sync/update command
+      - no package registry changes
+      - no automatic merge/update bot
+      - no consumer GitHub Actions workflow template installation until that template exists
+    risk_rationale: MEDIUM risk because bootstrap creates a consumer-facing adoption path and writes managed assets into target repositories.
+  architecture-check:
+    decision: Use a small bootstrap service with explicit asset mappings and a thin Typer command.
+    constraints:
+      - preserve existing consumer files unless force is explicit
+      - make dry-run side-effect free
+      - generate root policyflow.yml using the consumer config contract
+      - record managed asset metadata for future sync
+      - do not implement doctor or sync behavior in this issue
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a bootstrap/init path for Consumer-Repos.
+    acceptance_criteria:
+      - a fresh repo receives a valid PolicyFlow directory and config layout
+      - bootstrap output reports created, skipped, and dry-run actions
+      - existing files are not overwritten without force
+      - generated paths match the consumer config defaults
+      - tests cover fresh install, dry-run, existing-file protection, force, and CLI reporting
+    approved_scope:
+      - bootstrap service for consumer layout scaffolding
+      - init CLI command with target path
+      - dry-run and force overwrite behavior
+      - managed asset metadata for later sync support
+      - tests for fresh install, dry-run, skip, force, and CLI reporting
+      - getting-started documentation
+    non_goals:
+      - no doctor command implementation
+      - no full sync/update command
+      - no package registry changes
+      - no automatic merge/update bot
+      - no consumer GitHub Actions workflow template installation until that template exists
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; bootstrap writes many consumer-facing files but behavior is bounded and testable through temp directories.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A dedicated bootstrap module keeps filesystem planning, copying, and reporting separate from CLI presentation and future doctor/sync consumers.
+    approved_scope:
+      - bootstrap service for consumer layout scaffolding
+      - init CLI command with target path
+      - dry-run and force overwrite behavior
+      - managed asset metadata for later sync support
+      - tests for fresh install, dry-run, skip, force, and CLI reporting
+      - getting-started documentation
+    module_boundaries:
+      - policyflow.bootstrap owns asset mapping and filesystem operations
+      - policyflow.cli exposes init command and prints bootstrap result lines
+      - policyflow.consumer_config remains the config contract source
+    contract_impact: Introduces the first bootstrap-managed asset metadata shape for future sync work.
+    risk_review_decision: MEDIUM risk path approved with explicit overwrite protection tests.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not overwrite existing files unless force is true
+      - dry-run must not create files or directories
+      - generated policyflow.yml must validate through load_consumer_config
+      - bootstrap metadata must not contain machine-local absolute paths
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a bootstrap service, init CLI command, managed asset metadata, tests, and getting-started documentation for bootstrapping Consumer-Repos.
+    changed_files:
+      - policyflow/bootstrap.py
+      - policyflow/cli.py
+      - docs/getting-started.md
+      - tests/test_bootstrap.py
+      - workflows/features/consumer-bootstrap-init.yml
+    test_summary: Added red-first bootstrap tests for fresh install, dry-run, existing-file skip, force overwrite, and CLI reporting; all pass after implementation.
+    docs_updates:
+      - docs/getting-started.md
+    known_limitations:
+      - consumer GitHub Actions workflow installation waits for issue #27
+      - doctor and sync behavior wait for follow-up issues
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
