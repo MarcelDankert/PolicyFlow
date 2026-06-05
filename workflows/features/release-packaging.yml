@@ -1,0 +1,185 @@
+workflow:
+  id: release-packaging
+  type: feature
+
+context:
+  workflow_file: workflows/features/release-packaging.yml
+  goal: Package PolicyFlow with versioned releases and bundled bootstrap assets.
+  scope:
+    - package bootstrap assets inside the Python distribution
+    - update bootstrap asset lookup to work from packaged assets
+    - add packaging checks that inspect built wheels
+    - document install, pinning, upgrade, and release notes expectations
+    - add release notes guidance
+  non_goals:
+    - no package registry publishing automation
+    - no automatic upgrade tooling
+    - no full backward-compatibility guarantee matrix
+  affected_modules:
+    - pyproject.toml
+    - policyflow
+    - docs
+    - tests
+    - workflows
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding release packaging support.
+    scope_locked:
+      - package bootstrap assets inside the Python distribution
+      - update bootstrap asset lookup to work from packaged assets
+      - add packaging checks that inspect built wheels
+      - document install, pinning, upgrade, and release notes expectations
+      - add release notes guidance
+    non_goals_locked:
+      - no package registry publishing automation
+      - no automatic upgrade tooling
+      - no full backward-compatibility guarantee matrix
+    risk_rationale: MEDIUM risk because packaging changes affect all Consumer-Repo installs and bootstrap behavior.
+  architecture-check:
+    decision: Place consumer-facing assets under policyflow/assets and include them as setuptools package data.
+    constraints:
+      - bootstrap must read packaged assets rather than source-repo-only paths
+      - wheel checks must prove key non-Python assets are included
+      - docs must show pinning and upgrade expectations
+    approval_path: architecture-agent review
+  implementation:
+    summary: Release packaging now bundles consumer-facing bootstrap assets and validates wheel contents.
+    changed_files:
+      - pyproject.toml
+      - policyflow/bootstrap.py
+      - policyflow/assets/
+      - docs/release-and-upgrade.md
+      - docs/getting-started.md
+      - README.md
+      - tests/test_release_packaging.py
+      - workflows/features/release-packaging.yml
+    test_summary: Tests inspect package-data declarations, packaged asset root, and built wheel contents.
+    docs_updates:
+      - README consumer install and developer install paths are separated
+      - getting started documents pinned install before bootstrap
+      - release and upgrade guidance defines release notes and compatibility expectations
+    known_limitations:
+      - package registry publishing automation remains out of scope
+      - automatic Consumer-Repo asset sync remains out of scope
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Package PolicyFlow with bundled assets and release guidance.
+    acceptance_criteria:
+      - consumers can install a named PolicyFlow version without cloning the repo manually
+      - packaged assets needed by init and doctor are available at runtime
+      - release notes explain re-bootstrap/sync/update expectations
+      - docs show install/pin and upgrade path
+      - tests inspect wheel asset contents
+    approved_scope:
+      - package bootstrap assets inside the Python distribution
+      - update bootstrap asset lookup to work from packaged assets
+      - add packaging checks that inspect built wheels
+      - document install, pinning, upgrade, and release notes expectations
+      - add release notes guidance
+    non_goals:
+      - no package registry publishing automation
+      - no automatic upgrade tooling
+      - no full backward-compatibility guarantee matrix
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; package-data behavior is validated by built wheel inspection.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Package-data assets keep runtime bootstrap independent from a source checkout while preserving existing asset ownership.
+    approved_scope:
+      - package bootstrap assets inside the Python distribution
+      - update bootstrap asset lookup to work from packaged assets
+      - add packaging checks that inspect built wheels
+      - document install, pinning, upgrade, and release notes expectations
+      - add release notes guidance
+    module_boundaries:
+      - policyflow/assets owns packaged static assets
+      - policyflow.bootstrap resolves assets from package data
+      - pyproject.toml declares package data inclusion
+    contract_impact: Bootstrap asset lookup becomes package-runtime based instead of source-root based.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not add publishing automation in this issue
+      - keep source asset copies available for repository authoring
+      - avoid machine-local paths
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: PolicyFlow release packaging now uses packaged asset roots and setuptools package data so bootstrap assets are available from installed wheels.
+    changed_files:
+      - pyproject.toml
+      - policyflow/bootstrap.py
+      - policyflow/assets/
+      - docs/release-and-upgrade.md
+      - docs/getting-started.md
+      - README.md
+      - tests/test_release_packaging.py
+      - workflows/features/release-packaging.yml
+    test_summary: Tests inspect package-data declarations, packaged asset root, and built wheel contents.
+    docs_updates:
+      - README consumer install and developer install paths are separated
+      - getting started documents pinned install before bootstrap
+      - release and upgrade guidance defines release notes and compatibility expectations
+    known_limitations:
+      - no package registry publishing automation
+      - no automatic Consumer-Repo asset sync or migration tooling
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []

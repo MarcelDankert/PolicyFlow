@@ -1,0 +1,138 @@
+workflow:
+  id: low-risk-workflow-template
+  name: Low-Risk Workflow
+  version: 1
+  type: low-risk-fast-path
+  status: template
+  # Required default for all PolicyFlow consumer repos:
+  # 1. Create this workflow before implementation.
+  # 2. Fix scope, non_goals, and risk before writing code.
+  # 3. Execute these workflow phases as real working steps.
+  # 4. Use this workflow to steer execution, not only to document it afterwards.
+  # Allowed: small same-scope clarifications in the same PR.
+  # Not allowed: silent scope, risk, or non_goals expansion.
+
+context:
+  workflow_file: workflows/templates/low-risk-workflow.template.yml
+  required_fields:
+    - goal
+    - scope
+    - non_goals
+    - affected_modules
+    - workflow_file
+    - risk_level
+    - confidence
+    - required_reviews
+    - human_approval_required
+    - protected_areas_touched
+    - approval_evidence
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+
+evidence: {}
+# Add machine-readable role contracts as phases complete.
+contracts: {}
+overrides: []
+# Add machine-readable evidence blocks as phases complete, for example:
+# evidence:
+#   planning:
+#     summary: Low-risk scope was locked before implementation.
+#     scope_locked:
+#       - bounded docs update
+#     non_goals_locked:
+#       - no runtime changes
+#     risk_rationale: LOW-risk path remains valid.
+
+fast_path_allowed_when:
+  - no protected areas
+  - no contract changes
+  - no runtime architecture changes
+  - no database schema changes
+  - no deployment or security changes
+
+forbidden_use_cases:
+  - protected business logic
+  - critical execution boundary changes
+  - contracts
+  - database schema
+  - deployment pipeline
+
+steps:
+  - step: plan
+    agent: planning-agent
+    purpose: lock scope, non_goals, and fast-path risk before implementation starts
+    input_artifacts:
+      - approved issue
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - approved_scope
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    handoff_to: senior-dev-agent
+    handoff_conditions:
+      - LOW-risk fast path still valid
+      - workflow_file is declared
+      - scope and non_goals are declared before implementation
+    stop_conditions:
+      - scope ambiguous
+    escalation_conditions:
+      - risk upgrade required
+  - step: implement
+    agent: senior-dev-agent
+    purpose: implement only after the fast-path decision is explicit
+    input_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    output_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    handoff_to: review-agent
+    handoff_conditions:
+      - fast path still valid
+    stop_conditions:
+      - protected area discovered
+    escalation_conditions:
+      - must move to stricter workflow
+  - step: review
+    agent: review-agent
+    purpose: perform an explicit review phase before merge readiness
+    input_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    output_artifacts:
+      - review_findings
+      - severity
+      - approval_status
+      - merge_readiness
+    handoff_to: merge readiness or stricter workflow
+    handoff_conditions:
+      - no blocking findings
+    stop_conditions:
+      - fast path no longer valid
+    escalation_conditions:
+      - reclassify to MEDIUM or HIGH

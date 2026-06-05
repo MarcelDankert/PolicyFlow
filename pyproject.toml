@@ -13,6 +13,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "build>=1.0",
   "pytest>=8.0",
 ]
 
@@ -25,6 +26,19 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["policyflow"]
+
+[tool.setuptools.package-data]
+policyflow = [
+  "assets/agents/*.md",
+  "assets/prompts/*.md",
+  "assets/rules/*.md",
+  "assets/workflows/templates/*.yml",
+  "assets/github/*.md",
+  "assets/github/ISSUE_TEMPLATE/*.yml",
+  "assets/github/workflows/*.yml",
+  "assets/examples/*.yml",
+  "assets/docs/*.md",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -99,9 +99,20 @@ Pragmatic-strict transition mode:
 
 ## Example Installation Approach
 
-- copy `github/` templates into `.github/`
-- copy `rules/`, `agents/`, `workflows/`, and `prompts/` into `ai/`
-- add `ai/project-context.yml` in the target project
+Install a pinned PolicyFlow release in the target project:
+
+```bash
+python -m pip install policyflow==0.1.0
+```
+
+Then run bootstrap:
+
+```bash
+policyflow init .
+```
+
+See [docs/release-and-upgrade.md](docs/release-and-upgrade.md) for pinning,
+release note, and upgrade guidance.
 
 ## Current Status
 
@@ -124,7 +135,13 @@ Pragmatic-strict transition mode:
 
 PolicyFlow now includes a lightweight governance validator for workflow YAML files.
 
-Install locally:
+Consumer install:
+
+```bash
+python -m pip install policyflow==0.1.0
+```
+
+Developer install from a source checkout:
 
 ```bash
 python -m pip install -e .[dev]
@@ -275,7 +292,7 @@ TODO:
 ## Future Roadmap
 
 - workflow schema normalization after more consumer usage
-- packaged releases instead of `git+https` installation from `main`
+- release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow
 - GitHub API-based PR validation as a later target state after the local markdown flow is proven in real usage
 
