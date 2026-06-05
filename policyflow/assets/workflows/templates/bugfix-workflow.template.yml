@@ -1,0 +1,179 @@
+workflow:
+  id: bugfix-workflow-template
+  name: Bugfix Workflow
+  version: 1
+  type: bugfix
+  status: template
+  # Required default for all PolicyFlow consumer repos:
+  # 1. Create this workflow before implementation.
+  # 2. Fix scope, non_goals, and risk before writing code.
+  # 3. Execute these workflow phases as real working steps.
+  # 4. Use this workflow to steer execution, not only to document it afterwards.
+  # Allowed: small same-scope clarifications in the same PR.
+  # Not allowed: silent scope, risk, or non_goals expansion.
+
+context:
+  workflow_file: workflows/templates/bugfix-workflow.template.yml
+  required_fields:
+    - bug_summary
+    - scope
+    - non_goals
+    - affected_modules
+    - workflow_file
+    - risk_level
+    - confidence
+    - required_reviews
+    - human_approval_required
+    - protected_areas_touched
+    - approval_evidence
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: pending
+    - phase: architecture-check
+      state: pending
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence: {}
+# Add machine-readable role contracts as phases complete.
+contracts: {}
+overrides: []
+# Add machine-readable evidence blocks as phases complete, for example:
+# evidence:
+#   planning:
+#     summary: Bugfix scope and risk were locked before implementation.
+#     scope_locked:
+#       - parser validation
+#     non_goals_locked:
+#       - no contract changes
+#     risk_rationale: Bounded MEDIUM-risk fix.
+
+steps:
+  - step: triage
+    agent: planning-agent
+    purpose: lock the bounded fix scope, non_goals, and risk before implementation starts
+    input_artifacts:
+      - approved bug report
+    output_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - approved_scope
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    handoff_to: architecture-agent
+    handoff_conditions:
+      - defect documented
+      - workflow_file is declared
+      - scope and non_goals are declared before implementation
+    stop_conditions:
+      - defect not reproducible
+    escalation_conditions:
+      - root cause unclear
+  - step: architecture-impact-check
+    agent: architecture-agent
+    purpose: make the risk-based architecture decision explicit before coding
+    input_artifacts:
+      - issue_brief
+      - acceptance_criteria
+      - non_goals
+      - initial_risk_level
+      - protected_areas_touched
+      - confidence_summary
+      - escalation_flags
+    output_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+    handoff_to: senior-dev-agent
+    handoff_conditions:
+      - fix remains bounded
+    stop_conditions:
+      - root cause implies broader change
+    escalation_conditions:
+      - risk upgrade required
+  - step: implement-fix
+    agent: senior-dev-agent
+    purpose: implement only after triage and architecture constraints are explicit
+    input_artifacts:
+      - architecture_assessment
+      - approved_scope
+      - module_boundaries
+      - contract_impact
+      - risk_review_decision
+      - required_reviews
+      - implementation_constraints
+    output_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    handoff_to: review-agent
+    handoff_conditions:
+      - fix remains bounded
+    stop_conditions:
+      - broader behavior change needed
+    escalation_conditions:
+      - runtime or data impact uncertain
+  - step: review
+    agent: review-agent
+    purpose: perform an explicit review phase before QA and merge readiness
+    input_artifacts:
+      - implementation_summary
+      - changed_files
+      - test_summary
+      - docs_updates
+      - known_limitations
+      - unresolved_questions
+    output_artifacts:
+      - review_findings
+      - required_fixes
+      - severity
+      - approval_status
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+    handoff_to: senior-dev-agent or qa-agent
+    handoff_conditions:
+      - no blocking findings before QA
+    stop_conditions:
+      - validation missing
+    escalation_conditions:
+      - risk understated
+  - step: qa
+    agent: qa-agent
+    purpose: perform an explicit QA evidence pass before merge readiness
+    input_artifacts:
+      - review_approval
+      - residual_risk
+      - qa_focus_areas
+      - test_expectations
+    output_artifacts:
+      - qa_report
+      - quality_gate_status
+      - unresolved_risks
+      - approval_required
+      - merge_readiness
+    handoff_to: human approval or merge readiness
+    handoff_conditions:
+      - fix evidenced
+    stop_conditions:
+      - defect still not covered
+    escalation_conditions:
+      - approval unresolved

@@ -32,7 +32,7 @@ def bootstrap_consumer_repo(
     force: bool = False,
 ) -> BootstrapResult:
     target_root = Path(target)
-    source_root = Path(__file__).resolve().parents[1]
+    source_root = packaged_asset_root()
     assets = _bootstrap_assets(source_root)
     result = BootstrapResult()
 
@@ -63,6 +63,10 @@ def bootstrap_consumer_repo(
         _write_bootstrap_metadata(target_root, assets, force)
 
     return result
+
+
+def packaged_asset_root() -> Path:
+    return Path(__file__).resolve().parent / "assets"
 
 
 def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:

@@ -1,0 +1,7 @@
+version: 1
+
+features:
+  pr_validation: false
+  github_approval_checks: false
+  runner_execution: false
+  bootstrap_managed_assets: false

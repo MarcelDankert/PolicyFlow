@@ -1,0 +1,26 @@
+project:
+  name: "ExampleProject"
+  type: "software-system"
+  goal: "Describe the target system goal here."
+
+layers:
+  runtime: "Application runtime layer"
+  data: "Data or research layer"
+  infrastructure: "Infrastructure and deployment layer"
+
+context_sources:
+  architecture:
+    - "/ai/architecture.md"
+  contracts:
+    - "/contracts"
+  governance_overrides:
+    - "/ai/rules/project-overrides.md"
+
+protected_areas:
+  - protected business logic
+  - critical execution boundary
+  - database schema
+  - contracts
+  - secrets/IAM/security
+  - deployment pipeline
+  - architecture boundaries
