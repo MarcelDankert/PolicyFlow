@@ -192,6 +192,14 @@ policyflow block-phase workflows/examples/example-feature-workflow.yml implement
 policyflow record-handoff workflows/examples/example-feature-workflow.yml --from-phase implementation --to-phase review --required-input implementation_summary --produced-output review_findings
 ```
 
+Managed asset upgrade helpers:
+
+```bash
+policyflow sync .
+policyflow sync . --apply
+policyflow sync . --apply --force
+```
+
 Successful validation prints:
 
 ```text
@@ -281,6 +289,7 @@ Current validator scope:
 - validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
 - exposes workflow reporting views for a single workflow (`status`) and a directory tree (`audit`) with optional JSON output
 - supports synchronous external agent execution for canonical agent-owned phases through a central runner config and JSON result contract
+- supports dry-run and explicit-apply sync for PolicyFlow-managed Consumer-Repo assets
 
 This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
 

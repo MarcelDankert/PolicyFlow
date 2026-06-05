@@ -21,6 +21,7 @@ from policyflow.runtime import (
     start_phase as start_workflow_phase,
 )
 from policyflow.reporting import audit_directory, audit_lines, status_lines, workflow_status
+from policyflow.sync import sync_consumer_assets
 from policyflow.validator import (
     inspect_workflow_file,
     validate_pull_request,
@@ -116,6 +117,34 @@ def doctor(
 
     if report["failures"]:
         raise typer.Exit(code=1)
+
+
+@app.command("sync")
+def sync(
+    target: Path = typer.Argument(Path(".")),
+    apply: bool = typer.Option(False, "--apply"),
+    force: bool = typer.Option(False, "--force"),
+) -> None:
+    """Preview or apply updates for PolicyFlow-managed Consumer-Repo assets."""
+
+    result = sync_consumer_assets(target, apply=apply, force=force)
+
+    for path in result.added:
+        console.print(f"{'created' if apply else 'would create'} {path}", markup=False)
+    for path in result.changed:
+        console.print(f"{'updated' if apply else 'would update'} {path}", markup=False)
+    for path in result.locally_modified:
+        if apply and force:
+            console.print(f"overwrote local modification {path}", markup=False)
+        else:
+            console.print(f"local modification preserved {path}", markup=False)
+    for path in result.removed:
+        console.print(f"upstream removed managed asset {path}", markup=False)
+
+    if apply:
+        console.print("[green][SUCCESS][/green] PolicyFlow asset sync completed.")
+    else:
+        console.print("[green][SUCCESS][/green] PolicyFlow asset sync preview completed.")
 
 
 @app.command("validate-pr")

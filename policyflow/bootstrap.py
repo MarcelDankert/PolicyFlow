@@ -5,6 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 import json
 from pathlib import Path
 from typing import Iterable
+import hashlib
 
 import yaml
 
@@ -32,8 +33,7 @@ def bootstrap_consumer_repo(
     force: bool = False,
 ) -> BootstrapResult:
     target_root = Path(target)
-    source_root = packaged_asset_root()
-    assets = _bootstrap_assets(source_root)
+    assets = bootstrap_assets()
     result = BootstrapResult()
 
     for asset in assets:
@@ -67,6 +67,24 @@ def bootstrap_consumer_repo(
 
 def packaged_asset_root() -> Path:
     return Path(__file__).resolve().parent / "assets"
+
+
+def bootstrap_assets() -> list[BootstrapAsset]:
+    return _bootstrap_assets(packaged_asset_root())
+
+
+def asset_content(asset: BootstrapAsset) -> str:
+    if asset.content is not None:
+        return asset.content
+
+    if asset.source is None:
+        raise ValueError(f"Bootstrap asset has no source or content: {asset.target}")
+
+    return asset.source.read_text(encoding="utf-8")
+
+
+def asset_digest(asset: BootstrapAsset) -> str:
+    return hashlib.sha256(asset_content(asset).encode("utf-8")).hexdigest()
 
 
 def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
@@ -294,14 +312,7 @@ def _starter_workflow_content() -> str:
 
 
 def _write_asset(asset: BootstrapAsset, destination: Path) -> None:
-    if asset.content is not None:
-        destination.write_text(asset.content, encoding="utf-8")
-        return
-
-    if asset.source is None:
-        raise ValueError(f"Bootstrap asset has no source or content: {asset.target}")
-
-    destination.write_text(asset.source.read_text(encoding="utf-8"), encoding="utf-8")
+    destination.write_text(asset_content(asset), encoding="utf-8")
 
 
 def _write_bootstrap_metadata(
@@ -314,14 +325,18 @@ def _write_bootstrap_metadata(
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     managed_assets = [_as_posix(asset.target) for asset in assets]
     metadata = {
-        "policyflow_version": _policyflow_version(),
+        "policyflow_version": policyflow_version(),
         "managed_assets": sorted([*managed_assets, ".policyflow/bootstrap.json"]),
+        "asset_hashes": {
+            _as_posix(asset.target): asset_digest(asset)
+            for asset in sorted(assets, key=lambda item: _as_posix(item.target))
+        },
         "force": force,
     }
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
 
-def _policyflow_version() -> str:
+def policyflow_version() -> str:
     try:
         return version("policyflow")
     except PackageNotFoundError:
