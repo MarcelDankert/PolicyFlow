@@ -68,7 +68,7 @@ def bootstrap_consumer_repo(
 def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
     assets: list[BootstrapAsset] = [
         BootstrapAsset(None, Path("policyflow.yml"), _consumer_config_content()),
-        BootstrapAsset(source_root / "policyflow.runners.yml", Path("policyflow.runners.yml")),
+        BootstrapAsset(None, Path("policyflow.runners.yml"), _consumer_runner_config_content()),
         BootstrapAsset(
             source_root / "examples" / "project-context.yml",
             Path("ai/project-context.yml"),
@@ -121,6 +121,40 @@ def _consumer_config_content() -> str:
         },
         "bootstrap": {
             "managed_assets": [],
+        },
+    }
+    return yaml.safe_dump(payload, sort_keys=False)
+
+
+def _consumer_runner_config_content() -> str:
+    payload = {
+        "default_runner": "codex",
+        "runners": {
+            "codex": {
+                "type": "codex",
+                "command": [
+                    "python",
+                    "scripts/policyflow_codex_wrapper.py",
+                    "--input",
+                    "{input_path}",
+                    "--output",
+                    "{output_path}",
+                ],
+                "prompt_paths": {
+                    "planning": "ai/prompts/planning-agent.prompt.md",
+                    "architecture-check": "ai/prompts/architecture-agent.prompt.md",
+                    "implementation": "ai/prompts/senior-dev-agent.prompt.md",
+                    "review": "ai/prompts/review-agent.prompt.md",
+                    "qa": "ai/prompts/qa-agent.prompt.md",
+                },
+                "agent_paths": {
+                    "planning": "ai/agents/planning-agent.md",
+                    "architecture-check": "ai/agents/architecture-agent.md",
+                    "implementation": "ai/agents/senior-dev-agent.md",
+                    "review": "ai/agents/review-agent.md",
+                    "qa": "ai/agents/qa-agent.md",
+                },
+            }
         },
     }
     return yaml.safe_dump(payload, sort_keys=False)

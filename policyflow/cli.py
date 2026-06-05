@@ -9,6 +9,7 @@ from rich.console import Console
 from policyflow.agent_execution import run_phase_with_runner
 from policyflow.bootstrap import bootstrap_consumer_repo
 from policyflow.consumer_config import load_consumer_config
+from policyflow.doctor import doctor_consumer_repo
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.github_approval import validate_github_pr_approvals
 from policyflow.runtime import (
@@ -89,6 +90,32 @@ def init(
         console.print(f"would skip {path}", markup=False)
 
     console.print("[green][SUCCESS][/green] PolicyFlow bootstrap completed.")
+
+
+@app.command("doctor")
+def doctor(
+    target: Path = typer.Argument(Path(".")),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Check whether a Consumer-Repo is ready to run PolicyFlow."""
+
+    report = doctor_consumer_repo(target)
+
+    if json_output:
+        typer.echo(json.dumps(report, indent=2))
+    else:
+        for check in report["checks"]:
+            label = {
+                "pass": "[PASS]",
+                "warning": "[WARN]",
+                "failure": "[FAIL]",
+            }[check["status"]]
+            console.print(f"{label} {check['check']}: {check['message']}", markup=False)
+            if check["remediation"]:
+                console.print(f"  remediation: {check['remediation']}", markup=False)
+
+    if report["failures"]:
+        raise typer.Exit(code=1)
 
 
 @app.command("validate-pr")
