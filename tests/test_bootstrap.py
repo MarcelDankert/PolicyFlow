@@ -25,6 +25,7 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     assert (tmp_path / "ai/prompts/planning-agent.prompt.md").exists()
     assert (tmp_path / "ai/rules/risk-classification.md").exists()
     assert (tmp_path / "ai/workflows/templates/feature-workflow.template.yml").exists()
+    assert (tmp_path / "ai/workflows/features/starter-workflow.yml").exists()
     assert (tmp_path / ".github/PULL_REQUEST_TEMPLATE.md").exists()
     assert (tmp_path / ".github/ISSUE_TEMPLATE/feature.yml").exists()
 
@@ -37,6 +38,7 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     assert metadata["policyflow_version"] == "0.1.0"
     assert "policyflow.yml" in metadata["managed_assets"]
     assert "ai/workflows/templates/feature-workflow.template.yml" in metadata["managed_assets"]
+    assert "ai/workflows/features/starter-workflow.yml" in metadata["managed_assets"]
 
 
 def test_bootstrap_dry_run_does_not_write_files(tmp_path: Path) -> None:

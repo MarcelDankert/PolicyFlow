@@ -74,6 +74,11 @@ def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
             Path("ai/project-context.yml"),
         ),
         BootstrapAsset(
+            None,
+            Path("ai/workflows/features/starter-workflow.yml"),
+            _starter_workflow_content(),
+        ),
+        BootstrapAsset(
             source_root / "github" / "PULL_REQUEST_TEMPLATE.md",
             Path(".github/PULL_REQUEST_TEMPLATE.md"),
         ),
@@ -156,6 +161,126 @@ def _consumer_runner_config_content() -> str:
                 },
             }
         },
+    }
+    return yaml.safe_dump(payload, sort_keys=False)
+
+
+def _starter_workflow_content() -> str:
+    payload = {
+        "workflow": {
+            "id": "starter-workflow",
+            "type": "feature",
+        },
+        "context": {
+            "workflow_file": "ai/workflows/features/starter-workflow.yml",
+            "risk_level": "MEDIUM",
+        },
+        "governance": {
+            "required_reviews": [
+                "architecture-agent",
+                "review-agent",
+                "qa-agent",
+            ],
+            "human_approval_required": False,
+            "escalation_required": False,
+            "protected_areas_touched": ["none"],
+        },
+        "execution": {
+            "mode": "strict",
+            "phases": [
+                {"phase": "planning", "state": "completed"},
+                {"phase": "architecture-check", "state": "completed"},
+                {"phase": "implementation", "state": "pending"},
+                {"phase": "review", "state": "pending"},
+                {"phase": "qa", "state": "pending"},
+            ],
+        },
+        "evidence": {
+            "planning": {
+                "summary": "Starter workflow scope and non-goals were locked before implementation.",
+                "scope_locked": ["starter PolicyFlow validation"],
+                "non_goals_locked": ["no product runtime changes"],
+                "risk_rationale": "MEDIUM risk starter path because architecture, review, and QA are visible.",
+            },
+            "architecture-check": {
+                "decision": "Starter workflow architecture check completed before implementation.",
+                "constraints": ["keep starter validation bounded"],
+                "approval_path": "architecture-agent review",
+            },
+        },
+        "contracts": {
+            "planning": {
+                "owner_agent": "planning-agent",
+                "issue_brief": "Validate the starter PolicyFlow consumer path.",
+                "acceptance_criteria": [
+                    "workflow validates",
+                    "PR body validation can reference workflow evidence",
+                ],
+                "approved_scope": ["starter PolicyFlow validation"],
+                "non_goals": ["no product runtime changes"],
+                "initial_risk_level": "MEDIUM",
+                "protected_areas_touched": ["none"],
+                "confidence_summary": "Starter workflow is stable enough for bootstrap validation.",
+                "escalation_flags": ["none"],
+            },
+            "architecture-check": {
+                "owner_agent": "architecture-agent",
+                "architecture_assessment": "Starter workflow stays inside documentation and validation setup.",
+                "approved_scope": ["starter PolicyFlow validation"],
+                "module_boundaries": ["consumer bootstrap assets"],
+                "contract_impact": "No product contract impact.",
+                "risk_review_decision": "MEDIUM risk starter path approved.",
+                "required_reviews": [
+                    "architecture-agent",
+                    "review-agent",
+                    "qa-agent",
+                ],
+                "implementation_constraints": ["keep starter workflow bounded"],
+            },
+        },
+        "overrides": [
+            {
+                "id": "starter-phase-bypass",
+                "type": "phase_bypass",
+                "reason": "Starter workflow keeps review pending while allowing bootstrap validation to demonstrate override visibility.",
+                "scope_impact": "No scope expansion beyond starter validation.",
+                "risk_impact": "MEDIUM risk remains unchanged because compensating controls are explicit.",
+                "mitigations": [
+                    "review findings must still be resolved before QA completion"
+                ],
+                "approved_by": "architecture-agent",
+                "approval_reference": "STARTER-ARCH-OVERRIDE",
+                "review_by": "2099-12-31",
+                "bypassed_phase": "review",
+                "compensating_controls": [
+                    "review findings tracked before QA sign-off"
+                ],
+            }
+        ],
+        "runtime": {
+            "status": "handoff_pending",
+            "current_phase": "architecture-check",
+            "active_agent": "senior-dev-agent",
+            "last_transition": "architecture-check completed and ready for implementation handoff",
+            "block_reason": None,
+        },
+        "handoffs": [
+            {
+                "from_phase": "architecture-check",
+                "to_phase": "implementation",
+                "status": "pending",
+                "required_inputs": [
+                    "architecture_assessment",
+                    "implementation_constraints",
+                ],
+                "produced_outputs": [
+                    "implementation_summary",
+                    "test_summary",
+                ],
+                "blockers": [],
+                "override_refs": ["starter-phase-bypass"],
+            }
+        ],
     }
     return yaml.safe_dump(payload, sort_keys=False)
 
