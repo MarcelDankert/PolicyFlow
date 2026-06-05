@@ -2,6 +2,53 @@
 
 ## Adopt In A Target Project
 
+Start with a root `policyflow.yml` so bootstrap, doctor, CI, and local commands
+can agree on the same Consumer-Repo paths and enabled features.
+
+Minimal local-only config:
+
+```yaml
+version: 1
+
+features:
+  pr_validation: false
+  github_approval_checks: false
+  runner_execution: false
+  bootstrap_managed_assets: false
+```
+
+GitHub-governed config:
+
+```yaml
+version: 1
+
+paths:
+  workflows: ai/workflows
+  prompts: ai/prompts
+  agents: ai/agents
+  rules: ai/rules
+  project_context: ai/project-context.yml
+  runner_config: policyflow.runners.yml
+  pr_template: .github/PULL_REQUEST_TEMPLATE.md
+  issue_templates: .github/ISSUE_TEMPLATE
+  governance_workflow: .github/workflows/policyflow-governance.yml
+
+features:
+  pr_validation: true
+  github_approval_checks: true
+  runner_execution: true
+  bootstrap_managed_assets: true
+```
+
+Validate the config before wiring deeper governance:
+
+```bash
+policyflow config-check policyflow.yml
+```
+
+Published examples are available at `examples/policyflow.minimal.yml` and
+`examples/policyflow.github-governed.yml`.
+
 1. Copy `github/ISSUE_TEMPLATE/*` into `.github/ISSUE_TEMPLATE/`.
 2. Copy `github/PULL_REQUEST_TEMPLATE.md` into `.github/`.
 3. Copy `rules/`, `agents/`, `workflows/`, and `prompts/` into `ai/`.
