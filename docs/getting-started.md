@@ -24,7 +24,8 @@ policyflow init . --force
 ```
 
 The bootstrap command writes the standard consumer layout under `ai/`, GitHub
-templates under `.github/`, `policyflow.yml`, `policyflow.runners.yml`, and
+templates and governance workflow under `.github/`, `policyflow.yml`,
+`policyflow.runners.yml`, and
 `.policyflow/bootstrap.json` metadata for future sync support. It also creates
 `ai/workflows/features/starter-workflow.yml` so the first validation path is
 available immediately.
@@ -81,6 +82,12 @@ Doctor checks the Consumer-Repo config, bootstrap artifacts, runner config,
 referenced prompt and agent files, project context, and GitHub governance
 templates. Missing local PolicyFlow assets fail readiness. External GitHub
 tooling is reported separately so local setup gaps are actionable.
+
+The installed GitHub Actions workflow uses read-only `contents` and
+`pull-requests` permissions, fetches the live PR body and review metadata with
+the built-in `github.token`, and runs `policyflow validate-pr` plus
+`policyflow validate-github-approvals` against the workflow referenced in the PR
+body.
 
 Published examples are available at `examples/policyflow.minimal.yml` and
 `examples/policyflow.github-governed.yml`.

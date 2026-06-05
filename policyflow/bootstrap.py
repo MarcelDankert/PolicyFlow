@@ -82,6 +82,10 @@ def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
             source_root / "github" / "PULL_REQUEST_TEMPLATE.md",
             Path(".github/PULL_REQUEST_TEMPLATE.md"),
         ),
+        BootstrapAsset(
+            source_root / "github" / "workflows" / "policyflow-governance.yml",
+            Path(".github/workflows/policyflow-governance.yml"),
+        ),
     ]
 
     for source_dir, target_dir in (

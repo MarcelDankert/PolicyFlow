@@ -1,0 +1,152 @@
+workflow:
+  id: consumer-github-actions-template
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-github-actions-template.yml
+  goal: Add a Consumer-Repo GitHub Actions governance workflow template.
+  scope:
+    - consumer-ready GitHub Actions workflow template
+    - bootstrap installs the workflow into .github/workflows
+    - doctor recognizes the governance workflow as part of GitHub templates
+    - tests validate workflow template structure and bootstrap installation
+    - getting-started documentation
+  non_goals:
+    - no hosted PolicyFlow service
+    - no multi-CI provider support
+    - no automatic branch protection management
+    - no package publishing change in this issue
+  affected_modules:
+    - github
+    - policyflow
+    - docs
+    - tests
+    - workflows
+  risk_level: MEDIUM
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope and non-goals were locked before adding the consumer GitHub Actions workflow template.
+    scope_locked:
+      - consumer-ready GitHub Actions workflow template
+      - bootstrap installs the workflow into .github/workflows
+      - doctor recognizes the governance workflow as part of GitHub templates
+      - tests validate workflow template structure and bootstrap installation
+      - getting-started documentation
+    non_goals_locked:
+      - no hosted PolicyFlow service
+      - no multi-CI provider support
+      - no automatic branch protection management
+      - no package publishing change in this issue
+    risk_rationale: MEDIUM risk because this adds a consumer-facing CI template that enforces governance on pull requests.
+  architecture-check:
+    decision: Add a consumer workflow template under github/workflows and install it through bootstrap.
+    constraints:
+      - use package-version installation in the consumer template
+      - fetch PR body and reviews using GitHub API/CLI with read permissions
+      - validate the PR-referenced workflow file before approval checks
+      - keep workflow template path aligned with consumer config defaults
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add Consumer-Repo GitHub Actions governance workflow template.
+    acceptance_criteria:
+      - bootstrap installs .github/workflows/policyflow-governance.yml
+      - template validates PR body and GitHub approval metadata
+      - template uses package install path instead of editable repo install
+      - docs explain permissions and token behavior
+      - tests cover template structure and bootstrap installation
+    approved_scope:
+      - consumer-ready GitHub Actions workflow template
+      - bootstrap installs the workflow into .github/workflows
+      - doctor recognizes the governance workflow as part of GitHub templates
+      - tests validate workflow template structure and bootstrap installation
+      - getting-started documentation
+    non_goals:
+      - no hosted PolicyFlow service
+      - no multi-CI provider support
+      - no automatic branch protection management
+      - no package publishing change in this issue
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; workflow content is static, installed by bootstrap, and checked by tests.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Keeping the consumer workflow under github/workflows makes it distinct from this repository's internal .github workflow while still packageable and bootstrap-managed.
+    approved_scope:
+      - consumer-ready GitHub Actions workflow template
+      - bootstrap installs the workflow into .github/workflows
+      - doctor recognizes the governance workflow as part of GitHub templates
+      - tests validate workflow template structure and bootstrap installation
+      - getting-started documentation
+    module_boundaries:
+      - github/workflows owns consumer-installable CI template
+      - policyflow.bootstrap owns installation into target repos
+      - policyflow.doctor checks generated workflow presence through config defaults
+    contract_impact: Adds .github/workflows/policyflow-governance.yml to bootstrap-managed consumer assets.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no machine-local absolute paths
+      - keep permissions read-only
+      - do not require secrets beyond github.token for read-only PR metadata
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a consumer GitHub Actions governance workflow template, installed it through bootstrap, documented permissions/token behavior, and added tests for template structure and bootstrap installation.
+    changed_files:
+      - github/workflows/policyflow-governance.yml
+      - policyflow/bootstrap.py
+      - docs/getting-started.md
+      - tests/test_consumer_github_workflow.py
+      - workflows/features/consumer-github-actions-template.yml
+    test_summary: Added red-first tests that failed until the consumer workflow template existed and bootstrap installed it; reran consumer workflow, bootstrap, doctor, and golden smoke tests successfully.
+    docs_updates:
+      - docs/getting-started.md
+    known_limitations:
+      - package publishing remains tracked by issue #24
+      - branch protection management is out of scope
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
