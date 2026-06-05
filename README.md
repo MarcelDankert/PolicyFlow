@@ -159,6 +159,44 @@ policyflow run-phase workflows/examples/example-feature-workflow.yml implementat
 policyflow run-phase workflows/examples/example-feature-workflow.yml implementation --runner-config policyflow.runners.yml
 ```
 
+The published `policyflow.runners.yml` uses the packaged Codex wrapper:
+
+```text
+python -m policyflow.codex_runner --input <input.json> --output <output.json>
+```
+
+The wrapper calls `codex exec` and expects Codex to return a single JSON object as
+its final response. Before using `run-phase`, install and authenticate Codex CLI
+and verify the local environment with:
+
+```bash
+codex doctor
+```
+
+In CI, install PolicyFlow and Codex CLI before the governance step, provide the
+Codex authentication and configuration expected by your Codex installation, and
+run `codex doctor` as a preflight check. If Codex is missing or cannot run,
+PolicyFlow blocks the phase with an actionable runtime reason instead of leaving
+the workflow in an ambiguous state.
+
+Runner result contract:
+
+- `phase`: must match the requested phase
+- `owner_agent`: must match the expected PolicyFlow owner agent
+- `status`: `completed` or `blocked`
+- `summary`: short result summary
+- `blockers`: required when the phase is blocked unless `summary` explains the block
+- `evidence_updates`: optional object written into the phase evidence block
+- `contract_updates`: optional object written into the phase contract block
+- `handoff`: optional object with `to_phase`, `required_inputs`, and `produced_outputs`
+
+Wrapper exit codes:
+
+- `0`: valid PolicyFlow result JSON was written
+- `2`: Codex CLI command was not found
+- `3`: Codex CLI ran but failed
+- `4`: PolicyFlow input/output contract error
+
 Runtime orchestration helpers:
 
 ```bash

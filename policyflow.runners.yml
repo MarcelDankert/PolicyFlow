@@ -3,12 +3,13 @@ default_runner: codex
 runners:
   codex:
     type: codex
-    # Replace this command with the repo-local Codex wrapper your team uses.
-    # The wrapper must read the PolicyFlow input JSON and write a PolicyFlow
-    # result JSON to the provided output path.
+    # Runs the packaged PolicyFlow Codex wrapper. The wrapper reads the
+    # PolicyFlow input JSON, calls `codex exec`, and writes PolicyFlow result
+    # JSON to the provided output path.
     command:
-      - python
-      - scripts/policyflow_codex_wrapper.py
+      - "{python_executable}"
+      - -m
+      - policyflow.codex_runner
       - --input
       - "{input_path}"
       - --output
