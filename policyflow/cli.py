@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 
 from policyflow.agent_execution import run_phase_with_runner
+from policyflow.bootstrap import bootstrap_consumer_repo
 from policyflow.consumer_config import load_consumer_config
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.github_approval import validate_github_pr_approvals
@@ -64,6 +65,30 @@ def config_check(config_path: Path = typer.Argument(Path("policyflow.yml"))) -> 
         raise typer.Exit(code=1) from exc
 
     console.print("[green][SUCCESS][/green] Consumer config validation passed.")
+
+
+@app.command("init")
+def init(
+    target: Path = typer.Argument(Path(".")),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    force: bool = typer.Option(False, "--force"),
+) -> None:
+    """Bootstrap PolicyFlow assets into a Consumer-Repo."""
+
+    result = bootstrap_consumer_repo(target, dry_run=dry_run, force=force)
+
+    for path in result.created:
+        console.print(f"created {path}", markup=False)
+    for path in result.overwritten:
+        console.print(f"overwrote {path}", markup=False)
+    for path in result.skipped:
+        console.print(f"skipped {path}", markup=False)
+    for path in result.would_create:
+        console.print(f"would create {path}", markup=False)
+    for path in result.would_skip:
+        console.print(f"would skip {path}", markup=False)
+
+    console.print("[green][SUCCESS][/green] PolicyFlow bootstrap completed.")
 
 
 @app.command("validate-pr")

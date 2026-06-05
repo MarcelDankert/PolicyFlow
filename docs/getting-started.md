@@ -5,6 +5,28 @@
 Start with a root `policyflow.yml` so bootstrap, doctor, CI, and local commands
 can agree on the same Consumer-Repo paths and enabled features.
 
+Bootstrap a fresh Consumer-Repo:
+
+```bash
+policyflow init .
+```
+
+Preview the generated files without writing them:
+
+```bash
+policyflow init . --dry-run
+```
+
+PolicyFlow does not overwrite existing files unless explicitly requested:
+
+```bash
+policyflow init . --force
+```
+
+The bootstrap command writes the standard consumer layout under `ai/`, GitHub
+templates under `.github/`, `policyflow.yml`, `policyflow.runners.yml`, and
+`.policyflow/bootstrap.json` metadata for future sync support.
+
 Minimal local-only config:
 
 ```yaml
