@@ -68,6 +68,18 @@ Validate the config before wiring deeper governance:
 policyflow config-check policyflow.yml
 ```
 
+Run preflight checks before the first governed workflow:
+
+```bash
+policyflow doctor .
+policyflow doctor . --json
+```
+
+Doctor checks the Consumer-Repo config, bootstrap artifacts, runner config,
+referenced prompt and agent files, project context, and GitHub governance
+templates. Missing local PolicyFlow assets fail readiness. External GitHub
+tooling is reported separately so local setup gaps are actionable.
+
 Published examples are available at `examples/policyflow.minimal.yml` and
 `examples/policyflow.github-governed.yml`.
 
