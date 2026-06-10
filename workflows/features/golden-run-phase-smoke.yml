@@ -1,0 +1,168 @@
+workflow:
+  id: golden-run-phase-smoke
+  type: feature
+
+context:
+  workflow_file: workflows/features/golden-run-phase-smoke.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/46
+  goal: Extend the golden Consumer-Repo smoke test to execute the first agent-owned phase through the runner contract after bootstrap.
+  scope:
+    - provider-neutral fake runner fixture for the golden smoke path
+    - golden smoke execution of run-phase against the bootstrapped starter workflow
+    - assertions for workflow state, contracts, runtime, and handoff after the phase
+    - regression coverage for bootstrap runner asset and command drift
+    - documentation note that the golden smoke test guards plug-and-play readiness
+  non_goals:
+    - no real Codex execution
+    - no real GitHub API calls
+    - no async runner orchestration
+    - no scheduler behavior
+  affected_modules:
+    - tests/test_golden_consumer_smoke.py
+    - docs/getting-started.md
+    - workflows/features/golden-run-phase-smoke.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: The work is bounded to integration test coverage and a docs note.
+    implementation: The fake runner can exercise the existing run-phase JSON contract without external services.
+    tests: The golden smoke test itself proves the new behavior and should fail on bootstrap command or asset drift.
+    residual_uncertainty: Provider-neutral default runner design remains scoped to issue #43.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #46 scope and non-goals were locked before implementation.
+    scope_locked:
+      - provider-neutral fake runner fixture for the golden smoke path
+      - golden smoke execution of run-phase against the bootstrapped starter workflow
+      - assertions for workflow state, contracts, runtime, and handoff after the phase
+      - regression coverage for bootstrap runner asset and command drift
+      - documentation note that the golden smoke test guards plug-and-play readiness
+    non_goals_locked:
+      - no real Codex execution
+      - no real GitHub API calls
+      - no async runner orchestration
+      - no scheduler behavior
+    risk_rationale: MEDIUM risk because this changes the productization regression guard for the Consumer-Repo happy path.
+  architecture-check:
+    decision: Keep the fake runner test-local and command-based so the smoke path validates PolicyFlow runner contracts without provider dependencies.
+    constraints:
+      - do not call real provider CLIs or network services
+      - preserve bootstrap as the source of the consumer layout
+      - keep command paths Windows-friendly and POSIX-friendly
+      - assert workflow mutations that prove the phase actually executed
+    approval_path: architecture-agent review
+  implementation:
+    summary: Extended the golden Consumer-Repo smoke test to rewrite the bootstrapped runner command to a local fake command runner, execute implementation through run-phase, and assert resulting workflow state, contract, runtime, and handoff updates.
+    files_changed:
+      - tests/test_golden_consumer_smoke.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/golden-run-phase-smoke.yml
+    tests_run:
+      - pytest -q tests/test_golden_consumer_smoke.py
+      - pytest -q tests/test_bootstrap.py tests/test_doctor.py tests/test_runtime_cli.py tests/test_repository_docs.py
+      - policyflow validate workflows/features/golden-run-phase-smoke.yml
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Golden smoke currently stops before first run-phase execution.
+    acceptance_criteria:
+      - golden smoke executes implementation through a fake runner
+      - fake runner uses the PolicyFlow input/output JSON contract
+      - workflow state, implementation contract, runtime, and handoff are asserted after execution
+      - no real GitHub or provider calls are required
+      - docs identify the smoke test as the plug-and-play regression guard
+    approved_scope:
+      - provider-neutral fake runner fixture for the golden smoke path
+      - golden smoke execution of run-phase against the bootstrapped starter workflow
+      - assertions for workflow state, contracts, runtime, and handoff after the phase
+      - regression coverage for bootstrap runner asset and command drift
+      - documentation note that the golden smoke test guards plug-and-play readiness
+    non_goals:
+      - no real Codex execution
+      - no real GitHub API calls
+      - no async runner orchestration
+      - no scheduler behavior
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; the change is test-focused and uses local temp Consumer-Repo fixtures.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A test-local command runner is the correct boundary because it exercises PolicyFlow runner orchestration while avoiding provider coupling.
+    approved_scope:
+      - provider-neutral fake runner fixture for the golden smoke path
+      - golden smoke execution of run-phase against the bootstrapped starter workflow
+      - assertions for workflow state, contracts, runtime, and handoff after the phase
+      - regression coverage for bootstrap runner asset and command drift
+      - documentation note that the golden smoke test guards plug-and-play readiness
+    module_boundaries:
+      - tests/test_golden_consumer_smoke.py owns the integration fixture
+      - policyflow.agent_execution remains the production runner executor
+      - docs/getting-started.md documents the regression guard
+    contract_impact: Adds regression coverage for the consumer runner contract without changing runtime behavior.
+    risk_review_decision: MEDIUM risk accepted with local-only smoke coverage.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - fake runner must not depend on Codex
+      - no external services in tests
+      - assert actual workflow mutation after run-phase
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: The golden smoke path now validates bootstrap, doctor, workflow validation, audit/status, runner config drift, local fake runner execution through run-phase, post-run workflow mutation, and PR body validation.
+    changed_files:
+      - tests/test_golden_consumer_smoke.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/golden-run-phase-smoke.yml
+    test_summary: Added local fake runner execution to the golden smoke test and verified the targeted golden, bootstrap, doctor, runtime, and repository docs checks.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - no real Codex execution is performed
+      - no real GitHub API call is performed
+      - provider-neutral default runner design remains scoped to issue #43
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
