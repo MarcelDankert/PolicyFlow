@@ -1,0 +1,181 @@
+workflow:
+  id: stable-public-python-api
+  type: feature
+
+context:
+  workflow_file: workflows/features/stable-public-python-api.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/41
+  goal: Expose a small documented public Python API so Consumer-Repos and integrations can use PolicyFlow without importing internal modules directly.
+  scope:
+    - define stable API functions for workflow validation, PR validation, GitHub approval validation, runtime phase mutation, status, and audit helpers
+    - export the approved API from `policyflow.api` and package root where practical
+    - document stable API examples and mark internal modules as implementation details
+    - add tests importing and exercising the public API
+    - keep existing CLI behavior unchanged
+  non_goals:
+    - no broad SDK redesign
+    - no new governance behavior
+    - no breaking CLI changes
+    - no removal of existing internal modules
+  affected_modules:
+    - policyflow/api.py
+    - policyflow/__init__.py
+    - docs/public-api.md
+    - policyflow/assets/docs/public-api.md
+    - tests/test_public_api.py
+    - tests/test_repository_docs.py
+    - workflows/features/stable-public-python-api.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is bounded to a wrapper API over existing validated service functions plus docs and tests.
+    implementation: Existing validator, GitHub approval, reporting, and runtime functions already provide the behavior to expose.
+    tests: Public imports can be exercised with existing fixtures and temporary workflow files.
+    residual_uncertainty: Future API expansion and deprecation timelines may need separate release-policy work after consumer usage.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #41 scope and non-goals were locked before API implementation.
+    scope_locked:
+      - define stable validation, PR validation, approval validation, runtime, status, and audit APIs
+      - export approved symbols from policyflow.api and package root
+      - document stable APIs and internal implementation boundaries
+      - add import and behavior tests
+      - preserve CLI behavior
+    non_goals_locked:
+      - no broad SDK redesign
+      - no new governance behavior
+      - no breaking CLI changes
+      - no removal of existing internal modules
+    risk_rationale: MEDIUM risk because this defines a consumer-facing Python compatibility boundary.
+  architecture-check:
+    decision: approved
+    constraints:
+      - implement thin wrappers over existing service functions
+      - keep CLI code paths unchanged
+      - export documented symbols explicitly through __all__
+      - do not remove existing internal import paths
+    approval_path: architecture-agent, review-agent, and qa-agent review are required by MEDIUM risk.
+  implementation:
+    summary: Added `policyflow.api`, package-root exports, public API docs, and tests for validation, PR validation, approval validation, reporting, audit, and runtime mutation.
+    changed_files:
+      - policyflow/api.py
+      - policyflow/__init__.py
+      - docs/public-api.md
+      - policyflow/assets/docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - tests/test_public_api.py
+      - tests/test_repository_docs.py
+      - workflows/features/stable-public-python-api.yml
+    test_plan:
+      - pytest -q tests/test_public_api.py tests/test_repository_docs.py
+      - policyflow validate workflows/features/stable-public-python-api.yml
+      - pytest -q tests/test_release_packaging.py tests/test_bootstrap.py tests/test_asset_sync.py
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define a stable public Python API boundary for Consumer-Repo integrations.
+    acceptance_criteria:
+      - Consumer-Repos can import documented PolicyFlow functions from policyflow.api or package root
+      - public API docs include examples for workflow validation, PR validation, status, and runtime mutation
+      - package-root or public-module imports are covered by tests
+      - internal modules remain implementation details without breaking CLI behavior
+    approved_scope:
+      - define stable validation, PR validation, approval validation, runtime, status, and audit APIs
+      - export approved symbols from policyflow.api and package root
+      - document stable APIs and internal implementation boundaries
+      - add import and behavior tests
+      - preserve CLI behavior
+    non_goals:
+      - no broad SDK redesign
+      - no new governance behavior
+      - no breaking CLI changes
+      - no removal of existing internal modules
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence because the implementation is thin but creates a public compatibility promise.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A dedicated public `policyflow.api` module with root re-exports creates a stable boundary while allowing internal modules to keep evolving.
+    approved_scope:
+      - public API wrappers
+      - root exports
+      - public API documentation
+      - tests for import and behavior
+    module_boundaries:
+      - no validator semantic changes
+      - no runtime semantic changes
+      - no CLI behavior changes
+      - internal modules remain available but undocumented
+    contract_impact: Consumer integrations can depend on documented public imports instead of internal module layout.
+    risk_review_decision: MEDIUM risk accepted with no protected areas touched.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - wrappers must delegate to existing service functions
+      - public API names must be explicit in __all__
+      - docs must identify stable and internal boundaries
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented a stable `policyflow.api` wrapper module and root re-exports for validation, PR validation, GitHub approval validation, status, audit, and runtime phase mutation while leaving CLI and internal modules unchanged.
+    changed_files:
+      - policyflow/api.py
+      - policyflow/__init__.py
+      - docs/public-api.md
+      - policyflow/assets/docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - tests/test_public_api.py
+      - tests/test_repository_docs.py
+      - workflows/features/stable-public-python-api.yml
+    test_summary: Public API tests import from `policyflow.api` and package root, validate workflow and PR governance, validate GitHub approvals, query status/audit, and mutate runtime state through stable wrapper functions.
+    docs_updates:
+      - New public API guide documents stable imports, validation APIs, reporting APIs, runtime mutation APIs, exceptions, and internal module boundaries.
+      - Schema compatibility guide now points integrations to the public API guide.
+    known_limitations:
+      - Internal modules remain importable for compatibility but are not the documented Consumer-Repo contract.
+      - Broader SDK design and additional API surfaces remain out of scope.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []

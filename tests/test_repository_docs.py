@@ -79,6 +79,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "getting-started.md",
         "overview.md",
         "governance-enforcement-roadmap.md",
+        "public-api.md",
         "release-and-upgrade.md",
         "schema-compatibility.md",
     ):
@@ -139,3 +140,15 @@ def test_schema_todo_was_replaced_with_migration_path() -> None:
 
     assert "Normalize the workflow schema into a single canonical governance block" not in readme
     assert "TODO: Normalize workflow governance" not in schemas
+
+
+def test_public_api_docs_define_stable_import_boundary() -> None:
+    text = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
+
+    assert "from policyflow import validate_workflow" in text
+    assert "from policyflow.api import validate_pr_body" in text
+    assert "get_workflow_status" in text
+    assert "start_workflow_phase" in text
+    assert "audit_workflows" in text
+    assert "validate_github_approvals" in text
+    assert "internal implementation details" in text

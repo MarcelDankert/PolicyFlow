@@ -64,8 +64,8 @@ During the `0.x` compatibility window:
   normalization.
 - `policyflow sync .` may deliver canonical template updates, but it does not
   rewrite Consumer-Repo workflow instances.
-- Public integrations should target the canonical schema contract; issue #41
-  owns the stable public Python API surface.
+- Public integrations should target the canonical schema contract through the
+  stable imports documented in [public-api.md](public-api.md).
 
 Removing root-level fallback support requires a release note, a migration
 checklist, and tests that prove the planned failure messages before the release
