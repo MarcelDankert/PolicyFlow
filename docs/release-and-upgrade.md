@@ -7,6 +7,10 @@ validation, bootstrap assets, and GitHub checks use the same contract.
 python -m pip install policyflow==0.1.0
 ```
 
+Use this command once `policyflow==0.1.0` is published. Until then, install from
+the PolicyFlow checkout for local evaluation and keep Consumer-Repo automation
+pointed at the pinned release path only after publication.
+
 Use the same version in local developer setup, CI, and Consumer-Repo automation.
 Avoid installing from `main` for governed work because validator behavior and
 bootstrap assets can change between commits.

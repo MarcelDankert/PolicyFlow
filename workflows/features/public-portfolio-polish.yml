@@ -1,0 +1,189 @@
+workflow:
+  id: public-portfolio-polish
+  type: feature
+
+context:
+  workflow_file: workflows/features/public-portfolio-polish.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/62
+  goal: Polish PolicyFlow as a public portfolio-ready repository after the productization backlog is complete.
+  scope:
+    - add public repository standard files for contributing, security reporting, and release history
+    - replace remaining README TODO language with finished compatibility and roadmap wording
+    - improve package metadata for public package index presentation
+    - clarify release/install wording so unpublished release state is honest
+    - add repository docs tests for public polish signals
+  non_goals:
+    - no PyPI publication
+    - no GitHub release creation
+    - no runtime, validator, bootstrap, or CLI behavior changes
+    - no broad docs rewrite
+  affected_modules:
+    - README.md
+    - CONTRIBUTING.md
+    - SECURITY.md
+    - CHANGELOG.md
+    - pyproject.toml
+    - docs/getting-started.md
+    - docs/release-and-upgrade.md
+    - policyflow/assets/docs/getting-started.md
+    - policyflow/assets/docs/release-and-upgrade.md
+    - tests/test_repository_docs.py
+    - workflows/features/public-portfolio-polish.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is bounded to public presentation docs, release wording, package metadata, and docs tests.
+    implementation: The required files and metadata can be added without changing runtime behavior.
+    tests: Repository docs tests can assert public-repo files, metadata, and honest release wording.
+    residual_uncertainty: Actual PyPI/GitHub release publication remains outside this PR.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #62 scope and non-goals were locked before public polish edits.
+    scope_locked:
+      - public repository standard files
+      - README TODO replacement
+      - package metadata
+      - honest release/install wording
+      - repository docs tests
+    non_goals_locked:
+      - no PyPI publication
+      - no GitHub release creation
+      - no runtime, validator, bootstrap, or CLI behavior changes
+      - no broad docs rewrite
+    risk_rationale: MEDIUM risk because public package metadata and install wording affect external presentation, but no behavior changes are in scope.
+  architecture-check:
+    decision: approved
+    constraints:
+      - keep package version unchanged
+      - do not claim PyPI or GitHub release publication has happened
+      - keep pinned install examples but identify them as release-ready once published
+      - keep source and packaged docs aligned
+    approval_path: architecture-agent, review-agent, and qa-agent review are required by MEDIUM risk.
+  implementation:
+    summary: Added public repository standard files, release-state wording, README polish, package metadata, and repository docs tests.
+    changed_files:
+      - README.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - CHANGELOG.md
+      - pyproject.toml
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/public-portfolio-polish.yml
+    test_plan:
+      - pytest -q tests/test_repository_docs.py
+      - policyflow validate workflows/features/public-portfolio-polish.yml
+      - pytest -q tests/test_release_packaging.py
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add final public repository polish after functional productization issues are complete.
+    acceptance_criteria:
+      - public visitors can find contributing, security, and release history guidance
+      - README no longer presents completed schema guidance as a TODO
+      - package metadata includes authors, URLs, keywords, and classifiers
+      - install/release wording is honest about publication state
+      - repository tests cover public-polish signals where practical
+    approved_scope:
+      - public repository standard files
+      - README TODO replacement
+      - package metadata
+      - honest release/install wording
+      - repository docs tests
+    non_goals:
+      - no PyPI publication
+      - no GitHub release creation
+      - no runtime, validator, bootstrap, or CLI behavior changes
+      - no broad docs rewrite
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence because public metadata is straightforward but externally visible.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Public polish should update presentation and metadata only, preserving existing package and governance behavior while avoiding false release claims.
+    approved_scope:
+      - repository standard docs
+      - package metadata
+      - release wording
+      - docs tests
+    module_boundaries:
+      - no policyflow package runtime changes
+      - no CLI behavior changes
+      - no bootstrap asset behavior changes
+    contract_impact: Public docs clarify release readiness and contribution/security process without changing consumer contracts.
+    risk_review_decision: MEDIUM risk accepted with repository-doc and full-suite verification.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep release publication as a documented next operational step
+      - do not add machine-local paths or private operational details
+      - keep public docs concise and portfolio-appropriate
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Public presentation now includes contributing, security, and changelog files; README uses finished compatibility/project-status language; install docs honestly distinguish local evaluation from the future published `policyflow==0.1.0` path; package metadata includes authors, URLs, keywords, and classifiers.
+    changed_files:
+      - README.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - CHANGELOG.md
+      - pyproject.toml
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/public-portfolio-polish.yml
+    test_summary: Repository docs tests cover public standard files, README compatibility/project-status language, honest release wording, and package metadata.
+    docs_updates:
+      - Added CONTRIBUTING.md, SECURITY.md, and CHANGELOG.md.
+      - Replaced README TODO language with Compatibility and Project Status sections.
+      - Clarified that pinned install commands apply once `policyflow==0.1.0` is published.
+    known_limitations:
+      - This PR does not publish PyPI or GitHub release artifacts.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
