@@ -112,6 +112,77 @@ def write_mock_runner(path: Path) -> Path:
     return script_path
 
 
+def write_fake_codex(path: Path) -> Path:
+    script_path = path / "fake-codex"
+    script_path.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env python3",
+                "import json",
+                "import sys",
+                "from pathlib import Path",
+                "",
+                "output_path = None",
+                "for index, arg in enumerate(sys.argv):",
+                "    if arg == '-o' and index + 1 < len(sys.argv):",
+                "        output_path = Path(sys.argv[index + 1])",
+                "if output_path is None:",
+                "    raise SystemExit('missing -o output path')",
+                "result = {",
+                "    'phase': 'implementation',",
+                "    'owner_agent': 'senior-dev-agent',",
+                "    'status': 'completed',",
+                "    'summary': 'Phase completed by fake Codex CLI.',",
+                "    'contract_updates': {",
+                "        'owner_agent': 'senior-dev-agent',",
+                "        'implementation_summary': 'Implemented the bounded parser validation slice.',",
+                "        'changed_files': ['parser/module.py'],",
+                "        'test_summary': 'Added parser validation tests.',",
+                "        'docs_updates': ['docs/runtime-notes.md'],",
+                "        'known_limitations': ['none'],",
+                "        'unresolved_questions': ['none']",
+                "    },",
+                "    'handoff': {",
+                "        'to_phase': 'review',",
+                "        'required_inputs': ['implementation_summary', 'test_summary'],",
+                "        'produced_outputs': ['review_findings']",
+                "    }",
+                "}",
+                "output_path.write_text(json.dumps(result), encoding='utf-8')",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    script_path.chmod(0o755)
+    return script_path
+
+
+def write_packaged_codex_runner_config(path: Path, fake_codex_path: Path) -> Path:
+    config_path = path / "policyflow.runners.yml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "default_runner: codex",
+                "runners:",
+                "  codex:",
+                "    type: codex",
+                "    command:",
+                f"      - {json.dumps(sys.executable)}",
+                "      - -m",
+                "      - policyflow.codex_runner",
+                "      - --input",
+                "      - \"{input_path}\"",
+                "      - --output",
+                "      - \"{output_path}\"",
+                "      - --codex-command",
+                f"      - {json.dumps(str(fake_codex_path))}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return config_path
+
+
 def test_start_phase_updates_runtime_and_completes_pending_handoff(tmp_path: Path) -> None:
     workflow_path = tmp_path / "runtime-startable-medium.yml"
     workflow_path.write_text(
@@ -368,6 +439,34 @@ def test_run_phase_executes_runner_and_records_handoff(tmp_path: Path) -> None:
     assert data["runtime"]["status"] == "handoff_pending"
     assert data["runtime"]["current_phase"] == "implementation"
     assert data["handoffs"][-1]["to_phase"] == "review"
+
+
+def test_run_phase_executes_packaged_codex_wrapper(tmp_path: Path) -> None:
+    workflow_path = tmp_path / "runtime-startable-medium.yml"
+    workflow_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    fake_codex_path = write_fake_codex(tmp_path)
+    config_path = write_packaged_codex_runner_config(tmp_path, fake_codex_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "run-phase",
+            str(workflow_path),
+            "implementation",
+            "--runner-config",
+            str(config_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    data = load_yaml(workflow_path)
+    assert data["execution"]["phases"][2]["state"] == "completed"
+    assert data["contracts"]["implementation"]["owner_agent"] == "senior-dev-agent"
+    assert data["runtime"]["status"] == "handoff_pending"
+    assert data["handoffs"][-1]["produced_outputs"] == ["review_findings"]
 
 
 def test_run_phase_blocks_workflow_on_runner_failure(tmp_path: Path) -> None:

@@ -156,6 +156,7 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 10. treat the workflow as the steering artifact for the change, not as retrospective documentation
 11. keep same-PR workflow edits limited to same-scope clarifications
 12. keep the repo-level runner configuration current if you use external agent execution
+13. when using the default Codex runner, verify `codex doctor` before `policyflow run-phase`
 
 ## First Recommended Checks
 
@@ -178,3 +179,5 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which CLI orchestration commands should be used to advance the workflow state
 - confirm which reporting views should be used to check merge readiness and blocked workflows
 - confirm which central runner config should execute canonical phases and where its JSON contract output is written
+- confirm that `policyflow.runners.yml` points to `python -m policyflow.codex_runner` or another valid command
+- confirm Codex CLI is installed, authenticated, and passes `codex doctor` before agent-owned phase execution
