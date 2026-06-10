@@ -26,6 +26,7 @@ from policyflow.validator import (
     inspect_workflow_file,
     validate_pull_request,
 )
+from policyflow.workflow_generator import create_workflow_instance
 
 
 app = typer.Typer(help="PolicyFlow governance validator.")
@@ -91,6 +92,42 @@ def init(
         console.print(f"would skip {path}", markup=False)
 
     console.print("[green][SUCCESS][/green] PolicyFlow bootstrap completed.")
+
+
+@app.command("new-workflow")
+def new_workflow(
+    workflow_type: str,
+    workflow_id: str = typer.Option(..., "--id"),
+    risk: str = typer.Option(..., "--risk"),
+    target: Path = typer.Option(Path("."), "--target"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    force: bool = typer.Option(False, "--force"),
+) -> None:
+    """Create a new workflow instance from PolicyFlow defaults."""
+
+    try:
+        result = create_workflow_instance(
+            target,
+            workflow_type=workflow_type,
+            workflow_id=workflow_id,
+            risk_level=risk,
+            dry_run=dry_run,
+            force=force,
+        )
+    except WorkflowValidationError as exc:
+        console.print("[red][ERROR][/red] Workflow generation failed.")
+        for error in exc.errors:
+            console.print(f"  - {error}")
+        raise typer.Exit(code=1) from exc
+
+    for path in result.created:
+        console.print(f"created {path}", markup=False)
+    for path in result.overwritten:
+        console.print(f"overwrote {path}", markup=False)
+    for path in result.would_create:
+        console.print(f"would create {path}", markup=False)
+
+    console.print("[green][SUCCESS][/green] Workflow generation completed.")
 
 
 @app.command("doctor")

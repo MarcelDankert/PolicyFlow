@@ -111,6 +111,13 @@ Then run bootstrap:
 policyflow init .
 ```
 
+Create the first governed workflow instance:
+
+```bash
+policyflow new-workflow feature --id first-feature --risk LOW
+policyflow validate ai/workflows/features/first-feature.yml
+```
+
 See [docs/release-and-upgrade.md](docs/release-and-upgrade.md) for pinning,
 release note, and upgrade guidance.
 
@@ -151,6 +158,14 @@ Validate a workflow file:
 
 ```bash
 policyflow validate workflows/examples/example-feature-workflow.yml
+```
+
+Create a workflow instance in a Consumer-Repo:
+
+```bash
+policyflow new-workflow feature --id first-feature --risk LOW
+policyflow new-workflow bugfix --id parser-fix --risk MEDIUM
+policyflow new-workflow architecture-change --id storage-boundary --risk HIGH
 ```
 
 Validate a PR body markdown file against a workflow:
