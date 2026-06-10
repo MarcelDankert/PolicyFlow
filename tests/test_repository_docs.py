@@ -1,4 +1,5 @@
 from pathlib import Path
+import tomllib
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -152,3 +153,48 @@ def test_public_api_docs_define_stable_import_boundary() -> None:
     assert "audit_workflows" in text
     assert "validate_github_approvals" in text
     assert "internal implementation details" in text
+
+
+def test_public_repository_standard_files_are_present() -> None:
+    expected_files = {
+        "CONTRIBUTING.md": ("workflow-first", "pull request"),
+        "SECURITY.md": ("security", "vulnerability"),
+        "CHANGELOG.md": ("0.1.0", "Unreleased"),
+    }
+
+    for relative_path, expected_terms in expected_files.items():
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        lowered = text.lower()
+
+        for term in expected_terms:
+            assert term.lower() in lowered
+
+
+def test_readme_uses_finished_compatibility_language() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "TODO:" not in readme
+    assert "## Compatibility" in readme
+    assert "docs/schema-compatibility.md" in readme
+    assert "## Project Status" in readme
+    assert "release-ready" in readme
+
+
+def test_release_docs_are_honest_about_publication_state() -> None:
+    for relative_path in ("README.md", "docs/getting-started.md", "docs/release-and-upgrade.md"):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "policyflow==0.1.0" in text
+        assert "once `policyflow==0.1.0` is published" in text
+
+
+def test_pyproject_has_public_package_metadata() -> None:
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = data["project"]
+
+    assert project["authors"]
+    assert project["keywords"]
+    assert project["classifiers"]
+    assert project["urls"]["Repository"] == "https://github.com/MarcelDankert/PolicyFlow"
+    assert project["urls"]["Documentation"].endswith("#readme")
+    assert "Typing :: Typed" in project["classifiers"]

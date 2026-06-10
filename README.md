@@ -65,6 +65,13 @@ Install a pinned PolicyFlow release:
 python -m pip install policyflow==0.1.0
 ```
 
+Use this command once `policyflow==0.1.0` is published. Until then, install from
+this checkout for local evaluation:
+
+```bash
+python -m pip install -e .[dev]
+```
+
 Bootstrap the standard Consumer-Repo layout:
 
 ```bash
@@ -385,13 +392,21 @@ This runtime layer is intentionally small. It mutates only controlled workflow f
 
 PolicyFlow now acts as a lightweight workflow orchestration layer as well as a governance validator, but it is still not a full orchestration platform, scheduler, or agent runtime.
 
-TODO:
-- Follow the canonical workflow schema and migration guidance in
-  [docs/schema-compatibility.md](docs/schema-compatibility.md).
+## Compatibility
+
+Follow the canonical workflow schema and migration guidance in
+[docs/schema-compatibility.md](docs/schema-compatibility.md). Stable public
+imports are documented in [docs/public-api.md](docs/public-api.md).
+
+## Project Status
+
+PolicyFlow is release-ready for `0.1.0` packaging and publication once the PyPI
+package and matching GitHub Release are created. Until that release exists,
+install from this repository for evaluation and use the pinned
+`policyflow==0.1.0` commands as the intended published Consumer-Repo path.
 
 ## Future Roadmap
 
-- public Python API stability boundary for documented integrations
 - release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow
 
