@@ -1,0 +1,154 @@
+workflow:
+  id: consumer-onboarding-guide
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-onboarding-guide.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/23
+  goal: Provide a tight end-to-end Consumer-Repo onboarding guide from install and bootstrap to first governed PR validation.
+  scope:
+    - getting-started quickstart restructuring
+    - README pointer updates where needed
+    - packaged docs asset alignment
+    - removal of obsolete manual-copy instructions from the primary happy path
+    - repository docs tests for command sequence and stale guidance
+  non_goals:
+    - no full docs site redesign
+    - no advanced customization matrix
+    - no video or tutorial production
+    - no behavior changes to CLI or validator
+  affected_modules:
+    - docs/getting-started.md
+    - docs/governance-enforcement-roadmap.md
+    - docs/overview.md
+    - policyflow/assets/docs/getting-started.md
+    - policyflow/assets/docs/governance-enforcement-roadmap.md
+    - policyflow/assets/docs/overview.md
+    - README.md
+    - tests/test_repository_docs.py
+    - workflows/features/consumer-onboarding-guide.yml
+  risk_level: LOW
+  confidence:
+    planning: Scope is bounded to docs and repository-doc tests.
+    implementation: The guide can use already-implemented commands and bootstrapped paths.
+    tests: Repository-doc tests can guard the onboarding command sequence and stale manual-copy guidance.
+    residual_uncertainty: Broader docs normalization remains covered by follow-up issue #49.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #23 scope and non-goals were locked before documentation changes.
+    scope_locked:
+      - getting-started quickstart restructuring
+      - README pointer updates where needed
+      - packaged docs asset alignment
+      - removal of obsolete manual-copy instructions from the primary happy path
+      - repository docs tests for command sequence and stale guidance
+    non_goals_locked:
+      - no full docs site redesign
+      - no advanced customization matrix
+      - no video or tutorial production
+      - no behavior changes to CLI or validator
+    risk_rationale: LOW risk because this is bounded documentation and docs-test work without schema, runner, or validator behavior changes.
+  implementation:
+    summary: Reworked Consumer-Repo onboarding docs into a package-first quickstart and aligned packaged documentation assets.
+    changed_files:
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - docs/overview.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/overview.md
+      - tests/test_repository_docs.py
+      - workflows/features/consumer-onboarding-guide.yml
+    test_plan:
+      - pytest -q tests/test_repository_docs.py
+      - pytest -q tests/test_release_packaging.py
+      - policyflow validate workflows/features/consumer-onboarding-guide.yml
+      - policyflow validate workflows/examples/example-feature-workflow.yml
+      - policyflow validate workflows/examples/example-bugfix-workflow.yml
+      - policyflow validate workflows/examples/example-architecture-change-workflow.yml
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Replace stitched-together setup guidance with a single Consumer-Repo onboarding path.
+    acceptance_criteria:
+      - Getting Started shows install, init, minimal edits, doctor, new-workflow, validate, optional run-phase, PR validation, and sync
+      - manual copy instructions are not presented as the normal happy path
+      - local-only and GitHub-governed adoption are clearly separated
+      - packaged docs asset matches source docs
+      - repository docs tests cover stale guidance and key commands
+    approved_scope:
+      - getting-started quickstart restructuring
+      - README pointer updates where needed
+      - packaged docs asset alignment
+      - removal of obsolete manual-copy instructions from the primary happy path
+      - repository docs tests for command sequence and stale guidance
+    non_goals:
+      - no full docs site redesign
+      - no advanced customization matrix
+      - no video or tutorial production
+      - no behavior changes to CLI or validator
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence because the guide reflects existing validated CLI commands.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Consumer onboarding now documents the install, init, doctor, workflow creation, validation, optional runner, PR governance, and sync path as one end-to-end quickstart.
+    changed_files:
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - docs/overview.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/overview.md
+      - tests/test_repository_docs.py
+      - workflows/features/consumer-onboarding-guide.yml
+    docs_updates:
+      - Getting Started now treats package install and `policyflow init` as the normal Consumer-Repo path.
+      - Manual copy guidance moved behind Advanced Manual Adoption.
+      - Overview and governance roadmap now describe current capabilities instead of stale future-state wording.
+      - Packaged docs assets match source docs for bootstrap/sync distribution.
+    tests_added:
+      - tests/test_repository_docs.py::test_getting_started_has_end_to_end_consumer_quickstart
+      - tests/test_repository_docs.py::test_getting_started_keeps_manual_copy_out_of_primary_path
+      - tests/test_repository_docs.py::test_packaged_getting_started_matches_source_doc
+      - tests/test_repository_docs.py::test_overview_and_roadmap_reflect_current_capabilities
+    test_summary: Repository documentation tests cover the quickstart command sequence, manual-copy placement, source/packaged doc parity, and stale capability wording.
+    known_limitations:
+      - Broader docs normalization remains tracked separately by issue #49.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: planning completed
+  block_reason:
+
+handoffs: []
