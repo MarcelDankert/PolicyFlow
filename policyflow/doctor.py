@@ -159,10 +159,6 @@ def _check_runner_config(target_root: Path, config: ConsumerConfig) -> dict[str,
             "Fix policyflow.runners.yml runner command settings.",
         )
 
-    command_check = _check_runner_command(target_root, command)
-    if command_check is not None:
-        return command_check
-
     missing_assets = _missing_runner_assets(target_root, runner)
     if missing_assets:
         return _check(
@@ -171,6 +167,10 @@ def _check_runner_config(target_root: Path, config: ConsumerConfig) -> dict[str,
             f"Missing runner assets: {', '.join(missing_assets)}",
             "Run `policyflow init` to scaffold missing runner prompt/agent assets.",
         )
+
+    command_check = _check_runner_command(target_root, command)
+    if command_check is not None:
+        return command_check
 
     return _check("runner_config", "pass", "Runner config and referenced assets are present.")
 

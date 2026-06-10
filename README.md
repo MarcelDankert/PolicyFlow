@@ -174,32 +174,40 @@ policyflow audit workflows/features
 policyflow audit workflows/features --json
 ```
 
-Central runner configuration:
+Provider-neutral runner configuration:
 
 ```bash
 policyflow run-phase workflows/examples/example-feature-workflow.yml implementation
 policyflow run-phase workflows/examples/example-feature-workflow.yml implementation --runner-config policyflow.runners.yml
 ```
 
-The published `policyflow.runners.yml` uses the packaged Codex wrapper:
+PolicyFlow executes agent-owned phases through a generic command runner
+contract. The default `type: command` runner can be any local CLI, hosted model
+adapter, or internal wrapper that reads PolicyFlow input JSON and writes
+PolicyFlow result JSON. See [docs/runner-contract.md](docs/runner-contract.md)
+for the full input/output contract, placeholders, exit-code behavior, and
+examples.
+
+The packaged Codex wrapper is a reference adapter, not a PolicyFlow
+requirement:
 
 ```text
 python -m policyflow.codex_runner --input <input.json> --output <output.json>
 ```
 
-The wrapper calls `codex exec` and expects Codex to return a single JSON object as
-its final response. Before using `run-phase`, install and authenticate Codex CLI
-and verify the local environment with:
+The wrapper calls `codex exec` and expects Codex to return a single JSON object
+as its final response. If you choose the Codex adapter, install and authenticate
+Codex CLI and verify the local environment with:
 
 ```bash
 codex doctor
 ```
 
-In CI, install PolicyFlow and Codex CLI before the governance step, provide the
-Codex authentication and configuration expected by your Codex installation, and
-run `codex doctor` as a preflight check. If Codex is missing or cannot run,
-PolicyFlow blocks the phase with an actionable runtime reason instead of leaving
-the workflow in an ambiguous state.
+In CI, install PolicyFlow and the provider runner selected in
+`policyflow.runners.yml` before the governance step. Provider credentials and
+runtime setup stay outside PolicyFlow. If the configured runner is missing or
+cannot run, PolicyFlow blocks the phase with an actionable runtime reason instead
+of leaving the workflow in an ambiguous state.
 
 Runner result contract:
 
@@ -212,7 +220,7 @@ Runner result contract:
 - `contract_updates`: optional object written into the phase contract block
 - `handoff`: optional object with `to_phase`, `required_inputs`, and `produced_outputs`
 
-Wrapper exit codes:
+Codex reference adapter exit codes:
 
 - `0`: valid PolicyFlow result JSON was written
 - `2`: Codex CLI command was not found

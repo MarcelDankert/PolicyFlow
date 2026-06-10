@@ -159,8 +159,32 @@ def _consumer_config_content() -> str:
 
 def _consumer_runner_config_content() -> str:
     payload = {
-        "default_runner": "codex",
+        "default_runner": "command",
         "runners": {
+            "command": {
+                "type": "command",
+                "command": [
+                    "policyflow-runner",
+                    "--input",
+                    "{input_path}",
+                    "--output",
+                    "{output_path}",
+                ],
+                "prompt_paths": {
+                    "planning": "ai/prompts/planning-agent.prompt.md",
+                    "architecture-check": "ai/prompts/architecture-agent.prompt.md",
+                    "implementation": "ai/prompts/senior-dev-agent.prompt.md",
+                    "review": "ai/prompts/review-agent.prompt.md",
+                    "qa": "ai/prompts/qa-agent.prompt.md",
+                },
+                "agent_paths": {
+                    "planning": "ai/agents/planning-agent.md",
+                    "architecture-check": "ai/agents/architecture-agent.md",
+                    "implementation": "ai/agents/senior-dev-agent.md",
+                    "review": "ai/agents/review-agent.md",
+                    "qa": "ai/agents/qa-agent.md",
+                },
+            },
             "codex": {
                 "type": "codex",
                 "command": [

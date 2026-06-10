@@ -38,13 +38,21 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     runner_config = yaml.safe_load(
         (tmp_path / "policyflow.runners.yml").read_text(encoding="utf-8")
     )
-    runner_command = runner_config["runners"]["codex"]["command"]
-    assert "scripts/policyflow_codex_wrapper.py" not in runner_command
-    assert runner_command[:3] == ["{python_executable}", "-m", "policyflow.codex_runner"]
-    assert "--input" in runner_command
-    assert "{input_path}" in runner_command
-    assert "--output" in runner_command
-    assert "{output_path}" in runner_command
+    assert runner_config["default_runner"] == "command"
+    command_runner = runner_config["runners"]["command"]
+    assert command_runner["type"] == "command"
+    assert command_runner["command"] == [
+        "policyflow-runner",
+        "--input",
+        "{input_path}",
+        "--output",
+        "{output_path}",
+    ]
+    codex_runner = runner_config["runners"]["codex"]
+    codex_command = codex_runner["command"]
+    assert codex_runner["type"] == "codex"
+    assert "scripts/policyflow_codex_wrapper.py" not in codex_command
+    assert codex_command[:3] == ["{python_executable}", "-m", "policyflow.codex_runner"]
 
     config = load_consumer_config(tmp_path / "policyflow.yml")
     assert config.paths.workflows == Path("ai/workflows")
