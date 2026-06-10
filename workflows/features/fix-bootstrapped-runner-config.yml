@@ -1,0 +1,161 @@
+workflow:
+  id: fix-bootstrapped-runner-config
+  type: bugfix
+
+context:
+  workflow_file: workflows/features/fix-bootstrapped-runner-config.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/45
+  goal: Fix bootstrap so generated Consumer-Repo runner config points to a shipped PolicyFlow runner entrypoint instead of a missing repo-local wrapper script.
+  scope:
+    - bootstrap-generated policyflow.runners.yml command
+    - tests that guard the generated runner command
+    - documentation references if the generated command changes
+  non_goals:
+    - no provider-neutral runner redesign
+    - no real Codex execution in tests
+    - no credential management
+    - no broad doctor command validation beyond this bugfix
+  affected_modules:
+    - policyflow/bootstrap.py
+    - tests/test_bootstrap.py
+    - docs/getting-started.md
+    - README.md
+  risk_level: MEDIUM
+  confidence:
+    planning: The defect is reproduced by a fresh bootstrap producing a stale runner command.
+    implementation: The fix is bounded to generated runner config and matching tests/docs.
+    tests: Bootstrap regression tests can assert the generated command and avoid real provider execution.
+    residual_uncertainty: Follow-up issues cover deeper doctor validation and golden run-phase smoke coverage.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #45 scope and non-goals were locked before implementation.
+    scope_locked:
+      - bootstrap-generated policyflow.runners.yml command
+      - tests that guard the generated runner command
+      - documentation references if the generated command changes
+    non_goals_locked:
+      - no provider-neutral runner redesign
+      - no real Codex execution in tests
+      - no credential management
+      - no broad doctor command validation beyond this bugfix
+    risk_rationale: MEDIUM risk because the generated runner config is a consumer-facing bootstrap contract, but the code change is localized and testable.
+  architecture-check:
+    decision: Update the generated runner command to invoke the packaged PolicyFlow module entrypoint and keep provider behavior adapter-level.
+    constraints:
+      - use the shipped policyflow.codex_runner module for the current default
+      - keep prompt and agent paths in the bootstrapped ai layout
+      - keep external Codex execution mocked out of bootstrap tests
+      - leave provider-neutral command defaults to #43
+    approval_path: architecture-agent review
+  implementation:
+    summary: Bootstrap-generated runner config now invokes the shipped policyflow.codex_runner module, and Windows fake Codex test fixtures use a runnable command shim.
+    files_changed:
+      - policyflow/bootstrap.py
+      - tests/test_bootstrap.py
+      - tests/test_codex_runner.py
+      - tests/test_runtime_cli.py
+      - workflows/features/fix-bootstrapped-runner-config.yml
+    tests_run:
+      - pytest -q tests/test_bootstrap.py
+      - pytest -q tests/test_codex_runner.py
+      - pytest -q tests/test_runtime_cli.py::test_run_phase_executes_packaged_codex_wrapper
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Fresh bootstrap emits a stale runner command pointing to a missing script.
+    acceptance_criteria:
+      - bootstrap no longer emits scripts/policyflow_codex_wrapper.py
+      - generated runner config uses a shipped PolicyFlow module entrypoint
+      - bootstrap tests guard the generated command
+      - docs stay aligned with the generated command
+    approved_scope:
+      - bootstrap-generated policyflow.runners.yml command
+      - tests that guard the generated runner command
+      - documentation references if the generated command changes
+    non_goals:
+      - no provider-neutral runner redesign
+      - no real Codex execution in tests
+      - no credential management
+      - no broad doctor command validation beyond this bugfix
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: The fix is narrow and can be verified through bootstrap output plus targeted tests.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Bootstrap should point to packaged PolicyFlow code because Consumer-Repos should not need an unscaffolded local script for first use.
+    approved_scope:
+      - bootstrap-generated policyflow.runners.yml command
+      - tests that guard the generated runner command
+      - documentation references if the generated command changes
+    module_boundaries:
+      - policyflow.bootstrap owns generated consumer runner config
+      - policyflow.codex_runner remains the provider-specific reference wrapper
+      - docs describe the generated command
+    contract_impact: Changes the Consumer-Repo bootstrap runner config contract from a missing local script to a packaged module command.
+    risk_review_decision: MEDIUM risk accepted with targeted bootstrap regression tests.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not execute real Codex in tests
+      - do not expand provider-neutral behavior beyond #45
+      - keep generated paths relative and portable
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Updated bootstrap runner config generation to use the packaged policyflow.codex_runner module entrypoint instead of the missing scripts/policyflow_codex_wrapper.py path. Added a bootstrap regression assertion for the generated command and made fake Codex test commands Windows-runnable.
+    changed_files:
+      - policyflow/bootstrap.py
+      - tests/test_bootstrap.py
+      - tests/test_codex_runner.py
+      - tests/test_runtime_cli.py
+      - workflows/features/fix-bootstrapped-runner-config.yml
+    test_summary: Verified the red bootstrap regression failed on the stale script path, then passed after the bootstrap command update. Also verified Codex runner and packaged run-phase tests after fixing the Windows fake CLI fixture.
+    docs_updates:
+      - none
+    known_limitations:
+      - provider-neutral default runner behavior remains scoped to issue #43
+      - deeper doctor command validation remains scoped to issue #47
+      - golden run-phase smoke coverage remains scoped to issue #46
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []

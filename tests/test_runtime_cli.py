@@ -113,8 +113,8 @@ def write_mock_runner(path: Path) -> Path:
 
 
 def write_fake_codex(path: Path) -> Path:
-    script_path = path / "fake-codex"
-    script_path.write_text(
+    fake_codex_script = path / "fake-codex.py"
+    fake_codex_script.write_text(
         "\n".join(
             [
                 "#!/usr/bin/env python3",
@@ -153,6 +153,18 @@ def write_fake_codex(path: Path) -> Path:
         ),
         encoding="utf-8",
     )
+    fake_codex_script.chmod(0o755)
+
+    if sys.platform == "win32":
+        script_path = path / "fake-codex.cmd"
+        script_path.write_text(
+            f'@echo off\n"{sys.executable}" "{fake_codex_script}" %*\n',
+            encoding="utf-8",
+        )
+        return script_path
+
+    script_path = path / "fake-codex"
+    script_path.write_text(fake_codex_script.read_text(encoding="utf-8"), encoding="utf-8")
     script_path.chmod(0o755)
     return script_path
 

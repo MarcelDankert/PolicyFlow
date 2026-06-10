@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from typer.testing import CliRunner
+import yaml
 
 from policyflow.bootstrap import bootstrap_consumer_repo
 from policyflow.cli import app
@@ -33,6 +34,17 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     )
     assert "confidence:" in starter_workflow
     assert "residual_uncertainty:" in starter_workflow
+
+    runner_config = yaml.safe_load(
+        (tmp_path / "policyflow.runners.yml").read_text(encoding="utf-8")
+    )
+    runner_command = runner_config["runners"]["codex"]["command"]
+    assert "scripts/policyflow_codex_wrapper.py" not in runner_command
+    assert runner_command[:3] == ["{python_executable}", "-m", "policyflow.codex_runner"]
+    assert "--input" in runner_command
+    assert "{input_path}" in runner_command
+    assert "--output" in runner_command
+    assert "{output_path}" in runner_command
 
     config = load_consumer_config(tmp_path / "policyflow.yml")
     assert config.paths.workflows == Path("ai/workflows")
