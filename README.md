@@ -1,5 +1,11 @@
 # PolicyFlow
 
+[![PolicyFlow Governance](https://github.com/MarcelDankert/PolicyFlow/actions/workflows/policyflow-governance.yml/badge.svg)](https://github.com/MarcelDankert/PolicyFlow/actions/workflows/policyflow-governance.yml)
+[![PyPI](https://img.shields.io/pypi/v/policyflow.svg)](https://pypi.org/project/policyflow/)
+[![Python](https://img.shields.io/pypi/pyversions/policyflow.svg)](https://pypi.org/project/policyflow/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Typed](https://img.shields.io/badge/typed-yes-brightgreen.svg)](pyproject.toml)
+
 PolicyFlow is a reusable governance and lightweight workflow orchestration
 framework for agent-assisted software delivery.
 
@@ -65,12 +71,8 @@ Install a pinned PolicyFlow release:
 python -m pip install policyflow==0.1.0
 ```
 
-Use this command once `policyflow==0.1.0` is published. Until then, install from
-this checkout for local evaluation:
-
-```bash
-python -m pip install -e .[dev]
-```
+Release links: [PyPI](https://pypi.org/project/policyflow/0.1.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.0).
 
 Bootstrap the standard Consumer-Repo layout:
 
@@ -400,10 +402,11 @@ imports are documented in [docs/public-api.md](docs/public-api.md).
 
 ## Project Status
 
-PolicyFlow is release-ready for `0.1.0` packaging and publication once the PyPI
-package and matching GitHub Release are created. Until that release exists,
-install from this repository for evaluation and use the pinned
-`policyflow==0.1.0` commands as the intended published Consumer-Repo path.
+PolicyFlow `0.1.0` is published on
+[PyPI](https://pypi.org/project/policyflow/0.1.0/) with a matching
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.0).
+Use `python -m pip install policyflow==0.1.0` for the published Consumer-Repo
+path.
 
 ## Future Roadmap
 
