@@ -79,6 +79,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "getting-started.md",
         "overview.md",
         "governance-enforcement-roadmap.md",
+        "release-and-upgrade.md",
     ):
         source = (ROOT / "docs" / relative_path).read_text(encoding="utf-8")
         packaged = (ROOT / "policyflow/assets/docs" / relative_path).read_text(
@@ -99,3 +100,14 @@ def test_overview_and_roadmap_reflect_current_capabilities() -> None:
     assert "policyflow new-workflow" in roadmap
     assert "policyflow validate-github-approvals" in roadmap
     assert "GitHub API-based PR validation after the markdown-file workflow" not in roadmap
+
+
+def test_release_docs_define_pinned_release_channel_and_artifacts() -> None:
+    text = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
+
+    assert "python -m pip install policyflow==0.1.0" in text
+    assert "PyPI" in text
+    assert "GitHub Release" in text
+    assert "policyflow sync ." in text
+    assert "policyflow validate" in text
+    assert "release artifacts" in text

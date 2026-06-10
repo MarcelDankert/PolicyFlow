@@ -11,6 +11,49 @@ Use the same version in local developer setup, CI, and Consumer-Repo automation.
 Avoid installing from `main` for governed work because validator behavior and
 bootstrap assets can change between commits.
 
+## Release Channel
+
+The initial public Consumer-Repo channel is the PyPI package named
+`policyflow`, starting with `policyflow==0.1.0`. Each published package version
+should have a matching GitHub Release named with the same tag, for example
+`v0.1.0`.
+
+Consumer-Repos should install from PyPI by version instead of cloning this
+repository. The generated GitHub Actions governance workflow pins the same
+package version through `POLICYFLOW_VERSION`:
+
+```yaml
+env:
+  POLICYFLOW_VERSION: "0.1.0"
+```
+
+```bash
+python -m pip install "policyflow==${POLICYFLOW_VERSION}"
+```
+
+Update this value in Consumer-Repo automation when adopting a newer PolicyFlow
+release.
+
+## Release Artifact Checklist
+
+Before publishing release artifacts:
+
+1. Confirm `pyproject.toml` and `policyflow.__version__` declare the same
+   version.
+2. Build the source distribution and wheel from a clean checkout.
+3. Inspect the wheel contents and verify packaged assets include bootstrap,
+   doctor, runner config, GitHub templates, workflow templates, prompts, rules,
+   agents, examples, and docs.
+4. Run release packaging tests and the full test suite.
+5. Publish the package to PyPI.
+6. Create the matching GitHub Release with release notes and the source
+   distribution plus wheel attached or linked.
+7. Document whether Consumer-Repos need to run `policyflow sync .`, update
+   workflow files, or change schema/config versions.
+
+The release artifacts are the PyPI source distribution, PyPI wheel, matching
+GitHub Release notes, and the packaged managed assets contained in that wheel.
+
 ## Upgrade Path
 
 1. Pick the target PolicyFlow version from the release notes.
@@ -25,6 +68,13 @@ bootstrap assets can change between commits.
 8. Use `policyflow init . --force` only when the repo intentionally runs bootstrap
    again with the packaged asset version.
 9. Revalidate active workflow files and PR bodies after the upgrade.
+
+Recommended validation after changing the version pin:
+
+```bash
+policyflow validate ai/workflows/features/<workflow>.yml
+policyflow validate-pr ai/workflows/features/<workflow>.yml pr-body.md
+```
 
 PolicyFlow sync reports unchanged, added, changed, locally modified, and removed
 managed assets. It does not merge project-specific customizations. Consumer
@@ -42,6 +92,14 @@ Each PolicyFlow release should call out:
 - runner configuration contract changes
 - upgrade steps for Consumer-Repos
 - known compatibility limits
+
+Release notes must also state one of:
+
+- no managed asset changes; no `policyflow sync .` action required
+- managed asset changes available; run `policyflow sync .` to preview and
+  `policyflow sync . --apply` to accept safe updates
+- workflow/schema changes require explicit Consumer-Repo migration before
+  adopting the release
 
 ## Compatibility Rules
 

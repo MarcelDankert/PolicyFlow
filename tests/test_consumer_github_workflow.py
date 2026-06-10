@@ -29,7 +29,15 @@ def test_consumer_github_actions_template_has_governance_steps() -> None:
     assert "policyflow validate-pr" in validate_step["run"]
     assert "policyflow validate-github-approvals" in validate_step["run"]
     install_step = next(step for step in steps if step["name"] == "Install PolicyFlow")
-    assert "pip install policyflow" in install_step["run"]
+    assert "python -m pip install \"policyflow==${POLICYFLOW_VERSION}\"" in install_step["run"]
+    assert "pip install policyflow\n" not in install_step["run"]
+
+
+def test_packaged_consumer_github_actions_template_matches_source() -> None:
+    source = ROOT / "github" / "workflows" / "policyflow-governance.yml"
+    packaged = ROOT / "policyflow/assets/github/workflows/policyflow-governance.yml"
+
+    assert packaged.read_text(encoding="utf-8") == source.read_text(encoding="utf-8")
 
 
 def test_bootstrap_installs_consumer_github_actions_workflow(tmp_path: Path) -> None:

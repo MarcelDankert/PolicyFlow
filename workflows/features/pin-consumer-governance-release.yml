@@ -1,0 +1,174 @@
+workflow:
+  id: pin-consumer-governance-release
+  type: feature
+
+context:
+  workflow_file: workflows/features/pin-consumer-governance-release.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/48
+  goal: Make Consumer-Repo governance workflows install a reproducible PolicyFlow package version and document the release artifact process for pinned adoption.
+  scope:
+    - pin the generated Consumer-Repo GitHub Actions install command to the current PolicyFlow package version
+    - keep source and packaged GitHub governance workflow assets aligned
+    - document the initial release channel and artifact publishing checklist for `policyflow==0.1.0`
+    - document how release notes map to `policyflow sync` and workflow/schema upgrade actions
+    - add tests that prevent unpinned Consumer-Repo governance workflow installs
+  non_goals:
+    - no multi-registry release strategy
+    - no automated dependency update bot
+    - no fleet-wide upgrade orchestration
+    - no external PyPI or GitHub release publication from this PR
+  affected_modules:
+    - github/workflows/policyflow-governance.yml
+    - policyflow/assets/github/workflows/policyflow-governance.yml
+    - docs/release-and-upgrade.md
+    - policyflow/assets/docs/release-and-upgrade.md
+    - tests/test_consumer_github_workflow.py
+    - tests/test_repository_docs.py
+    - workflows/features/pin-consumer-governance-release.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope touches Consumer-Repo GitHub governance assets and release docs, so it is bounded but consumer-facing.
+    implementation: The package version is already declared as 0.1.0 in pyproject and policyflow.__version__.
+    tests: Existing workflow template tests can assert the pinned install command and source/asset parity.
+    residual_uncertainty: Actual external package publication remains an operational release action outside this PR.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #48 scope and non-goals were locked before changing Consumer-Repo workflow assets or release docs.
+    scope_locked:
+      - pin generated Consumer-Repo GitHub Actions install command
+      - keep source and packaged GitHub governance workflow assets aligned
+      - document initial release channel and artifact publishing checklist
+      - document release notes, sync, and upgrade mapping
+      - add tests preventing unpinned Consumer-Repo governance workflow installs
+    non_goals_locked:
+      - no multi-registry release strategy
+      - no automated dependency update bot
+      - no fleet-wide upgrade orchestration
+      - no external PyPI or GitHub release publication from this PR
+    risk_rationale: MEDIUM risk because this changes generated Consumer-Repo GitHub Actions behavior and release guidance.
+  architecture-check:
+    decision: approved
+    constraints:
+      - preserve the existing Consumer-Repo workflow trigger and validation steps
+      - pin the install command without adding new config schema requirements
+      - document publication as an operational checklist instead of claiming an external release was published by this PR
+    approval_path: review-agent and qa-agent review are required by MEDIUM risk.
+  implementation:
+    summary: Pinned the generated Consumer-Repo governance workflow install command and documented release artifact expectations.
+    changed_files:
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/pin-consumer-governance-release.yml
+    test_plan:
+      - pytest -q tests/test_consumer_github_workflow.py tests/test_repository_docs.py
+      - policyflow validate workflows/features/pin-consumer-governance-release.yml
+      - pytest -q tests/test_release_packaging.py tests/test_bootstrap.py tests/test_asset_sync.py
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Close the reproducibility gap between local pinned installs and generated Consumer-Repo GitHub governance workflows.
+    acceptance_criteria:
+      - generated GitHub Actions governance workflow installs a pinned PolicyFlow version by default
+      - release docs identify the public release channel and artifact publication process
+      - docs explain how release notes map to sync and workflow/schema upgrade actions
+      - tests prevent unpinned Consumer-Repo governance workflow install commands
+      - packaged source assets remain aligned with repository source assets
+    approved_scope:
+      - pin generated Consumer-Repo GitHub Actions install command
+      - keep source and packaged GitHub governance workflow assets aligned
+      - document initial release channel and artifact publishing checklist
+      - document release notes, sync, and upgrade mapping
+      - add tests preventing unpinned Consumer-Repo governance workflow installs
+    non_goals:
+      - no multi-registry release strategy
+      - no automated dependency update bot
+      - no fleet-wide upgrade orchestration
+      - no external PyPI or GitHub release publication from this PR
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence because the change is small but affects generated Consumer-Repo CI behavior.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Pinning the generated workflow install command and documenting release operations avoids adding new schema or bootstrap behavior while closing the immediate reproducibility gap.
+    approved_scope:
+      - source and packaged GitHub workflow install command
+      - release and upgrade documentation
+      - repository tests for pinned install and asset parity
+    module_boundaries:
+      - no validator semantics change
+      - no bootstrap config schema change
+      - no runner contract change
+    contract_impact: Consumer-Repo GitHub workflow installs the same named PolicyFlow package version as local docs.
+    risk_review_decision: MEDIUM risk accepted with review-agent and qa-agent review.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not claim external publication happened unless release metadata exists
+      - keep source and packaged workflow assets byte-for-byte aligned
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Consumer-Repo GitHub governance workflows now install `policyflow==${POLICYFLOW_VERSION}` with a default version of `0.1.0`; release docs define PyPI, matching GitHub Release notes, release artifacts, and sync/schema upgrade mapping.
+    changed_files:
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/pin-consumer-governance-release.yml
+    test_summary: Focused tests cover pinned Consumer-Repo workflow installs, source/packaged workflow parity, release docs content, and release docs asset parity.
+    docs_updates:
+      - Release guide now names PyPI as the Consumer-Repo package channel and matching GitHub Releases as release-note artifacts.
+      - Release guide now lists the package, wheel, source distribution, release notes, and packaged managed assets as release artifacts.
+      - Release guide now maps release notes to `policyflow sync .`, workflow validation, PR validation, and schema/config migration actions.
+    known_limitations:
+      - This PR documents the release artifact process and pins generated workflows but does not publish external PyPI or GitHub release artifacts.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
