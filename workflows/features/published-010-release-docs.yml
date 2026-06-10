@@ -1,0 +1,146 @@
+workflow:
+  id: published-010-release-docs
+  type: feature
+
+context:
+  workflow_file: workflows/features/published-010-release-docs.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/64
+  goal: Update public docs after the `v0.1.0` GitHub Release and `policyflow==0.1.0` PyPI package are published.
+  scope:
+    - remove pre-publication install wording from README and install docs
+    - present `policyflow==0.1.0` as the normal released install path
+    - add PyPI and GitHub Release links to public docs
+    - add README status badges for governance, PyPI, Python versions, license, and typing
+    - update CHANGELOG release status for `0.1.0`
+    - keep packaged docs assets aligned
+    - update repository docs tests for published-release wording
+  non_goals:
+    - no new release publication
+    - no version bump
+    - no runtime, validator, bootstrap, or CLI behavior changes
+  affected_modules:
+    - README.md
+    - CHANGELOG.md
+    - docs/getting-started.md
+    - docs/release-and-upgrade.md
+    - policyflow/assets/docs/getting-started.md
+    - policyflow/assets/docs/release-and-upgrade.md
+    - tests/test_repository_docs.py
+    - workflows/features/published-010-release-docs.yml
+  risk_level: LOW
+  confidence:
+    planning: Scope is bounded to documentation and repository docs tests after release publication.
+    implementation: PyPI and GitHub Release are externally visible and can be linked directly.
+    tests: Repository docs tests can assert published-release wording and links.
+    residual_uncertainty: None for docs; future releases need their own release notes.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #64 scope and non-goals were locked before documentation edits.
+    scope_locked:
+      - remove pre-publication install wording
+      - present policyflow==0.1.0 as published install path
+      - add PyPI and GitHub Release links
+      - update changelog release status
+      - keep packaged docs aligned
+      - update repository docs tests
+    non_goals_locked:
+      - no new release publication
+      - no version bump
+      - no runtime, validator, bootstrap, or CLI behavior changes
+    risk_rationale: LOW risk because this is docs and tests only after release publication.
+  implementation:
+    summary: Updated README, install docs, release guidance, and changelog to reflect the published 0.1.0 release, including README public status badges.
+    changed_files:
+      - README.md
+      - CHANGELOG.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/published-010-release-docs.yml
+    test_plan:
+      - pytest -q tests/test_repository_docs.py
+      - policyflow validate workflows/features/published-010-release-docs.yml
+      - pytest -q tests/test_release_packaging.py
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Update install and release docs now that v0.1.0 is published.
+    acceptance_criteria:
+      - README and docs state that policyflow==0.1.0 is published
+      - PyPI and GitHub Release links are visible
+      - README includes public repository status badges
+      - pre-publication wording is removed
+      - CHANGELOG identifies 0.1.0 as released
+      - repository docs tests cover release wording
+    approved_scope:
+      - release docs wording
+      - README install and project status wording
+      - README status badges
+      - changelog release status
+      - packaged docs parity
+      - repository docs tests
+    non_goals:
+      - no new release publication
+      - no version bump
+      - no runtime, validator, bootstrap, or CLI behavior changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence because the release artifacts are already published and the change is documentation-only.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Removed pre-publication install wording, added PyPI and GitHub Release links, added README status badges, updated project status to published, and marked 0.1.0 as released in the changelog.
+    changed_files:
+      - README.md
+      - CHANGELOG.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/published-010-release-docs.yml
+    test_summary: Repository docs tests verify published-release wording, PyPI and GitHub Release links, and absence of pre-publication wording.
+    docs_updates:
+      - README and install docs now present `policyflow==0.1.0` as published.
+      - README now shows governance, PyPI, Python version, license, and typing badges.
+      - CHANGELOG now marks 0.1.0 as released on 2026-06-10.
+    known_limitations:
+      - none
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: planning completed
+  block_reason:
+
+handoffs: []

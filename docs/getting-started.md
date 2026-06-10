@@ -12,12 +12,8 @@ Install and pin PolicyFlow:
 python -m pip install policyflow==0.1.0
 ```
 
-Use this command once `policyflow==0.1.0` is published. Until then, install from
-the PolicyFlow checkout for local evaluation:
-
-```bash
-python -m pip install -e .[dev]
-```
+Release links: [PyPI](https://pypi.org/project/policyflow/0.1.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.0).
 
 Use the same package pin in local setup, CI, and GitHub Actions. See
 [release-and-upgrade.md](release-and-upgrade.md) for release notes and upgrade

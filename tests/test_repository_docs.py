@@ -25,6 +25,16 @@ def test_readme_links_repository_agents_guidance() -> None:
     assert "PolicyFlow repository guidance" in readme
 
 
+def test_readme_has_public_repository_status_badges() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "actions/workflows/policyflow-governance.yml/badge.svg" in readme
+    assert "img.shields.io/pypi/v/policyflow.svg" in readme
+    assert "img.shields.io/pypi/pyversions/policyflow.svg" in readme
+    assert "License-MIT" in readme
+    assert "typed-yes" in readme
+
+
 def test_readme_matches_current_consumer_onboarding_positioning() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -177,15 +187,17 @@ def test_readme_uses_finished_compatibility_language() -> None:
     assert "## Compatibility" in readme
     assert "docs/schema-compatibility.md" in readme
     assert "## Project Status" in readme
-    assert "release-ready" in readme
+    assert "PolicyFlow `0.1.0` is published" in readme
 
 
-def test_release_docs_are_honest_about_publication_state() -> None:
+def test_release_docs_reflect_published_release_state() -> None:
     for relative_path in ("README.md", "docs/getting-started.md", "docs/release-and-upgrade.md"):
         text = (ROOT / relative_path).read_text(encoding="utf-8")
 
         assert "policyflow==0.1.0" in text
-        assert "once `policyflow==0.1.0` is published" in text
+        assert "once `policyflow==0.1.0` is published" not in text
+        assert "https://pypi.org/project/policyflow/0.1.0/" in text
+        assert "https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.0" in text
 
 
 def test_pyproject_has_public_package_metadata() -> None:

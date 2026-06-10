@@ -14,7 +14,9 @@ asset compatibility changes.
 
 ## 0.1.0
 
-Initial release target.
+Released: 2026-06-10
+
+Initial public release.
 
 - Bootstrap command for Consumer-Repos.
 - Doctor readiness checks.
