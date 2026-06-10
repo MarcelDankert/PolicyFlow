@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+import sys
 
 from typer.testing import CliRunner
+import yaml
 
 from policyflow.cli import app
 
@@ -31,6 +34,44 @@ def test_golden_consumer_repo_path_runs_end_to_end(tmp_path: Path) -> None:
     assert audit_result.exit_code == 0
     assert "starter-workflow" in audit_result.stdout
 
+    generated_runner_config = yaml.safe_load(
+        (tmp_path / "policyflow.runners.yml").read_text(encoding="utf-8")
+    )
+    generated_command = generated_runner_config["runners"]["codex"]["command"]
+    assert "scripts/policyflow_codex_wrapper.py" not in generated_command
+    assert generated_command[:3] == [
+        "{python_executable}",
+        "-m",
+        "policyflow.codex_runner",
+    ]
+
+    fake_runner_path = _write_fake_runner(tmp_path)
+    _configure_fake_runner(tmp_path, fake_runner_path)
+
+    run_phase_result = runner.invoke(
+        app,
+        [
+            "run-phase",
+            str(workflow_path),
+            "implementation",
+            "--runner-config",
+            str(tmp_path / "policyflow.runners.yml"),
+        ],
+    )
+    assert run_phase_result.exit_code == 0
+
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    assert workflow["execution"]["phases"][2]["state"] == "completed"
+    assert workflow["contracts"]["implementation"]["owner_agent"] == "senior-dev-agent"
+    assert workflow["runtime"]["status"] == "handoff_pending"
+    assert workflow["runtime"]["current_phase"] == "implementation"
+    assert workflow["handoffs"][-1]["to_phase"] == "review"
+    assert workflow["handoffs"][-1]["required_inputs"] == [
+        "implementation_summary",
+        "test_summary",
+    ]
+    assert workflow["handoffs"][-1]["produced_outputs"] == ["review_findings"]
+
     pr_body_path = tmp_path / "pr-body.md"
     pr_body_path.write_text(_starter_pr_body(), encoding="utf-8")
     validate_pr_result = runner.invoke(
@@ -38,6 +79,67 @@ def test_golden_consumer_repo_path_runs_end_to_end(tmp_path: Path) -> None:
         ["validate-pr", str(workflow_path), str(pr_body_path)],
     )
     assert validate_pr_result.exit_code == 0
+
+
+def _write_fake_runner(path: Path) -> Path:
+    script_path = path / "fake-policyflow-runner.py"
+    script_path.write_text(
+        "\n".join(
+            [
+                "import argparse",
+                "import json",
+                "from pathlib import Path",
+                "",
+                "parser = argparse.ArgumentParser()",
+                "parser.add_argument('--input', required=True)",
+                "parser.add_argument('--output', required=True)",
+                "args = parser.parse_args()",
+                "",
+                "payload = json.loads(Path(args.input).read_text(encoding='utf-8'))",
+                "result = {",
+                "    'phase': payload['phase'],",
+                "    'owner_agent': payload['owner_agent'],",
+                "    'status': 'completed',",
+                "    'summary': 'Golden smoke fake runner completed implementation.',",
+                "    'contract_updates': {",
+                "        'owner_agent': 'senior-dev-agent',",
+                "        'implementation_summary': 'Validated the bootstrapped runner path.',",
+                "        'changed_files': ['ai/workflows/features/starter-workflow.yml'],",
+                "        'test_summary': 'Golden consumer smoke executed run-phase.',",
+                "        'docs_updates': ['none'],",
+                "        'known_limitations': ['none'],",
+                "        'unresolved_questions': ['none']",
+                "    },",
+                "    'handoff': {",
+                "        'to_phase': 'review',",
+                "        'required_inputs': ['implementation_summary', 'test_summary'],",
+                "        'produced_outputs': ['review_findings']",
+                "    }",
+                "}",
+                "Path(args.output).write_text(json.dumps(result), encoding='utf-8')",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return script_path
+
+
+def _configure_fake_runner(target: Path, script_path: Path) -> None:
+    runner_config_path = target / "policyflow.runners.yml"
+    runner_config = yaml.safe_load(runner_config_path.read_text(encoding="utf-8"))
+    runner_config["runners"]["codex"]["type"] = "command"
+    runner_config["runners"]["codex"]["command"] = [
+        sys.executable,
+        str(script_path),
+        "--input",
+        "{input_path}",
+        "--output",
+        "{output_path}",
+    ]
+    runner_config_path.write_text(
+        yaml.safe_dump(runner_config, sort_keys=False),
+        encoding="utf-8",
+    )
 
 
 def _starter_pr_body() -> str:

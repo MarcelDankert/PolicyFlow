@@ -110,6 +110,11 @@ referenced prompt and agent files, project context, and GitHub governance
 templates. Missing local PolicyFlow assets fail readiness. External GitHub
 tooling is reported separately so local setup gaps are actionable.
 
+PolicyFlow's golden Consumer-Repo smoke test guards this plug-and-play path by
+bootstrapping a temporary repo, running doctor, validating the starter workflow,
+executing one implementation phase through a local fake runner, and validating a
+starter PR body without real provider or GitHub network calls.
+
 Preview managed asset changes after upgrading the PolicyFlow package:
 
 ```bash
