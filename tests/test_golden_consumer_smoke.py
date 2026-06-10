@@ -23,6 +23,26 @@ def test_golden_consumer_repo_path_runs_end_to_end(tmp_path: Path) -> None:
     workflow_path = tmp_path / "ai/workflows/features/starter-workflow.yml"
     assert workflow_path.exists()
 
+    new_workflow_result = runner.invoke(
+        app,
+        [
+            "new-workflow",
+            "feature",
+            "--id",
+            "first-feature",
+            "--risk",
+            "LOW",
+            "--target",
+            str(tmp_path),
+        ],
+    )
+    assert new_workflow_result.exit_code == 0
+    first_workflow_path = tmp_path / "ai/workflows/features/first-feature.yml"
+    assert first_workflow_path.exists()
+
+    first_validate_result = runner.invoke(app, ["validate", str(first_workflow_path)])
+    assert first_validate_result.exit_code == 0
+
     validate_result = runner.invoke(app, ["validate", str(workflow_path)])
     assert validate_result.exit_code == 0
 

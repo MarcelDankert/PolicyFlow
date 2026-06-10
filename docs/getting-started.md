@@ -40,6 +40,22 @@ templates and governance workflow under `.github/`, `policyflow.yml`,
 `ai/workflows/features/starter-workflow.yml` so the first validation path is
 available immediately.
 
+Create the first real governed workflow instance from the bootstrapped defaults:
+
+```bash
+policyflow new-workflow feature --id first-feature --risk LOW
+policyflow validate ai/workflows/features/first-feature.yml
+```
+
+Use `bugfix`, `architecture-change`, or `low-risk` for other workflow shapes.
+Generated workflow files follow the workflow root configured in `policyflow.yml`,
+protect existing files by default, and support preview/overwrite controls:
+
+```bash
+policyflow new-workflow feature --id preview-feature --risk LOW --dry-run
+policyflow new-workflow feature --id first-feature --risk LOW --force
+```
+
 Minimal local-only config:
 
 ```yaml
