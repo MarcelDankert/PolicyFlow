@@ -1,6 +1,7 @@
 # PolicyFlow
 
-PolicyFlow is a reusable governance and workflow framework for agent-assisted software delivery.
+PolicyFlow is a reusable governance and lightweight workflow orchestration
+framework for agent-assisted software delivery.
 
 It provides policy-as-code style documentation, risk-aware workflow templates, explicit agent handoffs, human approval gates, and GitHub governance patterns that a target project can adopt without building its own process layer from scratch.
 
@@ -9,13 +10,16 @@ It provides policy-as-code style documentation, risk-aware workflow templates, e
 - A template repository for agentic SDLC governance
 - A set of reusable rules, workflows, prompts, and GitHub intake patterns
 - A way to make agent-driven work more reviewable, risk-aware, and auditable
+- A lightweight workflow orchestration layer for phase state, handoffs, runner
+  execution, and governance evidence
 
 ## What PolicyFlow Is Not
 
 - Not a product repository
-- Not a runtime orchestration system
-- Not a full orchestration platform
+- Not a full orchestration platform or hosted agent runtime
 - Not a substitute for target-project architecture, contracts, or domain context
+
+PolicyFlow is not a hosted scheduler, merge bot, or provider credential manager.
 
 ## Why It Exists
 
@@ -53,17 +57,40 @@ PolicyFlow/
 See [AGENTS.md](AGENTS.md) for PolicyFlow repository guidance for Codex and
 other coding agents working on this framework.
 
-## How To Use It In A Target Project
+## How To Use It In A Consumer-Repo
 
-1. Copy `github/ISSUE_TEMPLATE/*` and `github/PULL_REQUEST_TEMPLATE.md` into the target repo's `.github/`.
-2. Copy `rules/`, `agents/`, `workflows/`, and `prompts/` into the target repo's `ai/`.
-3. Add `ai/project-context.yml` in the target project using [examples/project-context.yml](examples/project-context.yml) as the starting point.
-4. Add target-project overlays such as:
-   - `AGENTS.md`
-   - `ai/architecture.md`
-   - `ai/rules/project-overrides.md`
-   - `contracts/` if applicable
-5. Create workflow instances for real work under `ai/workflows/features/` or the target project's chosen workflow location before implementation starts. This is required in every consumer repo.
+Install a pinned PolicyFlow release:
+
+```bash
+python -m pip install policyflow==0.1.0
+```
+
+Bootstrap the standard Consumer-Repo layout:
+
+```bash
+policyflow init .
+```
+
+Validate the local setup before the first governed change:
+
+```bash
+policyflow doctor .
+```
+
+Then make the minimal project-specific edits:
+
+1. update `ai/project-context.yml`
+2. choose local-only or GitHub-governed features in `policyflow.yml`
+3. configure `policyflow.runners.yml` if agent-owned phases should run through
+   a local CLI, hosted-adapter wrapper, or internal runner
+4. add project-specific overlays such as `ai/architecture.md`,
+   `ai/rules/project-overrides.md`, or `contracts/` if applicable
+5. create workflow instances for real work under `ai/workflows/features/` or the
+   configured workflow location before implementation starts
+
+See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
+Quickstart, including PR validation, GitHub approval checks, runner setup, and
+managed asset sync.
 
 ## Workflow-First Delivery Standard
 
@@ -359,14 +386,14 @@ This runtime layer is intentionally small. It mutates only controlled workflow f
 PolicyFlow now acts as a lightweight workflow orchestration layer as well as a governance validator, but it is still not a full orchestration platform, scheduler, or agent runtime.
 
 TODO:
-- Normalize the workflow schema into a single canonical governance block in a future PR after real usage validates the current field layout.
+- Define the workflow schema normalization path, compatibility policy, and
+  migration guidance tracked by issue #50.
 
 ## Future Roadmap
 
 - workflow schema normalization after more consumer usage
 - release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow
-- GitHub API-based PR validation as a later target state after the local markdown flow is proven in real usage
 
 ## License
 

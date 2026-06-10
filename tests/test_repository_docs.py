@@ -24,6 +24,19 @@ def test_readme_links_repository_agents_guidance() -> None:
     assert "PolicyFlow repository guidance" in readme
 
 
+def test_readme_matches_current_consumer_onboarding_positioning() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "lightweight workflow orchestration layer" in readme
+    assert "not a hosted scheduler, merge bot, or provider credential manager" in readme
+    assert "policyflow init ." in readme
+    assert "policyflow doctor ." in readme
+    assert "Copy `github/ISSUE_TEMPLATE/*`" not in readme
+    assert "Copy `rules/`, `agents/`, `workflows/`, and `prompts/`" not in readme
+    assert "Not a runtime orchestration system" not in readme
+    assert "GitHub API-based PR validation as a later target state" not in readme
+
+
 def test_public_root_docs_do_not_include_machine_local_paths() -> None:
     for relative_path in ("AGENTS.md", "README.md"):
         text = (ROOT / relative_path).read_text(encoding="utf-8")

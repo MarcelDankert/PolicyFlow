@@ -1,0 +1,126 @@
+workflow:
+  id: normalize-docs-current-capabilities
+  type: feature
+
+context:
+  workflow_file: workflows/features/normalize-docs-current-capabilities.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/49
+  goal: Normalize README and roadmap-facing documentation so new Consumer-Repo users see current implemented PolicyFlow capabilities without contradictory setup or runtime language.
+  scope:
+    - README positioning for lightweight workflow orchestration versus hosted runtime limitations
+    - README adoption path alignment with package install and policyflow init
+    - README command and limitation consistency with Getting Started, Overview, and roadmap docs
+    - repository docs tests for stale manual-copy and runtime-positioning claims
+  non_goals:
+    - no docs site redesign
+    - no behavior changes to CLI or validator
+    - no broad rewrite of rules, prompts, agents, or historical workflow files
+    - no release publishing or CI install pinning changes
+  affected_modules:
+    - README.md
+    - tests/test_repository_docs.py
+    - workflows/features/normalize-docs-current-capabilities.yml
+  risk_level: LOW
+  confidence:
+    planning: Scope is bounded to public documentation language and repository-doc assertions.
+    implementation: Current docs already define the target capability language; README can be aligned without code changes.
+    tests: Repository-doc tests can catch stale manual-copy primary paths and contradictory runtime positioning.
+    residual_uncertainty: Release artifact pinning remains separately tracked by issue #48.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #49 scope and non-goals were locked before README and docs-test changes.
+    scope_locked:
+      - README positioning for lightweight workflow orchestration versus hosted runtime limitations
+      - README adoption path alignment with package install and policyflow init
+      - README command and limitation consistency with Getting Started, Overview, and roadmap docs
+      - repository docs tests for stale manual-copy and runtime-positioning claims
+    non_goals_locked:
+      - no docs site redesign
+      - no behavior changes to CLI or validator
+      - no broad rewrite of rules, prompts, agents, or historical workflow files
+      - no release publishing or CI install pinning changes
+    risk_rationale: LOW risk because this changes documentation and docs tests only.
+  implementation:
+    summary: Updated README positioning and primary Consumer-Repo adoption path to match current PolicyFlow capabilities.
+    changed_files:
+      - README.md
+      - tests/test_repository_docs.py
+      - workflows/features/normalize-docs-current-capabilities.yml
+    test_plan:
+      - pytest -q tests/test_repository_docs.py
+      - policyflow validate workflows/features/normalize-docs-current-capabilities.yml
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Remove contradictory setup and capability language that remains after the Consumer Quickstart update.
+    acceptance_criteria:
+      - README distinguishes lightweight workflow orchestration from hosted scheduler or full agent runtime limitations
+      - README primary adoption path starts with package install and policyflow init instead of manual directory copying
+      - implemented features are not described as future work in public onboarding docs
+      - limitations remain explicit for hosting, merge automation, approval bypassing, and provider credential management
+      - repository docs tests cover stale README setup and positioning claims
+    approved_scope:
+      - README positioning for lightweight workflow orchestration versus hosted runtime limitations
+      - README adoption path alignment with package install and policyflow init
+      - README command and limitation consistency with Getting Started, Overview, and roadmap docs
+      - repository docs tests for stale manual-copy and runtime-positioning claims
+    non_goals:
+      - no docs site redesign
+      - no behavior changes to CLI or validator
+      - no broad rewrite of rules, prompts, agents, or historical workflow files
+      - no release publishing or CI install pinning changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence because the target README language can mirror already-updated source docs.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: README now describes PolicyFlow as a governance and lightweight workflow orchestration framework, uses package install plus `policyflow init` and `policyflow doctor` as the primary Consumer-Repo adoption path, and keeps limitations explicit.
+    changed_files:
+      - README.md
+      - tests/test_repository_docs.py
+      - workflows/features/normalize-docs-current-capabilities.yml
+    test_summary: Repository documentation tests cover README onboarding positioning, stale manual-copy instructions, and obsolete future-state wording.
+    docs_updates:
+      - README primary adoption path now starts with install, bootstrap, and doctor.
+      - README limitations now distinguish lightweight workflow orchestration from hosted scheduling, merge automation, hosted agent runtime, and provider credential management.
+      - README roadmap no longer describes implemented GitHub PR validation as future work.
+    known_limitations:
+      - Release artifact publishing and CI install pinning remain tracked separately by issue #48.
+      - Canonical schema normalization remains tracked separately by issue #50.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: planning completed
+  block_reason:
+
+handoffs: []
