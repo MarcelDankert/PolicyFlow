@@ -47,9 +47,9 @@ execution:
     - phase: implementation
       state: completed
     - phase: review
-      state: pending
+      state: completed
     - phase: qa
-      state: pending
+      state: completed
 
 evidence:
   planning:
@@ -84,6 +84,15 @@ evidence:
       - pytest -q tests/test_bootstrap.py
       - pytest -q tests/test_codex_runner.py
       - pytest -q tests/test_runtime_cli.py::test_run_phase_executes_packaged_codex_wrapper
+  review:
+    outcome: approved
+    findings_summary: Follow-up runner, doctor, provider-neutral contract, and golden smoke work confirmed the bootstrapped runner path no longer references missing repo-local glue.
+    residual_risk: External provider binaries and credentials remain intentionally outside PolicyFlow and are surfaced as runner readiness warnings or run-phase blockers.
+  qa:
+    outcome: passed
+    evidence_summary: Bootstrap tests assert the generated command excludes scripts/policyflow_codex_wrapper.py, doctor tests catch broken local runner paths, and the golden Consumer-Repo smoke executes run-phase with a fake runner.
+    unresolved_risks:
+      - none
 
 contracts:
   planning:
@@ -143,19 +152,41 @@ contracts:
     docs_updates:
       - none
     known_limitations:
-      - provider-neutral default runner behavior remains scoped to issue #43
-      - deeper doctor command validation remains scoped to issue #47
-      - golden run-phase smoke coverage remains scoped to issue #46
+      - external provider credentials remain outside PolicyFlow
     unresolved_questions:
       - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - no blocking findings
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: approved
+    residual_risk: External provider runtime availability remains a consumer environment concern, not a bootstrap contract defect.
+    qa_focus_areas:
+      - bootstrap generated runner command
+      - doctor runner command validation
+      - golden run-phase execution path
+    test_expectations:
+      - pytest -q tests/test_bootstrap.py tests/test_doctor.py tests/test_golden_consumer_smoke.py
+  qa:
+    owner_agent: qa-agent
+    qa_report: Issue #45 acceptance criteria are covered by bootstrap, doctor, runtime, and golden Consumer-Repo smoke tests.
+    quality_gate_status: passed
+    unresolved_risks:
+      - none
+    approval_required: false
+    merge_readiness: true
 
 overrides: []
 
 runtime:
-  status: idle
-  current_phase:
-  active_agent:
-  last_transition: architecture-check completed
+  status: completed
+  current_phase: qa
+  active_agent: qa-agent
+  last_transition: qa completed
   block_reason:
 
 handoffs: []
