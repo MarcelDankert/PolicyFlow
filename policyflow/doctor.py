@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -9,6 +10,16 @@ import yaml
 
 from policyflow.consumer_config import ConsumerConfig, load_consumer_config
 from policyflow.exceptions import WorkflowValidationError
+
+
+SUPPORTED_RUNNER_PLACEHOLDERS = {
+    "input_path",
+    "output_path",
+    "workflow_path",
+    "phase",
+    "python_executable",
+}
+LOCAL_COMMAND_SUFFIXES = {".bat", ".cmd", ".exe", ".ps1", ".py", ".sh"}
 
 
 def doctor_consumer_repo(target: str | Path = Path(".")) -> dict[str, Any]:
@@ -148,6 +159,10 @@ def _check_runner_config(target_root: Path, config: ConsumerConfig) -> dict[str,
             "Fix policyflow.runners.yml runner command settings.",
         )
 
+    command_check = _check_runner_command(target_root, command)
+    if command_check is not None:
+        return command_check
+
     missing_assets = _missing_runner_assets(target_root, runner)
     if missing_assets:
         return _check(
@@ -158,6 +173,109 @@ def _check_runner_config(target_root: Path, config: ConsumerConfig) -> dict[str,
         )
 
     return _check("runner_config", "pass", "Runner config and referenced assets are present.")
+
+
+def _check_runner_command(target_root: Path, command: list[Any]) -> dict[str, str] | None:
+    for token in command:
+        if not isinstance(token, str):
+            return _check(
+                "runner_config",
+                "failure",
+                "Runner command entries must be strings.",
+                "Fix policyflow.runners.yml runner command entries.",
+            )
+
+        unsupported = _unsupported_placeholders(token)
+        if unsupported:
+            return _check(
+                "runner_config",
+                "failure",
+                f"Runner command contains unsupported runner command placeholder: {unsupported[0]}",
+                "Use only supported placeholders: "
+                + ", ".join(f"{{{name}}}" for name in sorted(SUPPORTED_RUNNER_PLACEHOLDERS)),
+            )
+
+    missing_path = _missing_local_command_path(target_root, command)
+    if missing_path is not None:
+        return _check(
+            "runner_config",
+            "failure",
+            f"Runner command references missing local runner command path: {missing_path}",
+            "Use a shipped PolicyFlow module entrypoint, scaffold the runner script, or fix policyflow.runners.yml.",
+        )
+
+    external_command = _missing_external_command(command)
+    if external_command is not None:
+        return _check(
+            "runner_config",
+            "warning",
+            f"External runner command was not found on PATH: {external_command}",
+            "Install the provider CLI before running agent phases, or configure policyflow.runners.yml to a valid command.",
+        )
+
+    return None
+
+
+def _unsupported_placeholders(token: str) -> list[str]:
+    placeholders = [match.group(1) for match in re.finditer(r"\{([^{}]+)\}", token)]
+    return [
+        f"{{{placeholder}}}"
+        for placeholder in placeholders
+        if placeholder not in SUPPORTED_RUNNER_PLACEHOLDERS
+    ]
+
+
+def _missing_local_command_path(target_root: Path, command: list[str]) -> str | None:
+    module_token_index = _module_token_index(command)
+    for index, token in enumerate(command):
+        if index == module_token_index:
+            continue
+        if _contains_placeholder(token):
+            continue
+        if not _looks_like_local_command_path(token):
+            continue
+
+        candidate = Path(token)
+        if not candidate.is_absolute():
+            candidate = target_root / candidate
+        if not candidate.exists():
+            return token
+
+    return None
+
+
+def _module_token_index(command: list[str]) -> int | None:
+    for index, token in enumerate(command[:-1]):
+        if token == "-m":
+            return index + 1
+    return None
+
+
+def _contains_placeholder(token: str) -> bool:
+    return bool(re.search(r"\{[^{}]+\}", token))
+
+
+def _looks_like_local_command_path(token: str) -> bool:
+    path = Path(token)
+    return (
+        path.is_absolute()
+        or "/" in token
+        or "\\" in token
+        or path.suffix.lower() in LOCAL_COMMAND_SUFFIXES
+    )
+
+
+def _missing_external_command(command: list[str]) -> str | None:
+    executable = command[0]
+    if _contains_placeholder(executable):
+        return None
+    if _looks_like_local_command_path(executable):
+        return None
+    if executable.lower() in {"python", "python3", "py"}:
+        return None
+    if shutil.which(executable) is None:
+        return executable
+    return None
 
 
 def _missing_runner_assets(target_root: Path, runner: dict[str, Any]) -> list[str]:

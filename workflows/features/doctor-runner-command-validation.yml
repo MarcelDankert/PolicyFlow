@@ -1,0 +1,163 @@
+workflow:
+  id: doctor-runner-command-validation
+  type: feature
+
+context:
+  workflow_file: workflows/features/doctor-runner-command-validation.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/47
+  goal: Make policyflow doctor detect structurally broken runner command configuration before run-phase execution.
+  scope:
+    - runner command token validation in doctor
+    - supported placeholder validation for runner command entries
+    - missing local script/path detection without executing arbitrary commands
+    - packaged Python module entrypoint recognition for policyflow.codex_runner
+    - warning/failure messaging and tests for command readiness
+  non_goals:
+    - no arbitrary runner command execution during doctor
+    - no credential or provider authentication probing
+    - no full shell syntax support
+    - no provider-neutral runner redesign beyond command shape validation
+  affected_modules:
+    - policyflow/doctor.py
+    - tests/test_doctor.py
+    - workflows/features/doctor-runner-command-validation.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: The scope is bounded to doctor readiness checks for runner command configuration.
+    implementation: Command validation can be implemented as side-effect-free static checks.
+    tests: Doctor tests can cover stale script paths, packaged modules, fake command paths, and unsupported placeholders.
+    residual_uncertainty: Provider-neutral runner defaults and golden run-phase execution remain in follow-up issues.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #47 scope and non-goals were locked before implementation.
+    scope_locked:
+      - runner command token validation in doctor
+      - supported placeholder validation for runner command entries
+      - missing local script/path detection without executing arbitrary commands
+      - packaged Python module entrypoint recognition for policyflow.codex_runner
+      - warning/failure messaging and tests for command readiness
+    non_goals_locked:
+      - no arbitrary runner command execution during doctor
+      - no credential or provider authentication probing
+      - no full shell syntax support
+      - no provider-neutral runner redesign beyond command shape validation
+    risk_rationale: MEDIUM risk because doctor readiness behavior is consumer-facing and affects bootstrap confidence, but the checks are side-effect-free.
+  architecture-check:
+    decision: Add static runner command validation inside the existing doctor runner-config check.
+    constraints:
+      - do not execute configured runner commands
+      - validate only command list structure, supported placeholders, obvious missing local paths, and known packaged module entrypoints
+      - preserve existing prompt and agent asset checks
+      - keep provider binary availability as a warning when it is external to PolicyFlow
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added side-effect-free runner command validation to doctor for unsupported placeholders, missing local command paths, packaged module commands, local fake commands, and missing external provider binaries.
+    files_changed:
+      - policyflow/doctor.py
+      - tests/test_doctor.py
+      - workflows/features/doctor-runner-command-validation.yml
+    tests_run:
+      - pytest -q tests/test_doctor.py::test_doctor_warns_when_external_provider_command_is_missing
+      - pytest -q tests/test_doctor.py
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Doctor currently passes runner configs that can fail immediately at run-phase.
+    acceptance_criteria:
+      - doctor fails stale missing local script runner commands
+      - doctor accepts packaged policyflow.codex_runner module command
+      - doctor accepts existing provider-neutral fake command paths
+      - doctor reports unsupported placeholders clearly
+      - doctor remains side-effect-free
+    approved_scope:
+      - runner command token validation in doctor
+      - supported placeholder validation for runner command entries
+      - missing local script/path detection without executing arbitrary commands
+      - packaged Python module entrypoint recognition for policyflow.codex_runner
+      - warning/failure messaging and tests for command readiness
+    non_goals:
+      - no arbitrary runner command execution during doctor
+      - no credential or provider authentication probing
+      - no full shell syntax support
+      - no provider-neutral runner redesign beyond command shape validation
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; checks are static and can be validated through temp Consumer-Repo fixtures.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Doctor should validate runner command shape without executing commands, separating config readiness from provider runtime readiness.
+    approved_scope:
+      - runner command token validation in doctor
+      - supported placeholder validation for runner command entries
+      - missing local script/path detection without executing arbitrary commands
+      - packaged Python module entrypoint recognition for policyflow.codex_runner
+      - warning/failure messaging and tests for command readiness
+    module_boundaries:
+      - policyflow.doctor owns Consumer-Repo readiness checks
+      - policyflow.agent_execution remains responsible for actual run-phase execution
+      - policyflow.bootstrap remains responsible for generated runner config
+    contract_impact: Strengthens doctor readiness semantics for Consumer-Repo runner config without changing runner execution behavior.
+    risk_review_decision: MEDIUM risk approved with targeted doctor tests.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not execute runner commands in doctor
+      - do not probe provider credentials
+      - keep remediation messages actionable
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Doctor now statically validates runner command entries, supported placeholders, obvious local script paths, and external command availability warnings without executing configured runner commands.
+    changed_files:
+      - policyflow/doctor.py
+      - tests/test_doctor.py
+      - workflows/features/doctor-runner-command-validation.yml
+    test_summary: Added red-first Doctor tests for stale missing local script commands and unsupported placeholders, plus passing coverage for packaged module commands, existing fake command paths, and missing external provider CLI warnings.
+    docs_updates:
+      - none
+    known_limitations:
+      - deeper provider-neutral runner defaults remain scoped to issue #43
+      - golden run-phase smoke execution remains scoped to issue #46
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
