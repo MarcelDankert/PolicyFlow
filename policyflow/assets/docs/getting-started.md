@@ -161,6 +161,11 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 10. treat the workflow as the steering artifact for the change, not as retrospective documentation
 11. keep same-PR workflow edits limited to same-scope clarifications
 12. keep the repo-level runner configuration current if you use external agent execution
+13. configure the default `type: command` runner to any provider adapter that implements the PolicyFlow runner contract before `policyflow run-phase`
+
+See [runner-contract.md](runner-contract.md) for the provider-neutral command
+contract. Codex is available through the packaged `policyflow.codex_runner`
+reference adapter, but PolicyFlow runtime orchestration does not require Codex.
 
 ## First Recommended Checks
 
@@ -183,3 +188,5 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which CLI orchestration commands should be used to advance the workflow state
 - confirm which reporting views should be used to check merge readiness and blocked workflows
 - confirm which central runner config should execute canonical phases and where its JSON contract output is written
+- confirm that `policyflow.runners.yml` points to a valid `type: command` provider adapter
+- confirm the selected provider CLI or hosted-adapter wrapper is installed, authenticated, and ready before agent-owned phase execution

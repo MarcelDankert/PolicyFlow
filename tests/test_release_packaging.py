@@ -37,6 +37,7 @@ def test_packaged_asset_root_contains_bootstrap_assets() -> None:
     assert (asset_root / "github/workflows/policyflow-governance.yml").exists()
     assert (asset_root / "examples/project-context.yml").exists()
     assert (asset_root / "docs/getting-started.md").exists()
+    assert (asset_root / "docs/runner-contract.md").exists()
 
 
 def test_built_wheel_contains_bootstrap_assets(tmp_path: Path) -> None:
@@ -64,3 +65,4 @@ def test_built_wheel_contains_bootstrap_assets(tmp_path: Path) -> None:
     assert "policyflow/assets/github/workflows/policyflow-governance.yml" in names
     assert "policyflow/assets/examples/project-context.yml" in names
     assert "policyflow/assets/docs/getting-started.md" in names
+    assert "policyflow/assets/docs/runner-contract.md" in names

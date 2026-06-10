@@ -37,9 +37,18 @@ def test_golden_consumer_repo_path_runs_end_to_end(tmp_path: Path) -> None:
     generated_runner_config = yaml.safe_load(
         (tmp_path / "policyflow.runners.yml").read_text(encoding="utf-8")
     )
-    generated_command = generated_runner_config["runners"]["codex"]["command"]
-    assert "scripts/policyflow_codex_wrapper.py" not in generated_command
-    assert generated_command[:3] == [
+    assert generated_runner_config["default_runner"] == "command"
+    generated_command = generated_runner_config["runners"]["command"]["command"]
+    assert generated_command == [
+        "policyflow-runner",
+        "--input",
+        "{input_path}",
+        "--output",
+        "{output_path}",
+    ]
+    generated_codex_command = generated_runner_config["runners"]["codex"]["command"]
+    assert "scripts/policyflow_codex_wrapper.py" not in generated_codex_command
+    assert generated_codex_command[:3] == [
         "{python_executable}",
         "-m",
         "policyflow.codex_runner",
@@ -127,8 +136,8 @@ def _write_fake_runner(path: Path) -> Path:
 def _configure_fake_runner(target: Path, script_path: Path) -> None:
     runner_config_path = target / "policyflow.runners.yml"
     runner_config = yaml.safe_load(runner_config_path.read_text(encoding="utf-8"))
-    runner_config["runners"]["codex"]["type"] = "command"
-    runner_config["runners"]["codex"]["command"] = [
+    runner_config["default_runner"] = "command"
+    runner_config["runners"]["command"]["command"] = [
         sys.executable,
         str(script_path),
         "--input",

@@ -1,11 +1,35 @@
-default_runner: codex
+default_runner: command
 
 runners:
+  command:
+    type: command
+    # Provider-neutral command adapter. Replace `policyflow-runner` with any
+    # local CLI, hosted-adapter wrapper, or internal runner that implements the
+    # PolicyFlow runner contract documented in docs/runner-contract.md.
+    command:
+      - policyflow-runner
+      - --input
+      - "{input_path}"
+      - --output
+      - "{output_path}"
+    prompt_paths:
+      planning: prompts/planning-agent.prompt.md
+      architecture-check: prompts/architecture-agent.prompt.md
+      implementation: prompts/senior-dev-agent.prompt.md
+      review: prompts/review-agent.prompt.md
+      qa: prompts/qa-agent.prompt.md
+    agent_paths:
+      planning: agents/planning-agent.md
+      architecture-check: agents/architecture-agent.md
+      implementation: agents/senior-dev-agent.md
+      review: agents/review-agent.md
+      qa: agents/qa-agent.md
+
   codex:
     type: codex
-    # Runs the packaged PolicyFlow Codex wrapper. The wrapper reads the
-    # PolicyFlow input JSON, calls `codex exec`, and writes PolicyFlow result
-    # JSON to the provided output path.
+    # Reference adapter: runs the packaged PolicyFlow Codex wrapper. Codex is
+    # not required by PolicyFlow core; any `type: command` runner can implement
+    # the same input/output JSON contract.
     command:
       - "{python_executable}"
       - -m

@@ -25,7 +25,8 @@ def test_doctor_passes_for_fresh_bootstrap(tmp_path: Path) -> None:
     checks = {check["check"]: check for check in report["checks"]}
     assert checks["consumer_config"]["status"] == "pass"
     assert checks["bootstrap_artifacts"]["status"] == "pass"
-    assert checks["runner_config"]["status"] == "pass"
+    assert checks["runner_config"]["status"] == "warning"
+    assert "policyflow-runner" in checks["runner_config"]["message"]
     assert checks["project_context"]["status"] == "pass"
     assert checks["github_templates"]["status"] == "pass"
 
@@ -125,6 +126,18 @@ def test_doctor_fails_unsupported_runner_command_placeholder(tmp_path: Path) -> 
 
 def test_doctor_passes_packaged_runner_module_command(tmp_path: Path) -> None:
     bootstrap_consumer_repo(tmp_path)
+    _write_runner_command(
+        tmp_path,
+        [
+            "{python_executable}",
+            "-m",
+            "policyflow.codex_runner",
+            "--input",
+            "{input_path}",
+            "--output",
+            "{output_path}",
+        ],
+    )
 
     report = doctor_consumer_repo(tmp_path)
 
@@ -180,5 +193,5 @@ def test_doctor_warns_when_external_provider_command_is_missing(tmp_path: Path) 
 def _write_runner_command(tmp_path: Path, command: list[str]) -> None:
     runner_path = tmp_path / "policyflow.runners.yml"
     runner_data = yaml.safe_load(runner_path.read_text(encoding="utf-8"))
-    runner_data["runners"]["codex"]["command"] = command
+    runner_data["runners"][runner_data["default_runner"]]["command"] = command
     runner_path.write_text(yaml.safe_dump(runner_data, sort_keys=False), encoding="utf-8")
