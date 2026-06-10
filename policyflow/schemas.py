@@ -5,8 +5,8 @@ from typing import Any
 
 def normalize_workflow_payload(data: dict[str, Any]) -> dict[str, Any]:
     """Prefer context/governance fields and accept root-level fallbacks."""
-    # TODO: Normalize workflow governance into a single canonical schema
-    # once real usage confirms the final field layout.
+    # Compatibility policy: docs/schema-compatibility.md defines the canonical
+    # schema and the 0.x root-level fallback window.
 
     context = data.get("context") if isinstance(data.get("context"), dict) else {}
     governance = (

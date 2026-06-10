@@ -48,7 +48,11 @@
 
 ## Remaining Roadmap
 
-- schema normalization after more real consumer usage
 - public Python API stability boundary
 - release publishing and pinned consumer governance workflow installation
 - broader docs cleanup and compatibility guidance as more Consumer-Repos adopt PolicyFlow
+
+Schema compatibility and the root-level fallback migration path are now
+documented in [schema-compatibility.md](schema-compatibility.md). Future
+roadmap work can tighten validation only after release notes and migration steps
+make the change explicit.
