@@ -1,8 +1,12 @@
 # Getting Started
 
-## Adopt In A Target Project
+## Consumer Quickstart
 
-Install a pinned PolicyFlow release before bootstrapping:
+Use this path for a fresh Consumer-Repo. It starts from a package install,
+bootstraps the standard layout, creates the first governed workflow, and reaches
+the first PR governance checks without manually copying PolicyFlow directories.
+
+Install and pin PolicyFlow:
 
 ```bash
 python -m pip install policyflow==0.1.0
@@ -12,51 +16,123 @@ Use the same package pin in local setup, CI, and GitHub Actions. See
 [release-and-upgrade.md](release-and-upgrade.md) for release notes and upgrade
 expectations.
 
-Start with a root `policyflow.yml` so bootstrap, doctor, CI, and local commands
-can agree on the same Consumer-Repo paths and enabled features.
-
-Bootstrap a fresh Consumer-Repo:
+Bootstrap the Consumer-Repo:
 
 ```bash
 policyflow init .
 ```
 
-Preview the generated files without writing them:
+Bootstrap writes:
+
+- `policyflow.yml`
+- `policyflow.runners.yml`
+- `.policyflow/bootstrap.json`
+- `ai/project-context.yml`
+- `ai/agents/`, `ai/prompts/`, `ai/rules/`
+- `ai/workflows/templates/`
+- `ai/workflows/features/starter-workflow.yml`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/ISSUE_TEMPLATE/`
+- `.github/workflows/policyflow-governance.yml`
+
+Preview or force bootstrap only when needed:
 
 ```bash
 policyflow init . --dry-run
-```
-
-PolicyFlow does not overwrite existing files unless explicitly requested:
-
-```bash
 policyflow init . --force
 ```
 
-The bootstrap command writes the standard consumer layout under `ai/`, GitHub
-templates and governance workflow under `.github/`, `policyflow.yml`,
-`policyflow.runners.yml`, and
-`.policyflow/bootstrap.json` metadata for future sync support. It also creates
-`ai/workflows/features/starter-workflow.yml` so the first validation path is
-available immediately.
+Make the minimal project-specific edits:
 
-Create the first real governed workflow instance from the bootstrapped defaults:
+- update `ai/project-context.yml`
+- choose local-only or GitHub-governed features in `policyflow.yml`
+- configure `policyflow.runners.yml` if you will run agent-owned phases
+- keep project-specific overlays separate from managed assets
+
+Validate readiness:
+
+```bash
+policyflow config-check policyflow.yml
+policyflow doctor .
+policyflow doctor . --json
+```
+
+Create the first real governed workflow:
 
 ```bash
 policyflow new-workflow feature --id first-feature --risk LOW
 policyflow validate ai/workflows/features/first-feature.yml
+policyflow status ai/workflows/features/first-feature.yml
+policyflow audit ai/workflows
 ```
 
-Use `bugfix`, `architecture-change`, or `low-risk` for other workflow shapes.
-Generated workflow files follow the workflow root configured in `policyflow.yml`,
-protect existing files by default, and support preview/overwrite controls:
+Other first workflow shapes:
+
+```bash
+policyflow new-workflow bugfix --id parser-fix --risk MEDIUM
+policyflow new-workflow architecture-change --id storage-boundary --risk HIGH
+policyflow new-workflow low-risk --id docs-update --risk LOW
+```
+
+Preview or overwrite generated workflows only when intentional:
 
 ```bash
 policyflow new-workflow feature --id preview-feature --risk LOW --dry-run
 policyflow new-workflow feature --id first-feature --risk LOW --force
 ```
 
-Minimal local-only config:
+## Runner Setup
+
+PolicyFlow uses a provider-neutral `type: command` runner contract. Any local
+CLI, hosted-adapter wrapper, or internal runner can execute phases if it reads
+PolicyFlow input JSON and writes PolicyFlow result JSON.
+
+See [runner-contract.md](runner-contract.md) for the command placeholders,
+input/output JSON contract, blocked/completed semantics, and Codex reference
+adapter.
+
+After configuring the selected runner, execute an agent-owned phase:
+
+```bash
+policyflow run-phase ai/workflows/features/first-feature.yml implementation
+```
+
+If the runner cannot execute, PolicyFlow blocks the phase with an actionable
+reason instead of leaving workflow state ambiguous.
+
+## First PR Governance
+
+Open the PR with the installed pull request template and fill these sections
+from the generated workflow:
+
+- linked issue
+- workflow file path
+- declared risk level
+- confidence summary from `context.confidence`
+- evidence references such as `evidence.planning`
+- override references when overrides exist
+- human approval login and reference when required
+- checked workflow governance confirmations
+
+Validate the PR body locally before pushing or while iterating:
+
+```bash
+policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md
+```
+
+For GitHub-governed repos, validate review metadata as well:
+
+```bash
+policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-body.md pr-reviews.json
+```
+
+The installed GitHub Actions workflow performs the PR body and GitHub approval
+checks automatically on pull requests.
+
+## Local-Only Adoption
+
+Use local-only adoption when you want PolicyFlow validation and workflow state
+without GitHub enforcement:
 
 ```yaml
 version: 1
@@ -68,7 +144,13 @@ features:
   bootstrap_managed_assets: false
 ```
 
-GitHub-governed config:
+Local-only repos can still use `validate`, `status`, `audit`, `doctor`, and
+`new-workflow`.
+
+## GitHub-Governed Adoption
+
+Use GitHub-governed adoption when PR templates, issue templates, and the
+governance workflow should enforce PolicyFlow checks:
 
 ```yaml
 version: 1
@@ -91,6 +173,12 @@ features:
   bootstrap_managed_assets: true
 ```
 
+The generated workflow uses read-only `contents` and `pull-requests`
+permissions, fetches live PR body and review metadata, and runs
+`policyflow validate-pr` plus `policyflow validate-github-approvals`.
+
+## Confidence And Evidence
+
 Every workflow file must declare confidence in `context.confidence` before
 implementation starts:
 
@@ -108,28 +196,7 @@ context:
 The PR `Confidence summary` should summarize these four fields instead of
 introducing a separate confidence claim.
 
-Validate the config before wiring deeper governance:
-
-```bash
-policyflow config-check policyflow.yml
-```
-
-Run preflight checks before the first governed workflow:
-
-```bash
-policyflow doctor .
-policyflow doctor . --json
-```
-
-Doctor checks the Consumer-Repo config, bootstrap artifacts, runner config,
-referenced prompt and agent files, project context, and GitHub governance
-templates. Missing local PolicyFlow assets fail readiness. External GitHub
-tooling is reported separately so local setup gaps are actionable.
-
-PolicyFlow's golden Consumer-Repo smoke test guards this plug-and-play path by
-bootstrapping a temporary repo, running doctor, validating the starter workflow,
-executing one implementation phase through a local fake runner, and validating a
-starter PR body without real provider or GitHub network calls.
+## Upgrade Managed Assets
 
 Preview managed asset changes after upgrading the PolicyFlow package:
 
@@ -146,20 +213,24 @@ policyflow sync . --apply
 Use `--force` only when the Consumer-Repo intentionally accepts overwriting
 locally modified managed assets.
 
-The installed GitHub Actions workflow uses read-only `contents` and
-`pull-requests` permissions, fetches the live PR body and review metadata with
-the built-in `github.token`, and runs `policyflow validate-pr` plus
-`policyflow validate-github-approvals` against the workflow referenced in the PR
-body.
+PolicyFlow's golden Consumer-Repo smoke test guards this plug-and-play path by
+bootstrapping a temporary repo, running doctor, generating and validating a
+workflow, executing one implementation phase through a local fake runner, and
+validating a starter PR body without real provider or GitHub network calls.
 
-Published examples are available at `examples/policyflow.minimal.yml` and
-`examples/policyflow.github-governed.yml`.
+## Advanced Manual Adoption
 
-1. Copy `github/ISSUE_TEMPLATE/*` into `.github/ISSUE_TEMPLATE/`.
-2. Copy `github/PULL_REQUEST_TEMPLATE.md` into `.github/`.
-3. Copy `rules/`, `agents/`, `workflows/`, and `prompts/` into `ai/`.
-4. Add `ai/project-context.yml` using the example in `examples/project-context.yml`.
-5. Add target-project overlays such as `ai/architecture.md` and `ai/rules/project-overrides.md`.
+Prefer `policyflow init` for normal adoption. Manual copying is only for unusual
+repositories that cannot run bootstrap.
+
+If you must install assets manually, copy the same generated layout that
+bootstrap would create and then run:
+
+```bash
+policyflow config-check policyflow.yml
+policyflow doctor .
+policyflow validate ai/workflows/features/first-feature.yml
+```
 
 ## Default Execution Mode
 
@@ -178,10 +249,6 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 11. keep same-PR workflow edits limited to same-scope clarifications
 12. keep the repo-level runner configuration current if you use external agent execution
 13. configure the default `type: command` runner to any provider adapter that implements the PolicyFlow runner contract before `policyflow run-phase`
-
-See [runner-contract.md](runner-contract.md) for the provider-neutral command
-contract. Codex is available through the packaged `policyflow.codex_runner`
-reference adapter, but PolicyFlow runtime orchestration does not require Codex.
 
 ## First Recommended Checks
 
