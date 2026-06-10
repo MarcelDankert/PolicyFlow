@@ -80,6 +80,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "overview.md",
         "governance-enforcement-roadmap.md",
         "release-and-upgrade.md",
+        "schema-compatibility.md",
     ):
         source = (ROOT / "docs" / relative_path).read_text(encoding="utf-8")
         packaged = (ROOT / "policyflow/assets/docs" / relative_path).read_text(
@@ -111,3 +112,30 @@ def test_release_docs_define_pinned_release_channel_and_artifacts() -> None:
     assert "policyflow sync ." in text
     assert "policyflow validate" in text
     assert "release artifacts" in text
+
+
+def test_schema_compatibility_docs_define_canonical_and_legacy_policy() -> None:
+    text = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    release = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
+
+    assert "## Canonical Workflow Schema" in text
+    assert "context.workflow_file" in text
+    assert "governance.required_reviews" in text
+    assert "root-level fallback fields" in text
+    assert "0.x compatibility window" in text
+    assert "new generated workflows must use the canonical schema" in text
+    assert "policyflow validate" in text
+    assert "policyflow new-workflow" in text
+    assert "policyflow sync ." in text
+    assert "policyflow.api" in text
+    assert "docs/schema-compatibility.md" in readme
+    assert "schema compatibility" in release
+
+
+def test_schema_todo_was_replaced_with_migration_path() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    schemas = (ROOT / "policyflow/schemas.py").read_text(encoding="utf-8")
+
+    assert "Normalize the workflow schema into a single canonical governance block" not in readme
+    assert "TODO: Normalize workflow governance" not in schemas

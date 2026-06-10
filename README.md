@@ -386,12 +386,12 @@ This runtime layer is intentionally small. It mutates only controlled workflow f
 PolicyFlow now acts as a lightweight workflow orchestration layer as well as a governance validator, but it is still not a full orchestration platform, scheduler, or agent runtime.
 
 TODO:
-- Define the workflow schema normalization path, compatibility policy, and
-  migration guidance tracked by issue #50.
+- Follow the canonical workflow schema and migration guidance in
+  [docs/schema-compatibility.md](docs/schema-compatibility.md).
 
 ## Future Roadmap
 
-- workflow schema normalization after more consumer usage
+- public Python API stability boundary for documented integrations
 - release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow
 

@@ -1,0 +1,212 @@
+workflow:
+  id: schema-normalization-path
+  type: feature
+
+context:
+  workflow_file: workflows/features/schema-normalization-path.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/50
+  goal: Define the canonical workflow schema normalization path, compatibility policy, and migration expectations without changing validator semantics.
+  scope:
+    - inventory current accepted canonical and legacy root-level workflow schema shapes
+    - document the canonical schema shape emitted by templates and workflow generation
+    - define deprecation behavior for root-level fallback fields
+    - document compatibility expectations for validators, templates, bootstrap, new-workflow, public API, PR validation, and sync
+    - add tests proving canonical templates/generator output and legacy fallback support
+    - update README and release/upgrade docs with the migration path
+  non_goals:
+    - no immediate breaking validator change
+    - no broad rewrite of workflow semantics
+    - no migration engine
+    - no public API implementation beyond documenting the schema contract expected by issue #41
+  affected_modules:
+    - README.md
+    - docs/schema-compatibility.md
+    - docs/release-and-upgrade.md
+    - docs/governance-enforcement-roadmap.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - policyflow/assets/docs/release-and-upgrade.md
+    - policyflow/assets/docs/governance-enforcement-roadmap.md
+    - policyflow/schemas.py
+    - tests/test_repository_docs.py
+    - tests/test_validator.py
+    - tests/test_workflow_generator.py
+    - workflows/features/schema-normalization-path.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is bounded to compatibility documentation, explicit tests, and removing open-ended TODO wording.
+    implementation: Existing validator and generator behavior already provide the canonical and fallback shapes to document.
+    tests: Existing validator and generator tests can prove canonical output and legacy fallback support without changing behavior.
+    residual_uncertainty: Future breaking schema enforcement remains deferred to a separately scoped release after deprecation notice.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #50 scope and non-goals were locked before schema docs and tests changed.
+    scope_locked:
+      - inventory canonical and legacy root-level workflow schema shapes
+      - document canonical schema emitted by templates and workflow generation
+      - define root-level fallback deprecation behavior
+      - document compatibility expectations for validators, templates, bootstrap, new-workflow, public API, PR validation, and sync
+      - add tests for canonical output and legacy fallback support
+      - update README and release docs with migration path
+    non_goals_locked:
+      - no immediate breaking validator change
+      - no broad rewrite of workflow semantics
+      - no migration engine
+      - no public API implementation beyond documenting the schema contract expected by issue #41
+    risk_rationale: MEDIUM risk because this defines a consumer-facing schema compatibility contract while preserving current behavior.
+  architecture-check:
+    decision: approved
+    constraints:
+      - keep validator behavior unchanged in this PR
+      - canonical schema is context/governance plus execution/evidence/contracts/overrides/runtime/handoffs blocks
+      - root-level fallback remains accepted during the 0.x compatibility window
+      - future removal requires release notes, migration steps, and explicit tests
+    approval_path: architecture-agent, review-agent, and qa-agent review are required by MEDIUM risk.
+  implementation:
+    summary: Documented canonical workflow schema compatibility and added tests for canonical generation, templates, and legacy fallback support.
+    changed_files:
+      - README.md
+      - docs/schema-compatibility.md
+      - docs/release-and-upgrade.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - policyflow/schemas.py
+      - tests/test_repository_docs.py
+      - tests/test_validator.py
+      - tests/test_workflow_generator.py
+      - workflows/templates/architecture-change-workflow.template.yml
+      - workflows/templates/bugfix-workflow.template.yml
+      - workflows/templates/feature-workflow.template.yml
+      - workflows/templates/low-risk-workflow.template.yml
+      - policyflow/assets/workflows/templates/architecture-change-workflow.template.yml
+      - policyflow/assets/workflows/templates/bugfix-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/low-risk-workflow.template.yml
+      - workflows/features/schema-normalization-path.yml
+    test_plan:
+      - pytest -q tests/test_repository_docs.py tests/test_validator.py tests/test_workflow_generator.py
+      - policyflow validate workflows/features/schema-normalization-path.yml
+      - pytest -q tests/test_release_packaging.py tests/test_bootstrap.py tests/test_asset_sync.py
+      - pytest -q
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Replace the open-ended schema normalization TODO with a concrete compatibility and migration plan.
+    acceptance_criteria:
+      - canonical workflow schema is explicitly documented
+      - generator and templates emit the canonical shape only
+      - validator behavior for legacy fallback shapes is covered by tests and release notes
+      - public API docs identify the stable schema contract expected by integrations
+      - breaking changes are tied to release/version migration steps
+    approved_scope:
+      - inventory canonical and legacy root-level workflow schema shapes
+      - document canonical schema emitted by templates and workflow generation
+      - define root-level fallback deprecation behavior
+      - document compatibility expectations for validators, templates, bootstrap, new-workflow, public API, PR validation, and sync
+      - add tests for canonical output and legacy fallback support
+      - update README and release docs with migration path
+    non_goals:
+      - no immediate breaking validator change
+      - no broad rewrite of workflow semantics
+      - no migration engine
+      - no public API implementation beyond documenting the schema contract expected by issue #41
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence because the current behavior is known, but the documented contract affects future compatibility.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The compatibility plan can be delivered as documentation plus tests that assert existing behavior, avoiding breaking validator changes while making future migration explicit.
+    approved_scope:
+      - schema compatibility docs
+      - README and release guidance
+      - validator and generator coverage for canonical and fallback shapes
+    module_boundaries:
+      - no validator semantic changes
+      - no workflow model changes
+      - no CLI behavior changes
+      - no public API implementation
+    contract_impact: Consumer-Repos get a documented stable schema target and a planned fallback deprecation path.
+    risk_review_decision: MEDIUM risk accepted with no protected areas touched.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not remove support for root-level fallback fields
+      - do not change generated workflow semantics
+      - keep source and packaged docs aligned
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added schema compatibility documentation, replaced open-ended schema TODO language with a migration path, added explicit governance blocks to workflow templates, and covered canonical output plus root-level fallback support in tests.
+    changed_files:
+      - README.md
+      - docs/schema-compatibility.md
+      - docs/release-and-upgrade.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - policyflow/schemas.py
+      - tests/test_repository_docs.py
+      - tests/test_validator.py
+      - tests/test_workflow_generator.py
+      - workflows/templates/architecture-change-workflow.template.yml
+      - workflows/templates/bugfix-workflow.template.yml
+      - workflows/templates/feature-workflow.template.yml
+      - workflows/templates/low-risk-workflow.template.yml
+      - policyflow/assets/workflows/templates/architecture-change-workflow.template.yml
+      - policyflow/assets/workflows/templates/bugfix-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/low-risk-workflow.template.yml
+      - workflows/features/schema-normalization-path.yml
+    test_summary: Focused tests cover schema compatibility docs, removal of open-ended TODO wording, canonical generator output, canonical workflow templates, packaged template parity, and legacy root-level fallback validation.
+    docs_updates:
+      - New schema compatibility document defines canonical workflow schema, 0.x root-level fallback policy, migration steps, and component expectations.
+      - README now points to the schema compatibility guide instead of open-ended schema normalization TODO language.
+      - Release and roadmap docs now describe schema compatibility changes as release-note and migration-managed work.
+    known_limitations:
+      - Root-level fallback support remains accepted in this PR; stricter validation requires a future release with migration notice.
+      - Stable public Python API implementation remains tracked by issue #41.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []

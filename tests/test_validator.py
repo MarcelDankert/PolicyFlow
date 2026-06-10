@@ -87,6 +87,21 @@ def test_root_level_fallback_fields_are_accepted() -> None:
     assert result.governance.required_reviews == ["review-agent"]
 
 
+def test_root_level_fallback_support_is_explicitly_covered_by_fixture() -> None:
+    data = fixture_path("valid-root-fallback.yml").read_text(encoding="utf-8")
+
+    for field in (
+        "workflow_file:",
+        "risk_level:",
+        "confidence:",
+        "required_reviews:",
+        "human_approval_required:",
+    ):
+        assert field in data
+
+    validate_workflow_file(fixture_path("valid-root-fallback.yml"))
+
+
 def test_valid_complete_evidence_workflow_passes() -> None:
     result = validate_workflow_file(fixture_path("valid-complete-evidence.yml"))
 

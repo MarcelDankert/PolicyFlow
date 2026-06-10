@@ -34,6 +34,19 @@ context:
     - protected_areas_touched
     - approval_evidence
 
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - architecture
+  approval_evidence:
+    - required before implementation
+
 execution:
   mode: strict
   phases:

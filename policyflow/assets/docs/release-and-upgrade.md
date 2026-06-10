@@ -108,6 +108,13 @@ configuration shape. A release that changes the expected config version,
 workflow schema, bootstrap metadata, or runner result contract must document the
 impact in release notes.
 
+Workflow schema compatibility is defined in
+[schema-compatibility.md](schema-compatibility.md). During the `0.x`
+compatibility window, root-level fallback fields remain accepted by
+`policyflow validate`, but new generated workflows and templates use the
+canonical `context` and `governance` blocks. Release notes must call out any
+schema compatibility change before stricter validation is introduced.
+
 Patch releases should avoid breaking existing Consumer-Repo workflow files.
 Minor releases may add optional fields or stricter validation when release notes
 include the required Consumer-Repo update path. Breaking schema changes should

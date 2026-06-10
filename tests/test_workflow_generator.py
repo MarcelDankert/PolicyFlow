@@ -13,6 +13,7 @@ from policyflow.validator import validate_workflow_file
 from policyflow.workflow_generator import create_workflow_instance
 
 
+ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
 
 
@@ -38,6 +39,17 @@ def test_create_low_risk_workflow_uses_consumer_paths_and_validates(tmp_path: Pa
     assert workflow.governance.required_reviews == ["review-agent"]
 
     data = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    root_fallback_fields = {
+        "workflow_file",
+        "risk_level",
+        "confidence",
+        "required_reviews",
+        "human_approval_required",
+        "escalation_required",
+        "protected_areas_touched",
+        "approval_evidence",
+    }
+    assert root_fallback_fields.isdisjoint(data)
     assert [phase["phase"] for phase in data["execution"]["phases"]] == [
         "planning",
         "implementation",
@@ -92,6 +104,38 @@ def test_create_medium_and_high_workflows_validate(
     assert workflow.context.risk_level == risk_level
     assert workflow.governance.required_reviews == expected_reviews
     assert [phase["phase"] for phase in data["execution"]["phases"]] == expected_phases
+
+
+def test_workflow_templates_emit_canonical_schema_only() -> None:
+    root_fallback_fields = {
+        "workflow_file",
+        "risk_level",
+        "confidence",
+        "required_reviews",
+        "human_approval_required",
+        "escalation_required",
+        "protected_areas_touched",
+        "approval_evidence",
+    }
+
+    for template_path in (ROOT / "workflows/templates").glob("*workflow.template.yml"):
+        data = yaml.safe_load(template_path.read_text(encoding="utf-8"))
+
+        assert root_fallback_fields.isdisjoint(data), template_path
+        assert "context" in data
+        assert "governance" in data
+        assert "execution" in data
+
+
+def test_packaged_workflow_templates_match_source_templates() -> None:
+    for source_path in (ROOT / "workflows/templates").glob("*.yml"):
+        packaged_path = (
+            ROOT / "policyflow/assets/workflows/templates" / source_path.name
+        )
+
+        assert packaged_path.read_text(encoding="utf-8") == source_path.read_text(
+            encoding="utf-8"
+        )
 
 
 def test_new_workflow_dry_run_reports_without_writing(tmp_path: Path) -> None:

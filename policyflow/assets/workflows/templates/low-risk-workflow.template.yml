@@ -32,6 +32,14 @@ context:
     - protected_areas_touched
     - approval_evidence
 
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
 execution:
   mode: strict
   phases:
