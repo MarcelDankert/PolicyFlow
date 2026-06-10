@@ -164,8 +164,9 @@ def _consumer_runner_config_content() -> str:
             "codex": {
                 "type": "codex",
                 "command": [
-                    "python",
-                    "scripts/policyflow_codex_wrapper.py",
+                    "{python_executable}",
+                    "-m",
+                    "policyflow.codex_runner",
                     "--input",
                     "{input_path}",
                     "--output",
