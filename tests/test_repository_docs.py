@@ -95,6 +95,33 @@ def test_getting_started_documents_github_app_governance_preflight() -> None:
     assert "C:\\" not in text
 
 
+def test_docs_clarify_high_risk_approval_evidence_contract() -> None:
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "governance.approval_evidence" in getting_started
+    assert "evidence.approval" in getting_started
+    assert "evidence.approval.approved_by" in getting_started
+    assert (
+        "PR approval validation reads the required GitHub login from "
+        "`evidence.approval.approved_by`"
+    ) in getting_started
+    assert "governance.approval_evidence` does not replace `evidence.approval" in getting_started
+    assert "Approval evidence: `evidence.approval`" in readme
+
+
+def test_pr_template_shows_high_risk_approval_evidence_path() -> None:
+    for relative_path in (
+        "github/PULL_REQUEST_TEMPLATE.md",
+        "policyflow/assets/github/PULL_REQUEST_TEMPLATE.md",
+    ):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "Approval evidence: `evidence.approval`" in text
+        assert "governance.human_approval_required: true" in text
+        assert "evidence.approval.approved_by" in text
+
+
 def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
     text = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
 

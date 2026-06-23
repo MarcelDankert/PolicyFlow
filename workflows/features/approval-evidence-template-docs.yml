@@ -1,0 +1,149 @@
+workflow:
+  id: approval-evidence-template-docs
+  type: feature
+
+context:
+  workflow_file: workflows/features/approval-evidence-template-docs.yml
+  goal: Clarify HIGH-risk approval evidence expectations in PR templates and Consumer-Repo docs.
+  scope:
+    - update the PR template to show evidence.approval for human approval-gated workflows
+    - document the difference between governance.approval_evidence and evidence.approval
+    - state that GitHub PR approval validation reads the approver login from evidence.approval.approved_by
+    - keep packaged GitHub and documentation assets synchronized
+  non_goals:
+    - no validator behavior changes
+    - no GitHub workflow behavior changes
+    - no runtime, runner, provider, scheduler, or token handling changes
+  affected_modules:
+    - github/PULL_REQUEST_TEMPLATE.md
+    - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - README.md
+    - tests/test_repository_docs.py
+  risk_level: LOW
+  confidence:
+    planning: Issue 96 is bounded to consumer-facing template and documentation clarification.
+    implementation: Changes are limited to managed template/docs assets and repository documentation assertions.
+    tests: Documentation tests and workflow validation cover the changed consumer-facing wording.
+    residual_uncertainty: Review should confirm the wording is clear enough for HIGH-risk Consumer-Repo PR authors.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 96 scope, non-goals, and LOW risk were fixed before implementation.
+    scope_locked:
+      - update PR template approval evidence guidance
+      - document governance.approval_evidence versus evidence.approval
+      - keep packaged assets synchronized
+    non_goals_locked:
+      - no validator behavior changes
+      - no GitHub workflow behavior changes
+      - no runtime or provider behavior changes
+    risk_rationale: LOW risk because this only clarifies docs and templates without changing enforcement semantics.
+  implementation:
+    summary: Clarified HIGH-risk approval evidence expectations in PR templates, README, and Consumer-Repo getting started docs.
+    changed_files:
+      - github/PULL_REQUEST_TEMPLATE.md
+      - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - tests/test_repository_docs.py
+      - workflows/features/approval-evidence-template-docs.yml
+    test_summary: Repository documentation tests and the active workflow validation pass.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - github/PULL_REQUEST_TEMPLATE.md
+      - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+    known_limitations:
+      - Approval semantics and validator behavior are unchanged.
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Clarify approval evidence expectations for HIGH-risk PR authors.
+    acceptance_criteria:
+      - "PR template shows Approval evidence: evidence.approval when governance.human_approval_required is true"
+      - docs explain governance.approval_evidence versus evidence.approval
+      - docs state PR approval validation reads evidence.approval.approved_by
+      - packaged template and docs assets stay synchronized
+    approved_scope:
+      - PR template wording
+      - Consumer-Repo docs wording
+      - repository documentation assertions
+      - workflow evidence for this change
+    non_goals:
+      - no validator behavior changes
+      - no GitHub workflow behavior changes
+      - no runtime, runner, provider, scheduler, or token handling changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Documentation and managed asset synchronization can be verified with focused repository docs tests.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: The PR template now calls out evidence.approval for human approval-gated workflows, and Consumer-Repo docs explain how governance.approval_evidence differs from machine-readable approval evidence.
+    changed_files:
+      - github/PULL_REQUEST_TEMPLATE.md
+      - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - tests/test_repository_docs.py
+      - workflows/features/approval-evidence-template-docs.yml
+    test_summary: Added repository docs tests that assert the HIGH-risk approval evidence contract appears in docs and managed templates.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - github/PULL_REQUEST_TEMPLATE.md
+      - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+    known_limitations:
+      - This PR does not change approval validation semantics.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []

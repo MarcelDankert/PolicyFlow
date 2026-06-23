@@ -32,6 +32,8 @@
 - Review evidence: `evidence.<...>` if present in the workflow
 - QA evidence: `evidence.<...>` if present in the workflow
 - Approval evidence: `evidence.<...>` if present in the workflow
+- Approval evidence: `evidence.approval` when `governance.human_approval_required: true`
+  - PR approval validation reads the required GitHub login from `evidence.approval.approved_by`
 
 ## Overrides
 - Override ID: `<override-id>` if present in the workflow

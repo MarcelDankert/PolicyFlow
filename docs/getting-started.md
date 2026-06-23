@@ -157,6 +157,22 @@ policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-
 The installed GitHub Actions workflow performs the PR body and GitHub approval
 checks automatically on pull requests.
 
+For `HIGH` risk workflows with `governance.human_approval_required: true`, keep
+the governance declaration and the approval evidence separate:
+
+- `governance.approval_evidence` describes which human approval is required by
+  the workflow.
+- `evidence.approval` records the concrete approval evidence used by PR
+  validation.
+- PR approval validation reads the required GitHub login from `evidence.approval.approved_by`
+  and expects the PR body to reference
+  `Approval evidence: evidence.approval`.
+
+`governance.approval_evidence` does not replace `evidence.approval`; HIGH-risk
+approval-gated workflows need the `evidence.approval.approved_by`,
+`evidence.approval.reference`, and `evidence.approval.scope_confirmed` fields
+for actionable PR approval validation.
+
 ## Local-Only Adoption
 
 Use local-only adoption when you want PolicyFlow validation and workflow state
