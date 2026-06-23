@@ -110,6 +110,22 @@ def test_docs_clarify_high_risk_approval_evidence_contract() -> None:
     assert "Approval evidence: `evidence.approval`" in readme
 
 
+def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/governance-enforcement-roadmap.md").read_text(
+        encoding="utf-8"
+    )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "editing a PR body may not trigger a new GitHub Actions run" in getting_started
+    assert "rerun the failed PolicyFlow job or push a new commit" in getting_started
+    assert "draft PRs are planning or preview artifacts" in getting_started
+    assert "stacked PRs are dependency-bound" in getting_started
+    assert "not normal merge candidates until upstream dependencies are merged or otherwise satisfied" in getting_started
+    assert "documentation-only guidance" in roadmap
+    assert "Draft and stacked PRs need explicit merge-readiness semantics" in readme
+
+
 def test_pr_template_shows_high_risk_approval_evidence_path() -> None:
     for relative_path in (
         "github/PULL_REQUEST_TEMPLATE.md",

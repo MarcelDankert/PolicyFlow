@@ -23,6 +23,13 @@ prove the semantic truth of all evidence, review findings, confidence claims,
 or quality metrics. External tools, reviewers, approvers, CI systems, and
 Consumer-Repos remain responsible for producing trustworthy evidence.
 
+Current draft and stacked PR semantics are documentation-only guidance. Draft
+PRs are treated as planning or preview artifacts until explicitly promoted to
+merge readiness. Stacked PRs are dependency-bound and should not be considered
+normal merge candidates until upstream dependencies are merged or otherwise
+satisfied. PolicyFlow documents this distinction today without adding validation
+behavior, scheduling, or release orchestration.
+
 ## Current Enforcement
 
 - workflow YAML validation

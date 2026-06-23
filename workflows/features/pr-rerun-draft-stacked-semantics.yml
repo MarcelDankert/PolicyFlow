@@ -1,0 +1,152 @@
+workflow:
+  id: pr-rerun-draft-stacked-semantics
+  type: feature
+
+context:
+  workflow_file: workflows/features/pr-rerun-draft-stacked-semantics.yml
+  goal: Document PR body edit rerun behavior and draft or stacked PR governance semantics.
+  scope:
+    - document that PR body edits may require rerunning the failed PolicyFlow job or pushing a new commit
+    - define draft PRs as planning or preview artifacts unless promoted to merge readiness
+    - define stacked PRs as dependency-bound and not normal merge candidates until dependencies are satisfied
+    - keep guidance documentation-only
+  non_goals:
+    - no validation behavior changes
+    - no GitHub Actions trigger changes
+    - no workflow engine, scheduler, runtime, provider, or token handling changes
+  affected_modules:
+    - docs/getting-started.md
+    - docs/governance-enforcement-roadmap.md
+    - policyflow/assets/docs/getting-started.md
+    - policyflow/assets/docs/governance-enforcement-roadmap.md
+    - README.md
+    - tests/test_repository_docs.py
+  risk_level: LOW
+  confidence:
+    planning: Issue 100 is bounded to documentation-only PR governance guidance.
+    implementation: Changes are limited to README, Consumer-Repo docs, roadmap guidance, packaged docs, and docs tests.
+    tests: Repository documentation tests can assert the rerun, draft PR, and stacked PR guidance remains present.
+    residual_uncertainty: Review should confirm the wording matches expected Consumer-Repo practice.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 100 scope, non-goals, and LOW risk were fixed before implementation.
+    scope_locked:
+      - document PR body edit rerun behavior
+      - document draft PR governance semantics
+      - document stacked PR dependency semantics
+      - keep the change documentation-only
+    non_goals_locked:
+      - no validation behavior changes
+      - no GitHub Actions trigger changes
+      - no runtime or provider behavior changes
+    risk_rationale: LOW risk because the change clarifies docs without changing enforcement semantics.
+  implementation:
+    summary: Documented PR body rerun behavior plus draft and stacked PR merge-readiness semantics.
+    changed_files:
+      - README.md
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - tests/test_repository_docs.py
+      - workflows/features/pr-rerun-draft-stacked-semantics.yml
+    test_summary: Repository documentation tests and the active workflow validation pass.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+    known_limitations:
+      - Guidance is documentation-only and does not add validation or GitHub Actions trigger behavior.
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document Consumer-Repo PR rerun behavior and draft or stacked PR semantics.
+    acceptance_criteria:
+      - Docs explain that editing a PR body may not trigger a new GitHub Actions run.
+      - Docs state that the failed PolicyFlow job may need to be rerun or a new commit pushed.
+      - Docs define draft PRs as planning or preview artifacts unless promoted to merge readiness.
+      - Docs define stacked PRs as dependency-bound and not normal merge candidates until dependencies are satisfied.
+      - Guidance remains documentation-only.
+    approved_scope:
+      - Consumer-Repo documentation
+      - governance enforcement roadmap wording
+      - README summary guidance
+      - packaged docs synchronization
+      - repository documentation tests
+    non_goals:
+      - no validation behavior changes
+      - no GitHub Actions trigger changes
+      - no workflow engine, scheduler, runtime, provider, or token handling changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Documentation-only semantics can be locked with repository docs tests.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Consumer-Repo guidance for rerunning PolicyFlow checks after PR body edits and documented draft/stacked PR merge-readiness semantics.
+    changed_files:
+      - README.md
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - tests/test_repository_docs.py
+      - workflows/features/pr-rerun-draft-stacked-semantics.yml
+    test_summary: Added repository docs assertions for PR body reruns, draft PR planning/preview semantics, stacked PR dependency semantics, and documentation-only roadmap scope.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+    known_limitations:
+      - No validation behavior or GitHub workflow trigger changes are introduced.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []
