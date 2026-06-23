@@ -1,0 +1,173 @@
+workflow:
+  id: high-risk-approval-diagnostics
+  type: feature
+
+context:
+  workflow_file: workflows/features/high-risk-approval-diagnostics.yml
+  goal: Improve HIGH-risk approval validation diagnostics.
+  scope:
+    - make HIGH-risk workflow validation point to missing evidence.approval fields
+    - clarify that governance.approval_evidence does not satisfy PR approval validation
+    - cover validator and GitHub approval validation diagnostics with focused tests
+  non_goals:
+    - no runtime, runner, or provider behavior changes
+    - no PR template changes
+    - no GitHub workflow changes
+  affected_modules:
+    - policyflow/validator.py
+    - policyflow/github_approval.py
+    - tests/test_validator.py
+    - tests/test_github_approval.py
+    - tests/fixtures
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is locked to validator diagnostics for existing HIGH-risk approval semantics.
+    implementation: Changes are bounded to validation error collection and focused tests.
+    tests: Validator and GitHub approval tests cover missing and incomplete approval evidence paths.
+    residual_uncertainty: Downstream PR template and GitHub workflow wording remain out of scope for issues 96 and 97.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 95 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - make HIGH-risk workflow validation point to missing evidence.approval fields
+      - clarify that governance.approval_evidence does not satisfy PR approval validation
+      - add focused validator and GitHub approval tests
+    non_goals_locked:
+      - no runtime, runner, or provider behavior changes
+      - no PR template changes
+      - no GitHub workflow changes
+    risk_rationale: MEDIUM risk because validator diagnostics change for existing HIGH-risk approval validation semantics.
+  architecture-check:
+    decision: Keep semantics unchanged and fail earlier with field-specific approval evidence diagnostics.
+    constraints:
+      - do not change approval enforcement behavior
+      - do not change PR template or GitHub workflow assets
+      - keep diagnostics aligned with existing validation patterns
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added a shared HIGH-risk approval evidence diagnostic and focused validator/GitHub approval tests for incomplete approval evidence.
+    changed_files:
+      - policyflow/validator.py
+      - policyflow/github_approval.py
+      - tests/test_validator.py
+      - tests/test_github_approval.py
+      - tests/fixtures/high-missing-evidence-approval.yml
+      - tests/fixtures/high-empty-approved-by.yml
+      - tests/fixtures/high-null-approved-by.yml
+      - workflows/features/high-risk-approval-diagnostics.yml
+    test_summary: Targeted regression tests failed before implementation and now pass with the requested diagnostics.
+    docs_updates:
+      - workflows/features/high-risk-approval-diagnostics.yml
+    known_limitations:
+      - PR template and GitHub workflow wording remain out of scope for issues 96 and 97.
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Improve diagnostics for incomplete HIGH-risk approval evidence.
+    acceptance_criteria:
+      - missing or empty evidence.approval.approved_by fails with a clear field-specific error
+      - error explains governance.approval_evidence alone is not sufficient for PR approval validation
+      - error suggests evidence.approval.approved_by, evidence.approval.reference, and evidence.approval.scope_confirmed
+      - tests cover missing evidence.approval, empty or null approved_by, and GitHub review validation with incomplete approval evidence
+    approved_scope:
+      - validator diagnostics for HIGH-risk approval evidence
+      - GitHub approval validation diagnostics for incomplete workflow approval evidence
+      - focused approval-related fixtures and tests
+    non_goals:
+      - no runtime, runner, or provider behavior changes
+      - no PR template changes
+      - no GitHub workflow changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Focused diagnostics are testable without changing enforcement semantics.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Validator and GitHub approval helpers own the diagnostic boundary for incomplete HIGH-risk approval evidence.
+    approved_scope:
+      - validator diagnostics for HIGH-risk approval evidence
+      - GitHub approval validation diagnostics for incomplete workflow approval evidence
+      - focused approval-related fixtures and tests
+    module_boundaries:
+      - policyflow.validator owns workflow field diagnostics
+      - policyflow.github_approval owns GitHub review validation diagnostics
+      - tests fixtures cover approval evidence edge cases
+    contract_impact: Validation errors become more actionable while approval requirements remain unchanged.
+    risk_review_decision: MEDIUM risk path accepted for diagnostic-only validator changes.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - preserve existing approval semantics
+      - avoid runtime, runner, PR template, and GitHub workflow changes
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Validator validation now rejects HIGH-risk human approval workflows when evidence.approval is missing or approved_by is empty before GitHub approval matching can produce an empty-login review error.
+    changed_files:
+      - policyflow/validator.py
+      - policyflow/github_approval.py
+      - tests/test_validator.py
+      - tests/test_github_approval.py
+      - tests/fixtures/high-missing-evidence-approval.yml
+      - tests/fixtures/high-empty-approved-by.yml
+      - tests/fixtures/high-null-approved-by.yml
+      - workflows/features/high-risk-approval-diagnostics.yml
+    test_summary: Added tests for missing evidence.approval, empty approved_by, null approved_by, and GitHub approval validation with incomplete approval evidence.
+    docs_updates:
+      - workflows/features/high-risk-approval-diagnostics.yml
+    known_limitations:
+      - PR template and GitHub workflow changes are reserved for issues 96 and 97.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []

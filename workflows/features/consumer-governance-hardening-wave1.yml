@@ -1,0 +1,221 @@
+workflow:
+  id: consumer-governance-hardening-wave1
+  type: feature
+
+context:
+  workflow_file: workflows/features/consumer-governance-hardening-wave1.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/milestone/7
+  goal: Deliver Wave 1 of the Consumer Governance Hardening milestone across approval diagnostics, PR body parser diagnostics, and GitHub App governance preflight.
+  scope:
+    - issue #95 HIGH-risk approval validation diagnostics
+    - issue #97 PR body Workflow File extraction diagnostics
+    - issue #98 GitHub App governance permission preflight
+    - supporting issue workflows for each implementation slice
+  non_goals:
+    - no release readiness artifact
+    - no PR template approval evidence changes
+    - no draft or stacked PR semantics changes
+    - no runtime, runner, scheduler, memory, message-bus, or provider SDK changes
+  affected_modules:
+    - policyflow/validator.py
+    - policyflow/github_approval.py
+    - policyflow/doctor.py
+    - policyflow/cli.py
+    - github/workflows/policyflow-governance.yml
+    - .github/workflows/policyflow-governance.yml
+    - policyflow/assets/github/workflows/policyflow-governance.yml
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - tests
+  risk_level: MEDIUM
+  confidence:
+    planning: Wave 1 scope is bounded to the first three Consumer Governance Hardening issues.
+    implementation: Changes stay within existing workflow governance diagnostics, doctor preflight, and synchronized docs/assets.
+    tests: Full test suite and all workflow examples/features validation cover the combined changes.
+    residual_uncertainty: Follow-up issues #96, #99, and #100 remain outside this PR.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Wave 1 scope combines issues #95, #97, and #98 from the Consumer Governance Hardening milestone.
+    scope_locked:
+      - improve HIGH-risk approval validation diagnostics
+      - improve Workflow File extraction diagnostics in PR validation and GitHub governance workflows
+      - add non-mutating GitHub App governance permission preflight through doctor
+    non_goals_locked:
+      - no release readiness artifact
+      - no PR template approval evidence changes
+      - no draft or stacked PR semantics changes
+      - no runtime or provider SDK changes
+    risk_rationale: MEDIUM risk because validator, doctor, and GitHub governance workflow diagnostics are consumer-facing.
+  architecture-check:
+    decision: Keep Wave 1 as hardening of existing governance surfaces, not new runtime or orchestration behavior.
+    constraints:
+      - preserve existing approval enforcement semantics
+      - keep GitHub workflow parser compatible with current PR template
+      - keep GitHub App preflight non-mutating and token-safe
+      - keep docs assets synchronized with source docs
+    approval_path: architecture-agent review
+  implementation:
+    summary: Implemented Wave 1 hardening across approval diagnostics, PR body parser diagnostics, and GitHub App governance preflight.
+    changed_files:
+      - policyflow/validator.py
+      - policyflow/github_approval.py
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - github/workflows/policyflow-governance.yml
+      - .github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_validator.py
+      - tests/test_github_approval.py
+      - tests/test_pr_validator.py
+      - tests/test_doctor.py
+      - tests/test_repository_docs.py
+      - tests/fixtures/high-missing-evidence-approval.yml
+      - tests/fixtures/high-empty-approved-by.yml
+      - tests/fixtures/high-null-approved-by.yml
+      - workflows/features/high-risk-approval-diagnostics.yml
+      - workflows/features/pr-body-parser-diagnostics.yml
+      - workflows/features/github-app-governance-permission-preflight.yml
+      - workflows/features/consumer-governance-hardening-wave1.yml
+    test_summary: Full test suite passed and all workflow examples/features validated.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - GitHub App preflight verifies non-mutating repository access and reports required mutation capabilities; it does not create real branches, commits, issues, pull requests, labels, or milestones.
+      - Issues #96, #99, and #100 remain follow-up work in the same milestone.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Deliver Wave 1 of Consumer Governance Hardening.
+    acceptance_criteria:
+      - issue #95 approval diagnostics are implemented and tested
+      - issue #97 PR body parser diagnostics are implemented and tested
+      - issue #98 GitHub App governance preflight is implemented, documented, and tested
+      - docs and packaged assets remain synchronized
+      - full test suite passes
+    approved_scope:
+      - issues #95, #97, and #98
+      - supporting issue workflows
+      - source and packaged docs/workflow assets
+    non_goals:
+      - no release readiness artifact
+      - no PR template approval evidence changes
+      - no draft or stacked PR semantics changes
+      - no runtime or provider SDK changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Wave 1 is bounded to tested consumer governance diagnostics and doctor preflight behavior.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Wave 1 changes remain inside existing governance validation, GitHub workflow diagnostics, doctor checks, and documentation surfaces.
+    approved_scope:
+      - issues #95, #97, and #98
+      - supporting issue workflows
+      - source and packaged docs/workflow assets
+    module_boundaries:
+      - policyflow.validator owns workflow and PR body validation diagnostics
+      - policyflow.github_approval owns GitHub approval validation
+      - policyflow.doctor owns setup and preflight diagnostics
+      - GitHub workflow assets own CI extraction diagnostics
+      - docs and packaged assets must remain synchronized
+    contract_impact: Improves diagnostics and preflight readiness without changing runtime ownership or provider integration contracts.
+    risk_review_decision: MEDIUM risk accepted for consumer-facing governance hardening.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no runtime or provider SDK changes
+      - no hidden token material in output or docs
+      - no release readiness artifact in Wave 1
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented Wave 1 Consumer Governance Hardening across issues #95, #97, and #98.
+    changed_files:
+      - policyflow/validator.py
+      - policyflow/github_approval.py
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - github/workflows/policyflow-governance.yml
+      - .github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_validator.py
+      - tests/test_github_approval.py
+      - tests/test_pr_validator.py
+      - tests/test_doctor.py
+      - tests/test_repository_docs.py
+      - tests/fixtures/high-missing-evidence-approval.yml
+      - tests/fixtures/high-empty-approved-by.yml
+      - tests/fixtures/high-null-approved-by.yml
+      - workflows/features/high-risk-approval-diagnostics.yml
+      - workflows/features/pr-body-parser-diagnostics.yml
+      - workflows/features/github-app-governance-permission-preflight.yml
+      - workflows/features/consumer-governance-hardening-wave1.yml
+    test_summary: pytest -q passed with 158 tests, and policyflow validate passed for all workflows/examples and workflows/features.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - GitHub App preflight remains non-mutating by design.
+      - Remaining milestone issues are handled separately.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []
+

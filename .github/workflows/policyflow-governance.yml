@@ -88,21 +88,36 @@ jobs:
 
           text = Path("pr-body.md").read_text(encoding="utf-8")
           current_section = None
+          headings = []
+          workflow_file_lines = []
+          workflow_file_section_present = False
 
           for line in text.splitlines():
               if line.startswith("## "):
                   current_section = line[3:].strip()
+                  headings.append(current_section)
+                  if current_section == "Workflow File":
+                      workflow_file_section_present = True
                   continue
 
-              if current_section != "Workflow File":
-                  continue
+              if current_section == "Workflow File":
+                  workflow_file_lines.append(line)
 
+          for line in workflow_file_lines:
               cleaned = re.sub(r"^-+\s*", "", line.strip()).strip("` ")
               if cleaned:
                   print(cleaned)
                   break
           else:
-              sys.stderr.write("Workflow File entry not found in PR body.\n")
+              if workflow_file_section_present:
+                  message = "PR body Workflow File section is empty."
+              else:
+                  message = "PR body must include a Workflow File section."
+              headings_text = ", ".join(headings) if headings else "none"
+              sys.stderr.write(
+                  f"{message} PR body length: {len(text)} characters. "
+                  f"Markdown headings found: {headings_text}.\n"
+              )
               raise SystemExit(1)
           PY
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.validator import validate_pull_request
+from policyflow.validator import HIGH_RISK_APPROVAL_EVIDENCE_ERROR, validate_pull_request
 
 
 def validate_github_pr_approvals(
@@ -74,12 +74,7 @@ def _required_approval_logins(workflow) -> set[str]:
     if workflow.governance.human_approval_required:
         approval_evidence = workflow.evidence.approval if workflow.evidence else None
         if approval_evidence is None or not approval_evidence.approved_by:
-            raise WorkflowValidationError(
-                [
-                    "Workflow with human approval required must declare "
-                    "evidence.approval.approved_by as a GitHub login."
-                ]
-            )
+            raise WorkflowValidationError([HIGH_RISK_APPROVAL_EVIDENCE_ERROR])
         required_logins.add(approval_evidence.approved_by)
 
     for override in workflow.overrides or []:

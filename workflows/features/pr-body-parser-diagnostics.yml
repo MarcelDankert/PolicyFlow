@@ -1,0 +1,142 @@
+workflow:
+  id: pr-body-parser-diagnostics
+  name: PR Body Parser Diagnostics
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Improve diagnostics when GitHub governance cannot extract the Workflow File path from a PR body.
+
+context:
+  workflow_file: workflows/features/pr-body-parser-diagnostics.yml
+  issue_key: "#97"
+  goal: Add PR body parser diagnostics for workflow file extraction failures.
+  scope:
+    - GitHub governance Workflow File extraction diagnostics
+    - PolicyFlow PR validator diagnostics for missing and empty Workflow File sections
+    - PR body fixtures and tests for workflow extraction edge cases
+    - synchronized live and consumer governance workflow assets
+  non_goals:
+    - no approval validation diagnostic changes
+    - no GitHub permission changes
+    - no governance preflight changes
+    - no PR template compatibility break
+  affected_modules:
+    - github/workflows/policyflow-governance.yml
+    - .github/workflows/policyflow-governance.yml
+    - policyflow/validator.py
+    - tests/test_pr_validator.py
+    - tests/fixtures
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope and non-goals are constrained by PolicyFlow issue 97.
+    implementation: Changes are limited to PR body workflow extraction and diagnostics.
+    tests: Focused PR validator tests cover the requested parser cases.
+    residual_uncertainty: Shell-embedded GitHub workflow diagnostics must stay in sync with Python validator behavior.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 97 scope, non-goals, risk, and validation commands were locked before implementation.
+    scope_locked:
+      - Workflow File extraction diagnostics
+      - missing and empty section distinction
+      - bullet plus backticked workflow path compatibility
+      - missing Linked Issue regression coverage
+    non_goals_locked:
+      - approval validation diagnostics
+      - GitHub permissions
+      - preflight behavior
+    risk_rationale: MEDIUM because GitHub governance workflow behavior is consumer-facing.
+  architecture-check:
+    decision: Keep extraction file-based and compatible with the existing PR template while enriching diagnostics at the parser boundary.
+    constraints:
+      - preserve bullet and backticked Workflow File path parsing
+      - do not alter approval validation diagnostics
+      - keep live, consumer, and packaged workflow assets synchronized
+    approval_path: architecture-agent review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Improve PR body parser diagnostics for Workflow File extraction failures.
+    acceptance_criteria:
+      - Failure output includes PR body length and markdown headings found.
+      - Missing Workflow File section is distinguished from an empty section.
+      - Template bullet plus backticked workflow path pattern is accepted.
+      - Tests cover missing Workflow File, empty Workflow File, bullet plus backticks, and missing Linked Issue.
+    approved_scope:
+      - GitHub governance workflow extraction diagnostics
+      - PR validator diagnostic tests and fixtures
+      - active workflow evidence
+    non_goals:
+      - approval validation diagnostics
+      - GitHub permission changes
+      - preflight behavior changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Requirements are explicit and bounded to parser diagnostics.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The change stays inside PR body section parsing and workflow path extraction diagnostics.
+    approved_scope:
+      - Workflow File extraction diagnostics
+      - validator regression tests
+      - synchronized governance workflow assets
+    module_boundaries:
+      - policyflow validator
+      - GitHub governance workflow assets
+      - PR validator tests
+    contract_impact: Consumer-facing diagnostics improve without changing the existing PR template path format.
+    risk_review_decision: MEDIUM risk remains appropriate for GitHub governance workflow behavior.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not change approval validation diagnostics
+      - do not broaden GitHub permissions
+      - do not add preflight behavior
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Workflow File extraction diagnostics with body length and discovered markdown headings, distinguishing missing and empty sections.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_pr_validator.py
+      - github/workflows/policyflow-governance.yml
+      - .github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - workflows/features/pr-body-parser-diagnostics.yml
+    test_summary: Focused PR validator tests cover missing section, empty section, bullet plus backticks, and missing Linked Issue.
+    docs_updates:
+      - none
+    known_limitations:
+      - GitHub workflow extraction logic remains embedded in the workflow YAML.
+    unresolved_questions:
+      - none

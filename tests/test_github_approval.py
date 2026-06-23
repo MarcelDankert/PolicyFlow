@@ -54,6 +54,20 @@ def test_github_pr_approvals_fail_when_override_approver_lacks_approved_review()
     )
 
 
+def test_github_pr_approvals_fail_when_high_risk_approval_evidence_is_incomplete() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_github_pr_approvals(
+            fixture_path("high-missing-evidence-approval.yml"),
+            fixture_path("valid-high-pr-body.md"),
+            fixture_path("github-reviews-valid-high.json"),
+        )
+
+    assert (
+        "HIGH risk workflows with human approval required must declare evidence.approval.approved_by, evidence.approval.reference, and evidence.approval.scope_confirmed; governance.approval_evidence alone is not sufficient for PR approval validation."
+        in exc_info.value.errors
+    )
+
+
 def test_validate_github_approvals_command_succeeds() -> None:
     result = runner.invoke(
         app,

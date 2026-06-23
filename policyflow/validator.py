@@ -37,6 +37,12 @@ REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
     },
 }
 EXPIRING_OVERRIDE_WINDOW_DAYS = 7
+HIGH_RISK_APPROVAL_EVIDENCE_ERROR = (
+    "HIGH risk workflows with human approval required must declare "
+    "evidence.approval.approved_by, evidence.approval.reference, and "
+    "evidence.approval.scope_confirmed; governance.approval_evidence alone is "
+    "not sufficient for PR approval validation."
+)
 
 
 def inspect_workflow_file(path: str | Path) -> tuple[WorkflowDocument, list[str]]:
@@ -163,6 +169,8 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
     ):
         errors.append("HIGH risk workflows must include non-empty approval evidence.")
 
+    _append_high_risk_approval_evidence_errors(errors, risk_level, governance, evidence)
+
     protected_areas = _normalize_protected_areas(
         governance.get("protected_areas_touched")
     )
@@ -234,6 +242,26 @@ def _append_confidence_errors(errors: list[str], confidence: Any) -> None:
         value = confidence.get(field_name)
         if not isinstance(value, str) or not value.strip():
             errors.append(f"context.confidence.{field_name} is required")
+
+
+def _append_high_risk_approval_evidence_errors(
+    errors: list[str], risk_level: Any, governance: Any, evidence: Any
+) -> None:
+    if risk_level != RiskLevel.HIGH.value:
+        return
+    if not isinstance(governance, dict):
+        return
+    if governance.get("human_approval_required") is not True:
+        return
+
+    evidence_blocks = evidence if isinstance(evidence, dict) else {}
+    approval_evidence = evidence_blocks.get("approval")
+    if not isinstance(approval_evidence, dict):
+        errors.append(HIGH_RISK_APPROVAL_EVIDENCE_ERROR)
+        return
+
+    if approval_evidence.get("approved_by") in (None, ""):
+        errors.append(HIGH_RISK_APPROVAL_EVIDENCE_ERROR)
 
 
 def _append_transition_errors(
@@ -428,15 +456,23 @@ def _phase_completed(phase_states: dict[str, str], phase_name: str) -> bool:
 def _collect_pull_request_errors(workflow: WorkflowDocument, pr_body: str) -> list[str]:
     errors: list[str] = []
     sections = _parse_markdown_sections(pr_body)
+    headings = _parse_markdown_headings(pr_body)
     governance_section = sections.get("Governance", "")
 
     linked_issue = sections.get("Linked Issue", "").strip()
     if not linked_issue:
         errors.append("PR body must include a non-empty Linked Issue section.")
 
-    workflow_file = _extract_workflow_file(sections.get("Workflow File", ""))
+    workflow_file_section = sections.get("Workflow File", "")
+    workflow_file = _extract_workflow_file(workflow_file_section)
     if not workflow_file:
-        errors.append("PR body must include a Workflow File entry.")
+        errors.append(
+            _format_workflow_file_diagnostic(
+                pr_body=pr_body,
+                headings=headings,
+                section_present="Workflow File" in sections,
+            )
+        )
     elif workflow_file != workflow.context.workflow_file:
         errors.append(
             "PR body Workflow File must match context.workflow_file: "
@@ -642,6 +678,29 @@ def _parse_markdown_sections(markdown: str) -> dict[str, str]:
         sections[current_heading] = "\n".join(current_lines).strip()
 
     return sections
+
+
+def _parse_markdown_headings(markdown: str) -> list[str]:
+    headings: list[str] = []
+    for line in markdown.splitlines():
+        if line.startswith("## "):
+            headings.append(line[3:].strip())
+    return headings
+
+
+def _format_workflow_file_diagnostic(
+    *, pr_body: str, headings: list[str], section_present: bool
+) -> str:
+    if section_present:
+        message = "PR body Workflow File section is empty."
+    else:
+        message = "PR body must include a Workflow File section."
+
+    headings_text = ", ".join(headings) if headings else "none"
+    return (
+        f"{message} PR body length: {len(pr_body)} characters. "
+        f"Markdown headings found: {headings_text}."
+    )
 
 
 def _extract_workflow_file(section_text: str) -> str | None:

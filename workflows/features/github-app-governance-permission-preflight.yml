@@ -1,0 +1,177 @@
+workflow:
+  id: github-app-governance-permission-preflight
+  type: feature
+
+context:
+  workflow_file: workflows/features/github-app-governance-permission-preflight.yml
+  issue: https://github.com/MarcelDankert/PolicyFlow/issues/98
+  goal: Add a doctor preflight that verifies the configured GitHub App has permissions needed for governance automation before release or PR orchestration starts.
+  scope:
+    - doctor CLI preflight path for GitHub App governance permissions
+    - permission-to-operation diagnostics for governance automation capabilities
+    - tests covering passing, failing, and secret-safe preflight output
+    - Consumer-Repo docs for running the preflight before release orchestration
+    - matching packaged docs asset updates
+  non_goals:
+    - no release readiness artifact
+    - no provider SDK dependency
+    - no hard-coded machine-local token helper paths
+    - no mutation of branches, issues, pull requests, labels, or milestones during preflight
+  affected_modules:
+    - policyflow/doctor.py
+    - policyflow/cli.py
+    - tests/test_doctor.py
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - workflows/features/github-app-governance-permission-preflight.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is bounded to doctor/preflight diagnostics and docs, with no release readiness artifact.
+    implementation: The preflight can use the existing gh CLI boundary and report capability gaps without provider SDKs.
+    tests: Doctor tests can exercise permission mapping with fake gh runners and verify no token/path leakage.
+    residual_uncertainty: Live GitHub permission responses can vary, so diagnostics should remain permission-area based rather than assuming one endpoint shape for every token type.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #98 scope, non-goals, and MEDIUM risk were locked before implementation.
+    scope_locked:
+      - doctor CLI preflight path for GitHub App governance permissions
+      - permission-to-operation diagnostics for governance automation capabilities
+      - tests covering passing, failing, and secret-safe preflight output
+      - Consumer-Repo docs for running the preflight before release orchestration
+      - matching packaged docs asset updates
+    non_goals_locked:
+      - no release readiness artifact
+      - no provider SDK dependency
+      - no hard-coded machine-local token helper paths
+      - no mutation of branches, issues, pull requests, labels, or milestones during preflight
+    risk_rationale: MEDIUM risk because doctor/preflight changes affect the Consumer-Repo setup path, while the implementation stays diagnostic and non-mutating.
+  architecture-check:
+    decision: Add the preflight as a doctor option that shells out to gh with GH_TOKEN or GITHUB_TOKEN, derives governance capabilities from GitHub permission areas, and reports missing areas without printing token material or local secret paths.
+    constraints:
+      - use gh/GH_TOKEN or documented env expectations only
+      - do not add provider SDK dependencies
+      - do not hard-code local token helper paths
+      - do not create release readiness artifacts
+      - keep checks non-mutating
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added optional doctor GitHub App governance preflight support, CLI exposure, permission diagnostics, secret-safe tests, and Consumer-Repo docs.
+    files_changed:
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - tests/test_doctor.py
+      - tests/test_repository_docs.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/github-app-governance-permission-preflight.yml
+    tests_run:
+      - pytest -q tests/test_doctor.py
+      - pytest -q tests/test_repository_docs.py
+      - pytest -q tests/test_doctor.py tests/test_repository_docs.py
+      - policyflow validate workflows/features/github-app-governance-permission-preflight.yml
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Consumer-Repos need a preflight to confirm the configured GitHub App can perform governance automation before release or PR orchestration starts.
+    acceptance_criteria:
+      - preflight documents or checks metadata read, branch creation, commit push, issue create/edit, PR create/edit, labels, milestones, and PR review read capabilities
+      - failures identify the missing capability and likely GitHub permission area
+      - preflight output does not print token material or machine-local secret paths
+      - docs explain how Consumer-Repos run the preflight before release orchestration
+    approved_scope:
+      - doctor CLI preflight path for GitHub App governance permissions
+      - permission-to-operation diagnostics for governance automation capabilities
+      - tests covering passing, failing, and secret-safe preflight output
+      - Consumer-Repo docs for running the preflight before release orchestration
+      - matching packaged docs asset updates
+    non_goals:
+      - no release readiness artifact
+      - no provider SDK dependency
+      - no hard-coded machine-local token helper paths
+      - no mutation of branches, issues, pull requests, labels, or milestones during preflight
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Medium confidence; the gh CLI boundary and doctor report shape already exist, but live GitHub tokens may expose permission metadata differently.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The preflight belongs in doctor as a setup/readiness diagnostic, with permission mapping isolated in policyflow.doctor and no direct GitHub SDK dependency.
+    approved_scope:
+      - doctor CLI preflight path for GitHub App governance permissions
+      - permission-to-operation diagnostics for governance automation capabilities
+      - tests covering passing, failing, and secret-safe preflight output
+      - Consumer-Repo docs for running the preflight before release orchestration
+      - matching packaged docs asset updates
+    module_boundaries:
+      - policyflow.doctor owns readiness checks and GitHub permission diagnostics
+      - policyflow.cli owns exposing the doctor option and rendering report output
+      - docs own Consumer-Repo preflight guidance
+    contract_impact: Extends doctor output with an optional GitHub App governance preflight check while preserving existing doctor behavior by default.
+    risk_review_decision: MEDIUM risk accepted with doctor and repository docs tests.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not introduce provider SDKs
+      - do not print token material or local secret paths
+      - do not mutate GitHub state during preflight
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Doctor can now run `--github-app-preflight OWNER/REPO` to inspect GitHub App governance permissions through gh/GH_TOKEN and report missing capability groups by likely GitHub permission area.
+    changed_files:
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - tests/test_doctor.py
+      - tests/test_repository_docs.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/github-app-governance-permission-preflight.yml
+    test_summary: Added red-first doctor tests for passing permissions, missing permission diagnostics, and token/path-safe CLI output, plus repository docs coverage for Consumer-Repo preflight guidance.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - the preflight is non-mutating and checks permission areas rather than creating real branches, commits, issues, pull requests, labels, or milestones
+      - live GitHub permission metadata depends on gh and the provided installation token
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase:
+  active_agent:
+  last_transition: architecture-check completed
+  block_reason:
+
+handoffs: []
