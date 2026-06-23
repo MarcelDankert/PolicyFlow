@@ -101,6 +101,12 @@ See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
 Quickstart, including PR validation, GitHub approval checks, runner setup, and
 managed asset sync.
 
+For `HIGH` risk workflows with `governance.human_approval_required: true`, the
+PR body should reference Approval evidence: `evidence.approval`. GitHub approval
+validation reads the required approver login from
+`evidence.approval.approved_by`; `governance.approval_evidence` documents the
+workflow requirement but does not replace the machine-readable evidence block.
+
 ## Workflow-First Delivery Standard
 
 PolicyFlow treats `workflow-first delivery` as the required default process for all consumer repositories that adopt these templates. The workflow is not retrospective paperwork. It is created first and then used to steer implementation, review, and merge readiness.
