@@ -1,0 +1,95 @@
+workflow:
+  id: consolidate-current-state-analysis
+  type: documentation-cleanup
+
+context:
+  workflow_file: workflows/features/consolidate-current-state-analysis.yml
+  risk_level: LOW
+  confidence:
+    planning: The work is limited to consolidating durable current-state analysis points into English docs.
+    implementation: Documentation updates will preserve existing product scope and remove only temporary analysis artifacts.
+    tests: Validation will use PolicyFlow workflow validation and repository documentation tests.
+    residual_uncertainty: Future roadmap details remain governed by ADRs and roadmap documents.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Durable points from the German current-state analysis were selected for consolidation before deleting the temporary snapshot.
+    scope_locked:
+      - move durable product-core and architecture-principle points into English docs
+      - preserve ADRs and roadmap as the strategic source of truth
+      - remove temporary German analysis snapshot and its intermediate workflow
+    non_goals_locked:
+      - no runtime behavior changes
+      - no schema or validator changes
+      - no roadmap milestone changes
+      - no GitHub issue creation
+    risk_rationale: LOW risk because the change only updates documentation and removes temporary analysis artifacts.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Consolidate useful current-state analysis points into durable English project documentation.
+    acceptance_criteria:
+      - product-core and architecture-principle points from the analysis are represented in maintained docs
+      - temporary German analysis document is removed
+      - temporary analysis workflow is removed
+      - docs remain consistent with PolicyFlow as a governance system, not an agent runtime or workflow engine
+    approved_scope:
+      - docs/overview.md
+      - docs/concepts.md
+      - docs/governance-enforcement-roadmap.md
+      - temporary analysis artifact removal
+    non_goals:
+      - implementation changes
+      - schema changes
+      - runner changes
+      - roadmap scope expansion
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence that the useful analysis content can be consolidated into maintained English docs.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Consolidated durable current-state analysis points into maintained English docs and removed the temporary German analysis snapshot.
+    changed_files:
+      - docs/overview.md
+      - docs/concepts.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/overview.md
+      - policyflow/assets/docs/concepts.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+      - workflows/features/consolidate-current-state-analysis.yml
+      - docs/policyflow-ist-analyse.md
+      - workflows/features/policyflow-ist-analyse.yml
+    test_summary: PolicyFlow workflow validation and repository documentation tests are planned before completion.
+    docs_updates:
+      - docs/overview.md
+      - docs/concepts.md
+      - docs/governance-enforcement-roadmap.md
+      - policyflow/assets/docs/overview.md
+      - policyflow/assets/docs/concepts.md
+      - policyflow/assets/docs/governance-enforcement-roadmap.md
+    known_limitations:
+      - The removed analysis was a snapshot, not a maintained product contract.
+    unresolved_questions:
+      - Future Loop Governance and Evaluation Governance details remain governed by ADRs and the Agentic Governance Roadmap.

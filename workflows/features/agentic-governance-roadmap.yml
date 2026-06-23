@@ -1,0 +1,100 @@
+workflow:
+  id: agentic-governance-roadmap
+  type: documentation-strategy
+
+context:
+  workflow_file: workflows/features/agentic-governance-roadmap.yml
+  risk_level: LOW
+  confidence:
+    planning: The requested work is limited to strategic ADRs, roadmap documentation, and planning notes.
+    implementation: No runtime, schema, validator, runner, provider, or GitHub enforcement behavior will change.
+    tests: Validation will use PolicyFlow workflow validation and relevant documentation tests.
+    residual_uncertainty: Future schema and platform boundaries remain open decisions documented in the roadmap.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Strategic documentation scope and non-goals were locked before creating ADR and roadmap files.
+    scope_locked:
+      - ADRs for Agentic Governance Platform direction and explicit non-runtime boundaries
+      - roadmap for workflow, loop, evaluation, and human governance
+      - planning document with proposed milestones and issues
+      - minimal README links to the new strategic documents
+    non_goals_locked:
+      - no runtime implementation
+      - no workflow engine or scheduler implementation
+      - no agent execution expansion
+      - no provider SDK or credential integration
+      - no validator or schema behavior changes
+    risk_rationale: LOW risk because the work creates strategic documentation and planning assets only.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define the strategic roadmap from AI-native SDLC Governance toward Agentic Governance Platform.
+    acceptance_criteria:
+      - ADR folder and requested ADRs exist
+      - roadmap document exists with the requested pillars, milestones, Querypilot pilot, and open decisions
+      - milestone and issue planning document exists for review before GitHub issue creation
+      - README changes are minimal and link to the new roadmap and ADRs
+      - no runtime, orchestration, agent execution, provider SDK, or schema behavior changes are introduced
+    approved_scope:
+      - strategic ADR documentation
+      - agentic governance roadmap
+      - milestone and issue planning document
+      - minimal README cross-links
+    non_goals:
+      - implement loop governance
+      - implement evaluation governance
+      - extend runner execution
+      - create GitHub issues directly
+      - introduce provider dependencies
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence that the work is bounded strategic documentation.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Created strategic ADRs, the Agentic Governance roadmap, a milestone and issue planning document, and minimal README links.
+    changed_files:
+      - README.md
+      - docs/adr/0001-strategic-direction-agentic-governance.md
+      - docs/adr/0002-policyflow-is-not-an-agent-runtime.md
+      - docs/adr/0003-loop-and-evaluation-governance.md
+      - docs/roadmap-agentic-governance.md
+      - docs/planning/agentic-governance-milestones.md
+      - workflows/features/agentic-governance-roadmap.yml
+    test_summary: PolicyFlow workflow validation and repository documentation tests are planned before completion.
+    docs_updates:
+      - README.md
+      - docs/adr/0001-strategic-direction-agentic-governance.md
+      - docs/adr/0002-policyflow-is-not-an-agent-runtime.md
+      - docs/adr/0003-loop-and-evaluation-governance.md
+      - docs/roadmap-agentic-governance.md
+      - docs/planning/agentic-governance-milestones.md
+    known_limitations:
+      - GitHub milestones and issues are only prepared for review and not created.
+      - Loop and evaluation governance are documented as future strategy, not implemented.
+    unresolved_questions:
+      - How much runtime mutation remains allowed?
+      - How evaluation scores are calculated.
+      - Which metrics are generic enough for PolicyFlow core.

@@ -1,5 +1,28 @@
 # Governance Enforcement Roadmap
 
+This document describes the current enforcement boundary and near-term
+governance direction. Strategic platform direction is tracked separately in
+[roadmap-agentic-governance.md](roadmap-agentic-governance.md), and accepted
+architecture decisions are tracked in [adr/](adr/).
+
+## Current Product Boundary
+
+PolicyFlow's strongest current capabilities are local validation, workflow
+generation, Consumer-Repo bootstrap, doctor checks, PR body validation, GitHub
+approval metadata validation, managed asset sync, status reporting, and audit
+reporting.
+
+Its more experimental boundaries are agent-owned phase execution through the
+provider-neutral command runner, lightweight runtime state mutation, and
+handoff-based coordination. These features exist to support governance evidence
+and phase visibility. They should not expand into hosted scheduling, autonomous
+agent orchestration, message routing, memory, or provider credential ownership.
+
+PolicyFlow validates governance structure and compliance claims. It does not
+prove the semantic truth of all evidence, review findings, confidence claims,
+or quality metrics. External tools, reviewers, approvers, CI systems, and
+Consumer-Repos remain responsible for producing trustworthy evidence.
+
 ## Current Enforcement
 
 - workflow YAML validation
@@ -51,6 +74,9 @@
 - public Python API stability boundary
 - release publishing and pinned consumer governance workflow installation
 - broader docs cleanup and compatibility guidance as more Consumer-Repos adopt PolicyFlow
+- declarative Loop Governance and Evaluation Governance as described in the
+  Agentic Governance Roadmap
+- stronger links between metrics, evidence, review gates, and audit reports
 
 Schema compatibility and the root-level fallback migration path are now
 documented in [schema-compatibility.md](schema-compatibility.md). Future
