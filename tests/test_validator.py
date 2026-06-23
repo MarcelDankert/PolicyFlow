@@ -112,6 +112,26 @@ def test_valid_complete_evidence_workflow_passes() -> None:
     assert result.contracts.qa.owner_agent == "qa-agent"
 
 
+def test_release_readiness_evidence_fixture_passes() -> None:
+    result = validate_workflow_file(fixture_path("valid-release-readiness.yml"))
+    data = fixture_path("valid-release-readiness.yml").read_text(encoding="utf-8")
+
+    assert result.context.risk_level == "MEDIUM"
+    for expected in (
+        "release_readiness:",
+        "state: preparatory",
+        "state: blocked",
+        "ready_for_release",
+        "release_blockers:",
+        "blocked_issues:",
+        "issue_ordering:",
+        "external_credentials_required:",
+        "non_executable_checks:",
+        "draft_prs:",
+    ):
+        assert expected in data
+
+
 def test_missing_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))

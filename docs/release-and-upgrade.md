@@ -58,6 +58,71 @@ Before publishing release artifacts:
 The release artifacts are the PyPI source distribution, PyPI wheel, matching
 GitHub Release notes, and the packaged managed assets contained in that wheel.
 
+## Release Readiness Evidence
+
+Use `evidence.release_readiness` when a release train needs an explicit,
+reviewable status artifact before release execution. This artifact is
+declarative governance evidence: it records ordering, blockers, missing
+credentials, checks that could not run, and draft PR context. It does not make
+PolicyFlow a release orchestrator or scheduler.
+
+This design does not make PolicyFlow a release orchestrator or scheduler.
+
+Recommended shape:
+
+```yaml
+evidence:
+  release_readiness:
+    state: preparatory
+    state_values:
+      - done
+      - preparatory
+      - blocked
+      - ready_for_release
+    release_blockers:
+      - issue: "#42"
+        reason: release artifact is not published yet
+        state: blocked
+    blocked_issues:
+      - issue: "#43"
+        blocked_by:
+          - "#42"
+        state: blocked
+        reason: consumer validation requires the published artifact
+    issue_ordering:
+      - issue: "#42"
+        before:
+          - "#43"
+        state: preparatory
+    external_credentials_required:
+      - name: PYPI_API_TOKEN
+        reason: publish release artifact
+        owner: release operator
+    non_executable_checks:
+      - check: consumer validation
+        reason: package artifact is not available yet
+        fallback: record as blocked until release artifact exists
+    draft_prs:
+      - pr: "#44"
+        reason: stacked preview awaiting release artifact
+        state: preparatory
+```
+
+Use the state values consistently:
+
+- `done`: the issue, check, PR, or release preparation item is complete
+- `preparatory`: work can be prepared, but it should not be treated as released
+  or fully validated yet
+- `blocked`: progress depends on an upstream issue, artifact, credential,
+  external approval, or unavailable check
+- `ready for release`: required artifacts, checks, credentials, and dependency
+  ordering are satisfied for the declared release scope
+
+Release readiness evidence should be updated by the release owner or workflow
+author before claiming merge or release readiness. PolicyFlow can validate the
+workflow structure around this evidence, but release execution, publication,
+credential handling, and scheduling remain outside PolicyFlow.
+
 ## Upgrade Path
 
 1. Pick the target PolicyFlow version from the release notes.

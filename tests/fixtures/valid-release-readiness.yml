@@ -1,0 +1,128 @@
+workflow:
+  id: valid-release-readiness
+  type: feature
+
+context:
+  workflow_file: workflows/examples/valid-release-readiness.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Release-readiness scope is documented before implementation.
+    implementation: Implementation is bounded to release governance evidence.
+    tests: Validation confirms the optional release-readiness block remains compatible.
+    residual_uncertainty: Review confirms issue ordering and blocked states before release.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Release-readiness artifact shape is documented before implementation.
+    scope_locked:
+      - release readiness evidence
+    non_goals_locked:
+      - no release orchestration
+      - no scheduler behavior
+    risk_rationale: MEDIUM risk because release governance affects consumer delivery decisions.
+  architecture-check:
+    decision: Keep release readiness as declarative governance evidence.
+    constraints:
+      - no scheduler behavior
+      - no release execution behavior
+    approval_path: architecture-agent review
+  release_readiness:
+    state: preparatory
+    state_values:
+      - done
+      - preparatory
+      - blocked
+      - ready_for_release
+    release_blockers:
+      - issue: "#42"
+        reason: release artifact is not published yet
+        state: blocked
+    blocked_issues:
+      - issue: "#43"
+        blocked_by:
+          - "#42"
+        state: blocked
+        reason: consumer validation requires the published artifact
+    issue_ordering:
+      - issue: "#42"
+        before:
+          - "#43"
+        state: preparatory
+    external_credentials_required:
+      - name: PYPI_API_TOKEN
+        reason: publish release artifact
+        owner: release operator
+    non_executable_checks:
+      - check: consumer validation
+        reason: package artifact is not available yet
+        fallback: record as blocked until release artifact exists
+    draft_prs:
+      - pr: "#44"
+        reason: stacked preview awaiting release artifact
+        state: preparatory
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Model release readiness as explicit evidence.
+    acceptance_criteria:
+      - release-readiness state is visible
+    approved_scope:
+      - release readiness evidence
+    non_goals:
+      - no release orchestration
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Release-readiness evidence is explicit and reviewable.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Release readiness stays declarative.
+    approved_scope:
+      - release readiness evidence
+    module_boundaries:
+      - workflow evidence only
+    contract_impact: No runtime or scheduler contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep the model declarative
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []

@@ -30,6 +30,12 @@ normal merge candidates until upstream dependencies are merged or otherwise
 satisfied. PolicyFlow documents this distinction today without adding validation
 behavior, scheduling, or release orchestration.
 
+release-readiness evidence remains declarative. PolicyFlow can document and
+carry `evidence.release_readiness` so teams can list blockers, preparatory work,
+dependency ordering, external credentials, non-executable checks, and draft PR
+reasons, but PolicyFlow does not schedule releases, publish artifacts, mutate
+GitHub state, or decide release execution order automatically.
+
 ## Current Enforcement
 
 - workflow YAML validation
