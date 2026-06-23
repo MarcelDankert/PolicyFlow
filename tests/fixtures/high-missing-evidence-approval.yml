@@ -1,0 +1,87 @@
+workflow:
+  id: high-missing-evidence-approval
+  type: architecture-change
+
+context:
+  workflow_file: workflows/examples/high-missing-evidence-approval.yml
+  risk_level: HIGH
+  confidence:
+    planning: Planning confidence is documented before implementation.
+    implementation: Implementation confidence is bounded by declared scope and constraints.
+    tests: Test confidence is based on declared validation evidence.
+    residual_uncertainty: Residual uncertainty is tracked in review and QA.
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - database schema
+  approval_evidence:
+    - approved in architecture review
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: High-risk scope locked before coding.
+    scope_locked:
+      - schema change planning
+    non_goals_locked:
+      - no runtime implementation
+    risk_rationale: Protected area touched.
+  architecture-check:
+    decision: High-risk architecture review completed.
+    constraints:
+      - preserve approval path
+    approval_path: human approval required
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Lock the protected-area change scope before coding.
+    acceptance_criteria:
+      - schema change planning remains explicit
+    approved_scope:
+      - schema change planning
+    non_goals:
+      - no runtime implementation
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - database schema
+    confidence_summary: High-risk path is required because a protected area is touched.
+    escalation_flags:
+      - human approval required
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Architecture review confirmed the protected-area path.
+    approved_scope:
+      - schema change planning
+    module_boundaries:
+      - database schema boundary
+    contract_impact: No runtime contract expansion is allowed.
+    risk_review_decision: HIGH risk with explicit human approval.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - preserve approval path

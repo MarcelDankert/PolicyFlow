@@ -134,10 +134,18 @@ def new_workflow(
 def doctor(
     target: Path = typer.Argument(Path(".")),
     json_output: bool = typer.Option(False, "--json"),
+    github_app_preflight: str | None = typer.Option(
+        None,
+        "--github-app-preflight",
+        help="Run GitHub App governance permission preflight for OWNER/REPO.",
+    ),
 ) -> None:
     """Check whether a Consumer-Repo is ready to run PolicyFlow."""
 
-    report = doctor_consumer_repo(target)
+    report = doctor_consumer_repo(
+        target,
+        github_app_preflight_repo=github_app_preflight,
+    )
 
     if json_output:
         typer.echo(json.dumps(report, indent=2))

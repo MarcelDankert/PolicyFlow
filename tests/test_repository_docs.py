@@ -75,6 +75,26 @@ def test_getting_started_has_end_to_end_consumer_quickstart() -> None:
         assert command in text
 
 
+def test_getting_started_documents_github_app_governance_preflight() -> None:
+    text = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+
+    assert "policyflow doctor . --github-app-preflight OWNER/REPO" in text
+    for capability in (
+        "read metadata",
+        "create branches",
+        "push commits",
+        "create/edit issues",
+        "create/edit pull requests",
+        "apply labels",
+        "assign milestones",
+        "read pull request reviews",
+    ):
+        assert capability in text
+    assert "GH_TOKEN" in text
+    assert "D:\\" not in text
+    assert "C:\\" not in text
+
+
 def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
     text = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
 

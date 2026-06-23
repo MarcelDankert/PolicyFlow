@@ -60,6 +60,31 @@ policyflow doctor .
 policyflow doctor . --json
 ```
 
+For GitHub-governed repos, run the GitHub App governance preflight before
+release orchestration or PR automation:
+
+```bash
+policyflow doctor . --github-app-preflight OWNER/REPO
+```
+
+The preflight uses GitHub CLI with `GH_TOKEN` or `GITHUB_TOKEN`; set that
+environment variable to the GitHub App installation token that release or PR
+automation will use. It verifies non-mutating repository access and reports the
+governance capabilities that must be available before mutation:
+
+- read metadata
+- create branches
+- push commits
+- create/edit issues
+- create/edit pull requests
+- apply labels
+- assign milestones
+- read pull request reviews
+
+When GitHub returns App permission metadata, missing capabilities identify the
+likely GitHub permission area, such as `Contents: write`, `Issues: write`, or
+`Pull requests: write`.
+
 Create the first real governed workflow:
 
 ```bash

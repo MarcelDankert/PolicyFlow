@@ -426,6 +426,32 @@ def test_high_risk_with_empty_approval_evidence_fails() -> None:
     )
 
 
+def test_high_risk_without_evidence_approval_fails_with_pr_approval_guidance() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("high-missing-evidence-approval.yml"))
+
+    assert (
+        "HIGH risk workflows with human approval required must declare evidence.approval.approved_by, evidence.approval.reference, and evidence.approval.scope_confirmed; governance.approval_evidence alone is not sufficient for PR approval validation."
+        in exc_info.value.errors
+    )
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    ["high-empty-approved-by.yml", "high-null-approved-by.yml"],
+)
+def test_high_risk_with_empty_approved_by_fails_with_field_guidance(
+    fixture_name: str,
+) -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path(fixture_name))
+
+    assert (
+        "HIGH risk workflows with human approval required must declare evidence.approval.approved_by, evidence.approval.reference, and evidence.approval.scope_confirmed; governance.approval_evidence alone is not sufficient for PR approval validation."
+        in exc_info.value.errors
+    )
+
+
 def test_protected_areas_require_high_risk_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("medium-protected-area.yml"))

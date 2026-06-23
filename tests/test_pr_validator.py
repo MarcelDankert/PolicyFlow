@@ -61,6 +61,98 @@ def test_pull_request_without_linked_issue_fails() -> None:
     assert "PR body must include a non-empty Linked Issue section." in exc_info.value.errors
 
 
+def test_pull_request_without_workflow_file_section_reports_body_diagnostics(
+    tmp_path: Path,
+) -> None:
+    pr_body_path = tmp_path / "pr-missing-workflow-file-section.md"
+    pr_body_path.write_text(
+        """## Summary
+
+Bounded parser validation update.
+
+## Linked Issue
+
+#97
+
+## Governance
+- Declared risk level: MEDIUM
+- Confidence summary: bounded change with direct tests
+
+## Confirmation
+- [x] The linked workflow file governed this change
+- [x] The workflow file existed before implementation and governed the work from the start
+- [x] Scope, non-goals, and risk were fixed in the workflow before implementation started
+- [x] Required workflow phases were executed as visible working steps, not only documented after the fact
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(fixture_path("valid-medium.yml"), pr_body_path)
+
+    assert (
+        "PR body must include a Workflow File section. "
+        "PR body length: 524 characters. Markdown headings found: "
+        "Summary, Linked Issue, Governance, Confirmation."
+    ) in exc_info.value.errors
+
+
+def test_pull_request_with_empty_workflow_file_section_reports_body_diagnostics(
+    tmp_path: Path,
+) -> None:
+    pr_body_path = tmp_path / "pr-empty-workflow-file-section.md"
+    pr_body_path.write_text(
+        """## Summary
+
+Bounded parser validation update.
+
+## Linked Issue
+
+#97
+
+## Workflow File
+
+## Governance
+- Declared risk level: MEDIUM
+- Confidence summary: bounded change with direct tests
+
+## Confirmation
+- [x] The linked workflow file governed this change
+- [x] The workflow file existed before implementation and governed the work from the start
+- [x] Scope, non-goals, and risk were fixed in the workflow before implementation started
+- [x] Required workflow phases were executed as visible working steps, not only documented after the fact
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_pull_request(fixture_path("valid-medium.yml"), pr_body_path)
+
+    assert (
+        "PR body Workflow File section is empty. "
+        "PR body length: 542 characters. Markdown headings found: "
+        "Summary, Linked Issue, Workflow File, Governance, Confirmation."
+    ) in exc_info.value.errors
+
+
+def test_pull_request_accepts_bulleted_backticked_workflow_file(
+    tmp_path: Path,
+) -> None:
+    pr_body = fixture_path("valid-pr-body.md").read_text(encoding="utf-8")
+    pr_body_path = tmp_path / "pr-bulleted-backticked-workflow-file.md"
+    pr_body_path.write_text(
+        pr_body.replace(
+            "- workflows/examples/valid-medium.yml",
+            "- `workflows/examples/valid-medium.yml`",
+        ),
+        encoding="utf-8",
+    )
+
+    result = validate_pull_request(fixture_path("valid-medium.yml"), pr_body_path)
+
+    assert result.context.workflow_file == "workflows/examples/valid-medium.yml"
+
+
 def test_pull_request_with_mismatched_workflow_file_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_pull_request(
