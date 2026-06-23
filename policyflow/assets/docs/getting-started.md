@@ -157,6 +157,18 @@ policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-
 The installed GitHub Actions workflow performs the PR body and GitHub approval
 checks automatically on pull requests.
 
+If a PolicyFlow PR check fails because the PR body is incomplete, update the PR
+body and then rerun the failed PolicyFlow job or push a new commit. In GitHub,
+editing a PR body may not trigger a new GitHub Actions run by itself, so the old
+failed check can remain visible until the job is rerun.
+
+Treat draft PRs and stacked PRs as explicit governance states:
+
+- draft PRs are planning or preview artifacts unless the author promotes them to
+  merge readiness and the PR body, workflow evidence, and required checks all
+  support that state
+- stacked PRs are dependency-bound and not normal merge candidates until upstream dependencies are merged or otherwise satisfied
+
 For `HIGH` risk workflows with `governance.human_approval_required: true`, keep
 the governance declaration and the approval evidence separate:
 

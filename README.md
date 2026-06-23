@@ -107,6 +107,12 @@ validation reads the required approver login from
 `evidence.approval.approved_by`; `governance.approval_evidence` documents the
 workflow requirement but does not replace the machine-readable evidence block.
 
+Draft and stacked PRs need explicit merge-readiness semantics: draft PRs are
+planning or preview artifacts until promoted, and stacked PRs remain
+dependency-bound until their upstream dependencies are satisfied. If a PR body
+edit fixes PolicyFlow metadata, rerun the failed PolicyFlow job or push a new
+commit because GitHub may not start a new Actions run for the body edit alone.
+
 ## Workflow-First Delivery Standard
 
 PolicyFlow treats `workflow-first delivery` as the required default process for all consumer repositories that adopt these templates. The workflow is not retrospective paperwork. It is created first and then used to steer implementation, review, and merge readiness.
