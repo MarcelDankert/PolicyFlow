@@ -63,6 +63,21 @@ overrides: []
 #     non_goals_locked:
 #       - no runtime changes
 #     risk_rationale: LOW-risk path remains valid.
+#   release_readiness:
+#     state: preparatory
+#     state_values:
+#       - done
+#       - preparatory
+#       - blocked
+#       - ready_for_release
+#     release_blockers: []
+#     blocked_issues: []
+#     issue_ordering: []
+#     external_credentials_required: []
+#     non_executable_checks: []
+#     draft_prs: []
+# Use release_readiness to record done, preparatory, blocked, or ready for release
+# states. This is governance evidence, not release orchestration or scheduling.
 
 fast_path_allowed_when:
   - no protected areas

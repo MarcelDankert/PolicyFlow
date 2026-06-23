@@ -126,6 +126,48 @@ def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
     assert "Draft and stacked PRs need explicit merge-readiness semantics" in readme
 
 
+def test_release_docs_define_release_readiness_artifact_shape() -> None:
+    release = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/governance-enforcement-roadmap.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "release_readiness:",
+        "release_blockers:",
+        "blocked_issues:",
+        "issue_ordering:",
+        "external_credentials_required:",
+        "non_executable_checks:",
+        "draft_prs:",
+        "done",
+        "preparatory",
+        "blocked",
+        "ready for release",
+    ):
+        assert expected in release
+
+    assert "does not make PolicyFlow a release orchestrator or scheduler" in release
+    assert "release-readiness evidence remains declarative" in roadmap
+
+
+def test_workflow_templates_reference_release_readiness_evidence() -> None:
+    for relative_path in (
+        "workflows/templates/feature-workflow.template.yml",
+        "workflows/templates/bugfix-workflow.template.yml",
+        "workflows/templates/architecture-change-workflow.template.yml",
+        "workflows/templates/low-risk-workflow.template.yml",
+        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
+        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
+        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
+        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
+    ):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "release_readiness" in text
+        assert "done, preparatory, blocked, or ready for release" in text
+
+
 def test_pr_template_shows_high_risk_approval_evidence_path() -> None:
     for relative_path in (
         "github/PULL_REQUEST_TEMPLATE.md",

@@ -66,6 +66,21 @@ evidence: {}
 #     non_goals_locked:
 #       - no contract changes
 #     risk_rationale: Bounded MEDIUM-risk change.
+#   release_readiness:
+#     state: preparatory
+#     state_values:
+#       - done
+#       - preparatory
+#       - blocked
+#       - ready_for_release
+#     release_blockers: []
+#     blocked_issues: []
+#     issue_ordering: []
+#     external_credentials_required: []
+#     non_executable_checks: []
+#     draft_prs: []
+# Use release_readiness to record done, preparatory, blocked, or ready for release
+# states. This is governance evidence, not release orchestration or scheduling.
 
 contracts: {}
 # Add machine-readable role contracts as phases complete, for example:
