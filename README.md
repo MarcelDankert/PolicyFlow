@@ -410,6 +410,8 @@ path.
 
 ## Future Roadmap
 
+- strategic direction: [Agentic Governance Roadmap](docs/roadmap-agentic-governance.md)
+  and [Architecture Decision Records](docs/adr/)
 - release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow
 
