@@ -505,6 +505,28 @@ def test_loop_governance_escalated_loop_accepts_escalation_evidence_ref() -> Non
     assert result.loop_governance.loops[0].status == "escalated"
 
 
+def test_loop_governance_example_covers_common_feedback_loops() -> None:
+    result = validate_workflow_file(
+        Path("workflows/examples/loop-governance-workflow.yml")
+    )
+    data = Path("workflows/examples/loop-governance-workflow.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert result.loop_governance is not None
+    assert [loop.id for loop in result.loop_governance.loops] == [
+        "review-feedback",
+        "qa-regression",
+        "security-review",
+        "human-arbitration",
+        "querypilot-sql-safety",
+    ]
+    assert "no loop execution" in data
+    assert "Querypilot-inspired SQL safety loop" in data
+    assert "stop_conditions.review-findings-resolved" in data
+    assert "escalation_conditions.security-critical-findings" in data
+
+
 def test_high_risk_loop_governance_requires_escalation_conditions() -> None:
     payload = loop_governance_fixture_payload()
     payload["context"]["risk_level"] = "HIGH"
