@@ -448,6 +448,7 @@ def _append_loop_governance_errors(
         max_iterations = loop.get("max_iterations")
         current_iteration = loop.get("current_iteration")
         stop_conditions = loop.get("stop_conditions")
+        escalation_conditions = loop.get("escalation_conditions")
         evidence_refs = loop.get("evidence_refs")
 
         if type(max_iterations) is not int or max_iterations <= 0:
@@ -474,15 +475,30 @@ def _append_loop_governance_errors(
             )
             continue
 
-        if loop.get("status") not in {"completed", "terminated"}:
+        if not isinstance(escalation_conditions, list) or not escalation_conditions:
+            errors.append(
+                f"loop_governance loop '{loop_id}' declaration error: "
+                "escalation_conditions must be a non-empty list."
+            )
             continue
 
-        stop_condition_ids = {
-            condition.get("id")
-            for condition in stop_conditions
-            if isinstance(condition, dict) and isinstance(condition.get("id"), str)
-        }
-        if not _evidence_refs_stop_condition(evidence_refs, stop_condition_ids):
+        if loop.get("status") not in {"completed", "terminated"}:
+            if loop.get("status") == "escalated":
+                escalation_condition_ids = _condition_ids(escalation_conditions)
+                if not _evidence_refs_condition(
+                    evidence_refs, "escalation_conditions", escalation_condition_ids
+                ):
+                    errors.append(
+                        f"loop_governance loop '{loop_id}' compliance failure: "
+                        "escalated loops must reference at least one declared "
+                        "escalation condition in evidence_refs."
+                    )
+            continue
+
+        stop_condition_ids = _condition_ids(stop_conditions)
+        if not _evidence_refs_condition(
+            evidence_refs, "stop_conditions", stop_condition_ids
+        ):
             errors.append(
                 f"loop_governance loop '{loop_id}' compliance failure: "
                 "completed or terminated loops must reference at least one "
@@ -490,19 +506,27 @@ def _append_loop_governance_errors(
             )
 
 
-def _evidence_refs_stop_condition(
-    evidence_refs: Any, stop_condition_ids: set[str]
+def _condition_ids(conditions: list[Any]) -> set[str]:
+    return {
+        condition.get("id")
+        for condition in conditions
+        if isinstance(condition, dict) and isinstance(condition.get("id"), str)
+    }
+
+
+def _evidence_refs_condition(
+    evidence_refs: Any, condition_group: str, condition_ids: set[str]
 ) -> bool:
-    if not isinstance(evidence_refs, list) or not stop_condition_ids:
+    if not isinstance(evidence_refs, list) or not condition_ids:
         return False
 
     accepted_refs = {
-        f"stop_conditions.{stop_condition_id}"
-        for stop_condition_id in stop_condition_ids
+        f"{condition_group}.{condition_id}"
+        for condition_id in condition_ids
     }
     accepted_refs.update(
-        f"loop_governance.stop_conditions.{stop_condition_id}"
-        for stop_condition_id in stop_condition_ids
+        f"loop_governance.{condition_group}.{condition_id}"
+        for condition_id in condition_ids
     )
 
     return any(ref in accepted_refs for ref in evidence_refs if isinstance(ref, str))
