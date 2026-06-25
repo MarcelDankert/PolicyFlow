@@ -6,6 +6,28 @@ asset compatibility changes.
 
 ## Unreleased
 
+## 0.2.0
+
+Released: 2026-06-25
+
+Evaluation Governance Foundation release.
+
+- Added optional top-level `evaluation` workflow governance for declared
+  quality criteria, categories, required metrics, thresholds, evidence refs,
+  and compliance status.
+- Added typed Evaluation Governance models and schema normalization support.
+- Added validator checks for risk-based evaluation categories, required metric
+  consistency, blocking failures, duplicate IDs, and simple declared threshold
+  comparisons.
+- Added provider-neutral Evaluation Governance examples covering tests,
+  coverage, review score, security findings, and performance gates.
+- Added invalid evaluation fixtures for missing evidence refs and threshold
+  mismatches.
+- Documented Consumer-Repo Evaluation Governance usage, scope, non-scope,
+  required fields, evidence, and examples.
+- Updated packaged managed docs and workflow templates so Consumer-Repos can
+  adopt the Evaluation Governance Foundation through the PyPI package.
+
 ## 0.1.1
 
 Released: 2026-06-25

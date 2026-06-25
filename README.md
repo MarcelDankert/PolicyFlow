@@ -49,13 +49,13 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 
 ```text
 PolicyFlow/
-├── docs/
-├── rules/
-├── agents/
-├── workflows/
-├── prompts/
-├── github/
-└── examples/
+â”œâ”€â”€ docs/
+â”œâ”€â”€ rules/
+â”œâ”€â”€ agents/
+â”œâ”€â”€ workflows/
+â”œâ”€â”€ prompts/
+â”œâ”€â”€ github/
+â””â”€â”€ examples/
 ```
 
 ## Repository Agent Guidance
@@ -68,11 +68,11 @@ other coding agents working on this framework.
 Install a pinned PolicyFlow release:
 
 ```bash
-python -m pip install policyflow==0.1.1
+python -m pip install policyflow==0.2.0
 ```
 
-Release links: [PyPI](https://pypi.org/project/policyflow/0.1.1/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.1).
+Release links: [PyPI](https://pypi.org/project/policyflow/0.2.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.2.0).
 
 Bootstrap the standard Consumer-Repo layout:
 
@@ -156,7 +156,7 @@ Pragmatic-strict transition mode:
 Install a pinned PolicyFlow release in the target project:
 
 ```bash
-python -m pip install policyflow==0.1.1
+python -m pip install policyflow==0.2.0
 ```
 
 Then run bootstrap:
@@ -199,7 +199,7 @@ PolicyFlow now includes a lightweight governance validator for workflow YAML fil
 Consumer install:
 
 ```bash
-python -m pip install policyflow==0.1.1
+python -m pip install policyflow==0.2.0
 ```
 
 Developer install from a source checkout:
@@ -420,10 +420,10 @@ imports are documented in [docs/public-api.md](docs/public-api.md).
 
 ## Project Status
 
-PolicyFlow `0.1.1` is published on
-[PyPI](https://pypi.org/project/policyflow/0.1.1/) with a matching
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.1).
-Use `python -m pip install policyflow==0.1.1` for the published Consumer-Repo
+PolicyFlow `0.2.0` is published on
+[PyPI](https://pypi.org/project/policyflow/0.2.0/) with a matching
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.2.0).
+Use `python -m pip install policyflow==0.2.0` for the published Consumer-Repo
 path.
 
 ## Future Roadmap
