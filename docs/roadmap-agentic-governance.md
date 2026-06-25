@@ -87,6 +87,22 @@ Scope:
 - validate required evaluation evidence by risk level
 - report evaluation compliance and missing evidence
 
+Initial schema direction:
+
+- `evaluation.categories`: groups such as tests, coverage, review, security,
+  performance, and domain-specific checks
+- `evaluation.categories[].required_metrics`: concrete metric declarations
+- `thresholds`: expected values or comparison rules
+- `evidence_refs`: links to workflow evidence, CI artifacts, scanner reports,
+  review records, benchmark output, or domain-specific evidence
+- `compliance_status`: overall evaluation compliance claim backed by external
+  evidence
+
+Evaluation Governance is declarative governance metadata. PolicyFlow records,
+validates, and reports evaluation requirements and evidence references; it does
+not run evaluation tooling, test suites, scanners, benchmarks, agents,
+schedulers, provider SDKs, or orchestration frameworks.
+
 Non-scope:
 
 - run test suites

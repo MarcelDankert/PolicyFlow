@@ -23,9 +23,71 @@ New generated workflows must use the canonical schema:
 - `execution`: strict phase list and current phase states
 - `evidence`: machine-readable phase evidence
 - `contracts`: machine-readable role contracts for completed canonical phases
+- `evaluation`: optional declarative evaluation governance criteria
 - `overrides`: typed approved exceptions
 - `runtime`: current orchestration state
 - `handoffs`: concrete phase handoffs
+
+## Evaluation Governance Schema
+
+Evaluation Governance is an optional top-level workflow block that declares
+measurable quality criteria and the evidence that supports them. PolicyFlow does not run evaluation tooling, execute tests, call scanners, calculate benchmark
+scores, or own provider credentials. Consumer-Repos, CI systems, review tools,
+security scanners, benchmark tools, and human reviewers remain responsible for
+producing the evidence.
+
+Initial schema shape:
+
+```yaml
+evaluation:
+  compliance_status: pending
+  categories:
+    - id: tests
+      required_metrics:
+        - id: tests-passed
+          name: Test suite pass status
+          source: ci
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: pending
+          status: pending
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          source: ci
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: pending
+          status: pending
+          evidence_refs:
+            - ci://coverage/report
+          blocks_merge: false
+```
+
+Field intent:
+
+- `evaluation.compliance_status`: overall evaluation state such as `pending`,
+  `passed`, `failed`, `blocked`, or `waived`
+- `categories`: evaluation groups such as `tests`, `coverage`, `review`,
+  `security`, `performance`, or Consumer-Repo-specific domain categories
+- `required_metrics`: concrete measured checks required for that category
+- `thresholds`: expected value or comparison rule for a metric
+- `evidence_refs`: references to workflow evidence, CI artifacts, review
+  records, scanner reports, benchmark output, or domain-specific evidence
+- `blocks_merge`: whether the metric is intended to block merge readiness when
+  not compliant
+
+PolicyFlow should not execute evaluation tooling. This schema only records the
+required criteria, thresholds, evidence references, and compliance status so
+later validation and reporting can reason about evaluation governance.
 
 `policyflow new-workflow`, workflow templates, bootstrap-managed templates, PR
 validation, status, audit, sync, and the future `policyflow.api` compatibility

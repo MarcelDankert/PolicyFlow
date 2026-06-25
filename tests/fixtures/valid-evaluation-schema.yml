@@ -1,0 +1,140 @@
+workflow:
+  id: valid-evaluation-schema
+  type: feature
+
+context:
+  workflow_file: workflows/examples/valid-evaluation-schema.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Evaluation governance expectations are declared before implementation.
+    implementation: Implementation stays bounded by declared evaluation criteria.
+    tests: Test evidence will be referenced through evaluation evidence refs.
+    residual_uncertainty: Review must confirm external evidence supports the compliance claim.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Evaluation schema scope and non-goals were locked.
+    scope_locked:
+      - evaluation governance schema
+    non_goals_locked:
+      - no evaluation tooling execution
+    risk_rationale: MEDIUM risk because evaluation criteria can affect merge readiness.
+  architecture-check:
+    decision: Keep evaluation governance declarative and provider-neutral.
+    constraints:
+      - no scanner execution
+      - no benchmark execution
+      - no provider SDK coupling
+    approval_path: architecture-agent review
+
+evaluation:
+  compliance_status: pending
+  categories:
+    - id: tests
+      required_metrics:
+        - id: tests-passed
+          name: Test suite pass status
+          source: ci
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: pending
+          status: pending
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          source: ci
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: pending
+          status: pending
+          evidence_refs:
+            - ci://coverage/report
+          blocks_merge: false
+    - id: security
+      required_metrics:
+        - id: critical-findings
+          name: Critical security findings
+          source: scanner
+          required: true
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: pending
+          status: pending
+          evidence_refs:
+            - ci://security/report
+          blocks_merge: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define evaluation governance expectations.
+    acceptance_criteria:
+      - evaluation schema is declarative
+    approved_scope:
+      - evaluation governance schema
+    non_goals:
+      - no evaluation tooling execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Evaluation criteria are explicit enough for review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Evaluation governance is metadata, not tooling execution.
+    approved_scope:
+      - evaluation governance schema
+    module_boundaries:
+      - workflow schema only
+    contract_impact: No runtime or provider contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep evaluation provider-neutral
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []

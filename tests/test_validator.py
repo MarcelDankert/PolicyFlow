@@ -132,6 +132,25 @@ def test_release_readiness_evidence_fixture_passes() -> None:
         assert expected in data
 
 
+def test_evaluation_schema_fixture_passes() -> None:
+    result = validate_workflow_file(fixture_path("valid-evaluation-schema.yml"))
+    data = fixture_path("valid-evaluation-schema.yml").read_text(encoding="utf-8")
+
+    assert result.context.risk_level == "MEDIUM"
+    for expected in (
+        "evaluation:",
+        "categories:",
+        "required_metrics:",
+        "thresholds:",
+        "evidence_refs:",
+        "compliance_status:",
+        "tests",
+        "coverage",
+        "security",
+    ):
+        assert expected in data
+
+
 def test_missing_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))
