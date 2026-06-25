@@ -1,0 +1,179 @@
+workflow:
+  id: metrics-schema
+  name: Metrics Schema
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Define a reusable metric representation for Evaluation Governance.
+
+context:
+  workflow_file: workflows/features/metrics-schema.yml
+  issue_key: "#80"
+  goal: Define a reusable metric representation for Evaluation Governance.
+  scope:
+    - typed metric schema fields for category, source, expected threshold, observed value, status, and evidence references
+    - support for domain-specific metrics without making them globally mandatory
+    - backward compatibility documentation
+    - focused validator/model tests for compatible metric declarations
+  non_goals:
+    - no metric calculation or external evaluation execution
+    - no risk-based required metric enforcement
+    - no missing metric evidence reference enforcement beyond existing required field shape
+    - no provider SDK coupling, hosted scheduling, message bus, memory, or workflow engine behavior
+  affected_modules:
+    - policyflow/models.py
+    - tests/test_validator.py
+    - docs/schema-compatibility.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - workflows/features/metrics-schema.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #80 builds on the published v1.1 Evaluation Foundation and is bounded to schema representation and compatibility guidance.
+    implementation: Existing EvaluationMetric fields already cover much of the target; this work can add category and compatibility coverage without introducing enforcement behavior.
+    tests: Focused validator tests and workflow validation will verify typed access and backward-compatible optional metric fields.
+    residual_uncertainty: Evidence reference enforcement, risk-based requirements, examples, and metric governance docs are reserved for later v1.3 issues.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #80 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - typed metric schema extension
+      - domain-specific metric compatibility
+      - backward compatibility documentation
+      - focused tests
+    non_goals_locked:
+      - no metric execution or calculation
+      - no risk-based required metric enforcement
+      - no provider/runtime ownership
+    risk_rationale: MEDIUM risk because metric schema shape is a consumer-facing governance contract.
+  architecture-check:
+    decision: Keep metrics as declarative Evaluation Governance data and avoid introducing execution or global mandatory metric semantics.
+    constraints:
+      - preserve existing evaluation declarations
+      - keep domain-specific metrics optional
+      - keep PolicyFlow as validator/governance tooling, not a metrics engine
+      - reserve risk-based and evidence-reference enforcement for dependent issues
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added optional metric-level category metadata to EvaluationMetric, covered domain-specific metrics in tests, and documented backward-compatible metric schema semantics.
+    changed_files:
+      - policyflow/models.py
+      - tests/test_validator.py
+      - docs/schema-compatibility.md
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/metrics-schema.yml
+    test_summary: Targeted validator and repository docs tests passed; active workflow and relevant evaluation/example workflow validations passed.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - metric evidence reference enforcement remains reserved for issue #81
+      - risk-based required metric enforcement changes remain reserved for issue #82
+      - examples and metric governance docs remain reserved for issues #83 and #84
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define a reusable metric representation for Evaluation Governance.
+    acceptance_criteria:
+      - schema supports metric name, category, source, expected threshold, observed value, status, and evidence reference
+      - schema supports domain-specific metrics without making them globally mandatory
+      - backward compatibility considerations are documented
+    approved_scope:
+      - policyflow models
+      - validator/model tests
+      - schema compatibility docs
+    non_goals:
+      - no metric calculation
+      - no risk-based requirements
+      - no provider/runtime coupling
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: The change is bounded to optional typed schema representation and compatibility documentation.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Metric schema belongs inside Evaluation Governance as declarative quality-signal metadata with evidence links, not as runtime measurement behavior.
+    approved_scope:
+      - metric category field
+      - typed access tests
+      - compatibility docs
+    module_boundaries:
+      - policyflow/models.py owns typed metric shape
+      - policyflow/validator.py continues to parse through existing workflow validation paths
+      - docs/schema-compatibility.md owns backward compatibility guidance
+    contract_impact: Consumer-Repos may declare optional domain-specific metric categories while existing evaluation blocks remain valid.
+    risk_review_decision: MEDIUM risk accepted for optional schema surface refinement.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not make categories globally mandatory outside metric declarations
+      - do not add risk-based requirements
+      - do not calculate observed values
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Evaluation metrics now support optional metric-level category metadata while preserving existing parent-category workflows.
+    changed_files:
+      - policyflow/models.py
+      - tests/test_validator.py
+      - docs/schema-compatibility.md
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/metrics-schema.yml
+    test_summary: pytest -q tests/test_validator.py tests/test_repository_docs.py passed, and policyflow validation passed for the active workflow plus relevant evaluation and feature examples.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - PolicyFlow does not calculate metric values
+      - metric evidence reference and risk-based requirement changes are left to dependent v1.3 issues
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

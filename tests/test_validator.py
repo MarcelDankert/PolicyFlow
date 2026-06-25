@@ -164,6 +164,7 @@ def test_evaluation_schema_fixture_passes() -> None:
     tests_metric = result.evaluation.categories[0].required_metrics[0]
     assert tests_metric.id == "tests-passed"
     assert tests_metric.name == "Test suite pass status"
+    assert tests_metric.category is None
     assert tests_metric.source == "ci"
     assert tests_metric.required is True
     assert tests_metric.thresholds.operator == "equals"
@@ -184,6 +185,23 @@ def test_evaluation_schema_fixture_passes() -> None:
         "security",
     ):
         assert expected in data
+
+
+def test_evaluation_metric_schema_supports_domain_specific_category() -> None:
+    payload = evaluation_fixture_payload()
+    metric = payload["evaluation"]["categories"][0]["required_metrics"][0]
+    metric["category"] = "querypilot.sql-safety"
+    metric["id"] = "only-select-allowed"
+    metric["name"] = "Only SELECT statements allowed"
+    metric["source"] = "querypilot-sql-guardrail"
+
+    result = validate_workflow_data(payload)
+
+    assert result.evaluation is not None
+    parsed_metric = result.evaluation.categories[0].required_metrics[0]
+    assert parsed_metric.category == "querypilot.sql-safety"
+    assert parsed_metric.id == "only-select-allowed"
+    assert parsed_metric.source == "querypilot-sql-guardrail"
 
 
 def test_evaluation_model_requires_categories() -> None:
