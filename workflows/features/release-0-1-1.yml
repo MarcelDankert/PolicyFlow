@@ -1,0 +1,214 @@
+workflow:
+  id: release-0-1-1
+  type: feature
+
+context:
+  workflow_file: workflows/features/release-0-1-1.yml
+  goal: Prepare the PolicyFlow 0.1.1 release after Consumer Governance Hardening.
+  scope:
+    - bump package version metadata from 0.1.0 to 0.1.1
+    - update release notes and consumer install documentation for 0.1.1
+    - update packaged docs and consumer GitHub workflow asset defaults
+    - build and inspect the 0.1.1 release artifacts locally
+  non_goals:
+    - no direct publish to PyPI before PR review and merge
+    - no protected branch merge
+    - no validator semantics changes
+    - no live PolicyFlow repository GitHub Actions pin change before the package exists on PyPI
+  affected_modules:
+    - pyproject.toml
+    - policyflow/__init__.py
+    - policyflow/bootstrap.py
+    - CHANGELOG.md
+    - README.md
+    - docs/getting-started.md
+    - docs/release-and-upgrade.md
+    - github/workflows/policyflow-governance.yml
+    - policyflow/assets
+    - tests
+  risk_level: MEDIUM
+  confidence:
+    planning: The v0.1.1 milestone is closed and release scope is limited to version, release notes, managed asset pins, and release artifact verification.
+    implementation: Changes are mechanical release preparation plus documentation updates; live repository CI remains editable-install based.
+    tests: Full tests, governance validation, package build, and artifact inspection will verify the release PR.
+    residual_uncertainty: PyPI publication and GitHub Release creation remain post-merge external release operations.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Release 0.1.1 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - version metadata
+      - changelog and release docs
+      - consumer managed asset defaults
+      - release artifact verification
+    non_goals_locked:
+      - no direct PyPI publish before merge
+      - no protected branch merge
+      - no validator semantics change
+      - no live repository GitHub Actions pin change before PyPI publication
+    risk_rationale: MEDIUM risk because release metadata and consumer-facing managed assets affect all new Consumer-Repo installs and upgrades.
+  architecture-check:
+    decision: Keep the live repository governance workflow installing from the checkout while updating packaged Consumer-Repo workflow assets to pin 0.1.1.
+    constraints:
+      - release PR must not depend on unpublished policyflow==0.1.1 in live CI
+      - package version fields must match
+      - managed docs and workflow assets must stay synchronized
+      - publication remains a post-merge operation
+    approval_path: architecture-agent review
+  implementation:
+    summary: Bumped PolicyFlow to 0.1.1, updated release documentation and managed asset pins, built local artifacts, and verified package metadata.
+    changed_files:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - CHANGELOG.md
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_bootstrap.py
+      - tests/test_repository_docs.py
+      - workflows/features/release-0-1-1.yml
+    test_summary: Full tests pass, release artifacts build, artifact metadata reports 0.1.1, and packaged Consumer-Repo workflow assets pin POLICYFLOW_VERSION to 0.1.1.
+    docs_updates:
+      - CHANGELOG.md
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+    known_limitations:
+      - PyPI publication and GitHub Release creation remain post-merge release operations.
+      - Build emits existing setuptools package-data warnings that do not block artifact creation.
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Prepare PolicyFlow 0.1.1 release artifacts and release documentation.
+    acceptance_criteria:
+      - pyproject.toml and policyflow.__version__ declare 0.1.1
+      - CHANGELOG contains 0.1.1 release notes dated 2026-06-25
+      - consumer install docs and packaged docs point to 0.1.1
+      - consumer GitHub governance assets default POLICYFLOW_VERSION to 0.1.1
+      - release artifacts build locally and tests pass
+    approved_scope:
+      - version metadata
+      - release notes
+      - docs and packaged docs
+      - consumer workflow assets
+      - release verification tests/build
+    non_goals:
+      - no direct PyPI publish before merge
+      - no protected branch merge
+      - no validator semantics change
+      - no live repository GitHub Actions pin change before package publication
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Release preparation is bounded and verifiable through tests, package build, and artifact inspection.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Release preparation changes public package metadata and managed assets, but does not change runtime or validator semantics.
+    approved_scope:
+      - version metadata
+      - release docs
+      - managed asset defaults
+      - release artifact verification
+    module_boundaries:
+      - package metadata and __version__ own the release version
+      - docs and packaged docs own consumer install guidance
+      - github workflow assets own consumer default install pin
+      - live .github workflow stays source-checkout based
+    contract_impact: New Consumer-Repos can bootstrap with 0.1.1-managed assets after publication; existing Consumer-Repos opt in by changing pins and running sync.
+    risk_review_decision: MEDIUM risk accepted for release metadata and consumer-facing asset updates.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep live repository CI independent of unpublished PyPI artifacts
+      - keep source and packaged assets synchronized
+      - document post-merge publish steps
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Version metadata, release notes, consumer install docs, bootstrap metadata fallback, and packaged Consumer-Repo GitHub governance defaults now target 0.1.1.
+    changed_files:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - CHANGELOG.md
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_bootstrap.py
+      - tests/test_repository_docs.py
+      - workflows/features/release-0-1-1.yml
+    test_summary: Ran targeted release/docs tests, full pytest, active workflow validation, example workflow validation, package build, and artifact inspection.
+    docs_updates:
+      - CHANGELOG.md
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+    known_limitations:
+      - Post-merge release publication is not performed in this PR.
+      - Setuptools emits existing package-data warnings during build.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []
