@@ -272,12 +272,16 @@ def test_loop_governance_docs_reference_examples_and_failure_fixtures() -> None:
     packaged_doc = (
         ROOT / "policyflow/assets/docs/loop-governance.md"
     ).read_text(encoding="utf-8")
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     for expected in (
         "## Scope",
         "## Non-Scope",
         "## Required Fields",
         "## Evidence",
+        "## Escalation Expectations",
+        "## Consumer Usage",
         "## Examples",
         "workflows/examples/loop-governance-workflow.yml",
         "Querypilot-inspired SQL safety loop",
@@ -285,10 +289,14 @@ def test_loop_governance_docs_reference_examples_and_failure_fixtures() -> None:
         "loop-governance-missing-stop-conditions.yml",
         "loop-governance-missing-escalation-conditions.yml",
         "PolicyFlow does not execute loops",
+        "`stop_conditions.<id>`",
+        "`escalation_conditions.<id>`",
     ):
         assert expected in loop_doc
 
     assert packaged_doc == loop_doc
+    assert "docs/loop-governance.md" in getting_started
+    assert "docs/loop-governance.md" in readme
 
 
 def test_workflow_templates_reference_release_readiness_evidence() -> None:

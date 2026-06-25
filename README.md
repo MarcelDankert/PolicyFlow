@@ -107,6 +107,13 @@ Consumer-Repos can declare tests, coverage, review, security, and performance
 criteria while keeping CI, scanners, test tooling, benchmark tooling, and human
 review execution external to PolicyFlow.
 
+Loop Governance is documented in
+[docs/loop-governance.md](docs/loop-governance.md). It explains how
+Consumer-Repos can declare bounded review, QA, security, human arbitration, and
+Querypilot-inspired SQL safety feedback loops while keeping loop execution,
+scheduling, message routing, memory, and provider runtimes external to
+PolicyFlow.
+
 For `HIGH` risk workflows with `governance.human_approval_required: true`, the
 PR body should reference Approval evidence: `evidence.approval`. GitHub approval
 validation reads the required approver login from

@@ -1,0 +1,138 @@
+workflow:
+  id: loop-governance-docs
+  name: Loop Governance Docs
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Document Loop Governance usage and boundaries.
+
+context:
+  workflow_file: workflows/features/loop-governance-docs.yml
+  issue_key: "#79"
+  goal: Document Loop Governance usage, boundaries, fields, evidence, escalation expectations, and link the guide from README and getting-started docs.
+  scope:
+    - expand docs/loop-governance.md
+    - sync packaged loop governance doc mirror
+    - link loop governance from docs/getting-started.md
+    - link loop governance from README.md
+    - repository documentation tests
+  non_goals:
+    - no validator behavior changes
+    - no schema changes
+    - no loop execution
+    - no scheduler, message routing, memory, or provider runtime integration
+  affected_modules:
+    - docs/loop-governance.md
+    - policyflow/assets/docs/loop-governance.md
+    - docs/getting-started.md
+    - README.md
+    - tests/test_repository_docs.py
+    - workflows/features
+  risk_level: LOW
+  confidence:
+    planning: Scope follows issue #79 and builds on the shipped Loop Governance schema, validators, and examples.
+    implementation: Documentation-only changes can preserve existing behavior and asset mirrors.
+    tests: Repository documentation tests will verify guide structure, mirrored docs, and README/getting-started links.
+    residual_uncertainty: Review should confirm wording stays provider-neutral and non-runtime.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+
+evidence:
+  planning:
+    summary: Loop Governance documentation scope and non-goals were locked before implementation.
+    scope_locked:
+      - loop governance guide
+      - README and getting-started links
+      - repository documentation tests
+    non_goals_locked:
+      - no validator behavior changes
+      - no loop execution
+      - no scheduler, message routing, memory, or provider runtime integration
+    risk_rationale: LOW risk because this is bounded documentation and tests.
+  implementation:
+    summary: Expanded Loop Governance documentation, linked it from getting-started and README, synced packaged documentation mirrors, and updated repository documentation tests.
+    changed_files:
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - tests/test_repository_docs.py
+    test_summary: Focused Loop Governance documentation test, full repository documentation tests, full pytest suite, active workflow validation, loop example validation, and standard example workflow validation passed.
+    docs_updates:
+      - docs/loop-governance.md
+      - docs/getting-started.md
+      - README.md
+    known_limitations:
+      - none
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document Loop Governance usage and boundaries.
+    acceptance_criteria:
+      - documentation explains scope, non-scope, loop fields, evidence, and escalation expectations
+      - documentation explicitly states that PolicyFlow does not execute loops
+      - README or getting-started docs link to Loop Governance after the schema ships
+    approved_scope:
+      - docs
+      - README and getting-started links
+      - repository documentation tests
+    non_goals:
+      - no validator behavior changes
+      - no schema changes
+      - no loop execution
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Documentation expectations are explicit and bounded.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Loop Governance docs now cover usage, boundaries, fields, evidence, escalation expectations, and README/getting-started entry points.
+    changed_files:
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - tests/test_repository_docs.py
+    test_summary: Focused Loop Governance documentation test, full repository documentation tests, full pytest suite, active workflow validation, loop example validation, and standard example workflow validation passed.
+    docs_updates:
+      - docs/loop-governance.md
+      - docs/getting-started.md
+      - README.md
+    known_limitations:
+      - none
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
