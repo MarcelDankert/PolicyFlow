@@ -172,6 +172,33 @@ def test_schema_docs_define_evaluation_governance_shape() -> None:
     assert "PolicyFlow should not execute evaluation tooling" in schema
 
 
+def test_evaluation_governance_docs_define_consumer_usage() -> None:
+    evaluation_doc = (ROOT / "docs/evaluation-governance.md").read_text(
+        encoding="utf-8"
+    )
+    packaged_doc = (
+        ROOT / "policyflow/assets/docs/evaluation-governance.md"
+    ).read_text(encoding="utf-8")
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    for expected in (
+        "## Scope",
+        "## Non-Scope",
+        "## Required Fields",
+        "## Evidence",
+        "## Examples",
+        "workflows/examples/evaluation-governance-workflow.yml",
+        "CI, scanners, test tooling, benchmark tools, and human reviewers remain external",
+        "PolicyFlow records, validates, and reports declared evaluation governance",
+    ):
+        assert expected in evaluation_doc
+
+    assert packaged_doc == evaluation_doc
+    assert "docs/evaluation-governance.md" in getting_started
+    assert "docs/evaluation-governance.md" in readme
+
+
 def test_workflow_templates_reference_evaluation_schema() -> None:
     for relative_path in (
         "workflows/templates/feature-workflow.template.yml",
@@ -234,6 +261,7 @@ def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
 
 def test_packaged_getting_started_matches_source_doc() -> None:
     for relative_path in (
+        "evaluation-governance.md",
         "getting-started.md",
         "overview.md",
         "governance-enforcement-roadmap.md",

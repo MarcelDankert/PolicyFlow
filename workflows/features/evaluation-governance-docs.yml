@@ -1,0 +1,137 @@
+workflow:
+  id: evaluation-governance-docs
+  name: Evaluation Governance Docs
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Document how Consumer-Repos should use Evaluation Governance.
+
+context:
+  workflow_file: workflows/features/evaluation-governance-docs.yml
+  issue_key: "#72"
+  goal: Explain Evaluation Governance scope, non-scope, required fields, evidence, and examples for Consumer-Repos.
+  scope:
+    - docs/evaluation-governance.md
+    - docs/getting-started.md link and short guidance
+    - README.md link and short guidance
+    - packaged docs copies
+    - docs tests for the new guidance
+  non_goals:
+    - no schema changes
+    - no validator behavior changes
+    - no evaluation tooling execution
+    - no provider-specific CI, scanner, benchmark, or review integration
+  affected_modules:
+    - README.md
+    - docs
+    - policyflow/assets/docs
+    - tests/test_repository_docs.py
+  risk_level: LOW
+  confidence:
+    planning: Issue #72 is a documentation-only slice after the evaluation examples shipped.
+    implementation: Changes are limited to consumer-facing docs and docs tests.
+    tests: Repository docs tests and workflow validation cover the changed guidance.
+    residual_uncertainty: Review should confirm whether more links belong in future onboarding docs.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Documentation scope and non-goals were locked for issue #72.
+    scope_locked:
+      - Evaluation Governance docs
+      - README and Getting Started links
+      - packaged docs copies
+    non_goals_locked:
+      - no schema changes
+      - no validator behavior changes
+      - no provider integration
+    risk_rationale: LOW risk because this is documentation and docs-test coverage only.
+  implementation:
+    summary: Added Evaluation Governance consumer documentation, onboarding links, packaged docs copies, and repository docs tests.
+    changed_files:
+      - README.md
+      - docs/evaluation-governance.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_repository_docs.py
+      - workflows/features/evaluation-governance-docs.yml
+    test_summary: Repository docs and packaging tests, full pytest suite, and active workflow validation passed.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - docs/getting-started.md
+      - README.md
+    known_limitations:
+      - documentation does not introduce new evaluation behavior
+    unresolved_questions:
+      - future docs may add reporting guidance after audit/reporting issues ship
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document Consumer-Repo usage of Evaluation Governance.
+    acceptance_criteria:
+      - documentation explains scope, non-scope, required fields, evidence, and examples
+      - documentation states external tooling remains external
+      - getting-started guidance links to the evaluation documentation
+    approved_scope:
+      - Evaluation Governance docs
+      - README and Getting Started links
+      - packaged docs copies
+    non_goals:
+      - no schema changes
+      - no validator behavior changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: The documentation scope is clear and bounded.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added the approved docs and docs-test coverage.
+    changed_files:
+      - README.md
+      - docs/evaluation-governance.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_repository_docs.py
+      - workflows/features/evaluation-governance-docs.yml
+    test_summary: Repository docs and packaging tests, full pytest suite, and active workflow validation passed.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - docs/getting-started.md
+      - README.md
+    known_limitations:
+      - documentation only
+    unresolved_questions:
+      - none for this issue
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

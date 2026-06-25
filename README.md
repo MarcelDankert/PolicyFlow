@@ -101,6 +101,12 @@ See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
 Quickstart, including PR validation, GitHub approval checks, runner setup, and
 managed asset sync.
 
+Evaluation Governance is documented in
+[docs/evaluation-governance.md](docs/evaluation-governance.md). It explains how
+Consumer-Repos can declare tests, coverage, review, security, and performance
+criteria while keeping CI, scanners, test tooling, benchmark tooling, and human
+review execution external to PolicyFlow.
+
 For `HIGH` risk workflows with `governance.human_approval_required: true`, the
 PR body should reference Approval evidence: `evidence.approval`. GitHub approval
 validation reads the required approver login from
