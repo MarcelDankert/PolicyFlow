@@ -334,6 +334,7 @@ def _append_evaluation_errors(
                 f"{risk_level} risk evaluation category '{category_id}' must include "
                 "at least one required metric."
             )
+        _append_evaluation_threshold_errors(errors, category_id, metrics)
 
     if evaluation.get("compliance_status") != "passed":
         return
@@ -369,6 +370,53 @@ def _append_evaluation_errors(
                     "evaluation.compliance_status passed cannot include blocking metric "
                     f"'{metric_ref}' with status {metric_status}."
                 )
+
+
+def _append_evaluation_threshold_errors(
+    errors: list[str], category_id: str, metrics: list[Any]
+) -> None:
+    for metric in metrics:
+        if not isinstance(metric, dict) or not isinstance(metric.get("id"), str):
+            continue
+        if metric.get("status") != "passed" or metric.get("actual_value") is None:
+            continue
+
+        threshold = metric.get("thresholds")
+        if not isinstance(threshold, dict):
+            continue
+
+        operator = threshold.get("operator")
+        expected_value = threshold.get("value")
+        actual_value = metric.get("actual_value")
+        if not _evaluation_threshold_satisfied(operator, actual_value, expected_value):
+            errors.append(
+                f"evaluation metric '{category_id}.{metric['id']}' actual_value "
+                f"{actual_value} does not satisfy threshold {operator} {expected_value}."
+            )
+
+
+def _evaluation_threshold_satisfied(
+    operator: Any, actual_value: Any, expected_value: Any
+) -> bool:
+    if not isinstance(operator, str):
+        return True
+
+    actual_text = str(actual_value)
+    expected_text = str(expected_value)
+    if operator == "equals":
+        return actual_text == expected_text
+    if operator == "greater_than_or_equal":
+        return _parse_number(actual_text) >= _parse_number(expected_text)
+    if operator == "less_than_or_equal":
+        return _parse_number(actual_text) <= _parse_number(expected_text)
+    return True
+
+
+def _parse_number(value: str) -> float:
+    try:
+        return float(value)
+    except ValueError:
+        return float("nan")
 
 
 def _category_has_required_metric(metrics: list[Any]) -> bool:

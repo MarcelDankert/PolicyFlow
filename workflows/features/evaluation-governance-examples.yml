@@ -1,0 +1,172 @@
+workflow:
+  id: evaluation-governance-examples
+  name: Evaluation Governance Examples
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add valid and invalid evaluation governance examples for Consumer-Repos.
+
+context:
+  workflow_file: workflows/features/evaluation-governance-examples.yml
+  issue_key: "#71"
+  goal: Provide provider-neutral evaluation governance examples and fixtures that demonstrate common categories, missing evidence, and threshold mismatch behavior.
+  scope:
+    - valid evaluation governance example workflow
+    - invalid evaluation fixtures for missing evidence and threshold mismatches
+    - template example comments for common evaluation categories
+    - focused validator support needed to make threshold mismatch fixtures meaningful
+  non_goals:
+    - no execution of evaluation tooling
+    - no provider-specific CI, scanner, benchmark, or review integration
+    - no hosted scheduler, workflow engine, agent runtime, or memory behavior
+    - no global requirement that every existing workflow declare evaluation
+  affected_modules:
+    - workflows/examples
+    - workflows/templates
+    - policyflow/assets/workflows/templates
+    - tests/fixtures
+    - tests/test_validator.py
+    - policyflow/validator.py
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is derived from issue #71 and remains bounded to examples and declarative validation.
+    implementation: Implementation can be verified through fixture validation without external tools.
+    tests: Tests will validate the example workflow and invalid fixtures.
+    residual_uncertainty: Review should confirm that threshold comparison stays provider-neutral and does not imply tool execution.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Evaluation examples scope and non-goals were locked before implementation.
+    scope_locked:
+      - provider-neutral evaluation examples
+      - invalid fixtures for missing evidence and threshold mismatch
+      - template example comments
+    non_goals_locked:
+      - no evaluation tooling execution
+      - no provider-specific integration
+      - no global evaluation requirement migration
+    risk_rationale: MEDIUM risk because example and fixture behavior can shape consumer adoption of evaluation governance.
+  architecture-check:
+    decision: Examples should demonstrate declared external evidence and limited metadata validation without making PolicyFlow an evaluator.
+    constraints:
+      - use provider-neutral evidence references
+      - compare only declared actual values and thresholds when both are present
+      - do not call external systems
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added provider-neutral evaluation examples, invalid threshold fixture coverage, template examples, and declared threshold validation.
+    changed_files:
+      - workflows/examples/evaluation-governance-workflow.yml
+      - workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - tests/fixtures/evaluation-threshold-mismatch.yml
+      - tests/test_validator.py
+      - policyflow/validator.py
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/evaluation-governance-examples.yml
+    test_summary: Evaluation-focused tests, example workflow validation, and active workflow validation passed.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - threshold validation only covers simple provider-neutral operators
+      - PolicyFlow does not execute or fetch evaluation evidence
+    unresolved_questions:
+      - future releases can decide whether additional threshold operators are needed
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add evaluation governance examples that demonstrate common categories and invalid cases.
+    acceptance_criteria:
+      - examples demonstrate tests, coverage, review score, security findings, and performance gates
+      - invalid fixtures cover missing evidence and threshold mismatches
+      - examples avoid provider-specific assumptions
+    approved_scope:
+      - evaluation examples
+      - invalid fixtures
+      - template comments
+    non_goals:
+      - no evaluation tooling execution
+      - no provider-specific integration
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: The example scope is concrete and can be validated locally.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Threshold mismatch validation is acceptable when limited to declared metadata and simple provider-neutral operators.
+    approved_scope:
+      - provider-neutral examples
+      - declared threshold mismatch validation
+    module_boundaries:
+      - examples and fixtures
+      - validator metadata checks
+    contract_impact: Existing workflows remain valid; new invalid fixtures document stricter declared evaluation claim checks.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not execute checks or fetch artifacts
+      - keep evidence references external and provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented the approved examples and minimal declared threshold validation.
+    changed_files:
+      - workflows/examples/evaluation-governance-workflow.yml
+      - workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - tests/fixtures/evaluation-threshold-mismatch.yml
+      - tests/test_validator.py
+      - policyflow/validator.py
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/evaluation-governance-examples.yml
+    test_summary: Evaluation-focused validator tests and workflow validations passed.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - no provider-specific evidence resolution
+    unresolved_questions:
+      - none for this issue
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []

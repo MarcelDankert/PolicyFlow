@@ -175,6 +175,62 @@ evaluation: {}
 #           evidence_refs:
 #             - evidence.qa
 #           blocks_merge: true
+#     - id: coverage
+#       required_metrics:
+#         - id: coverage-percent
+#           name: Coverage percentage
+#           source: external-coverage-report
+#           required: false
+#           thresholds:
+#             operator: greater_than_or_equal
+#             value: "80"
+#           actual_value: pending
+#           status: pending
+#           evidence_refs:
+#             - artifact://coverage-report
+#           blocks_merge: false
+#     - id: review
+#       required_metrics:
+#         - id: review-score
+#           name: Human review score
+#           source: human-review
+#           required: false
+#           thresholds:
+#             operator: greater_than_or_equal
+#             value: "4"
+#           actual_value: pending
+#           status: pending
+#           evidence_refs:
+#             - evidence.review
+#           blocks_merge: false
+#     - id: security
+#       required_metrics:
+#         - id: critical-findings
+#           name: Critical security findings
+#           source: external-security-scan
+#           required: true
+#           thresholds:
+#             operator: equals
+#             value: "0"
+#           actual_value: pending
+#           status: pending
+#           evidence_refs:
+#             - artifact://security-report
+#           blocks_merge: true
+#     - id: performance
+#       required_metrics:
+#         - id: p95-latency-ms
+#           name: P95 latency in milliseconds
+#           source: external-benchmark
+#           required: false
+#           thresholds:
+#             operator: less_than_or_equal
+#             value: "250"
+#           actual_value: pending
+#           status: pending
+#           evidence_refs:
+#             - artifact://performance-report
+#           blocks_merge: false
 
 steps:
   - step: plan

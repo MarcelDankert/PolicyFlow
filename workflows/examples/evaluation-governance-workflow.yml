@@ -1,0 +1,224 @@
+workflow:
+  id: evaluation-governance-workflow
+  type: feature
+
+context:
+  workflow_file: workflows/examples/evaluation-governance-workflow.yml
+  goal: Demonstrate provider-neutral Evaluation Governance for a bounded feature.
+  scope:
+    - evaluation governance example
+    - external evidence references
+  non_goals:
+    - no evaluation tooling execution
+    - no provider-specific CI integration
+  affected_modules:
+    - examples
+  risk_level: MEDIUM
+  confidence:
+    planning: Evaluation criteria are declared before implementation.
+    implementation: Implementation remains bounded to the declared example workflow.
+    tests: Test confidence is represented through external evidence references.
+    residual_uncertainty: Review should confirm evidence refs match Consumer-Repo artifacts.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Evaluation criteria and non-goals were locked before implementation.
+    scope_locked:
+      - provider-neutral evaluation governance example
+    non_goals_locked:
+      - no evaluation tooling execution
+      - no provider-specific CI integration
+    risk_rationale: MEDIUM risk because evaluation gates can affect merge readiness.
+  architecture-check:
+    decision: Keep Evaluation Governance declarative and evidence-reference based.
+    constraints:
+      - external systems produce evidence
+      - PolicyFlow records and validates declarations only
+    approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: Review confirmed the example remains provider-neutral.
+    residual_risk: Consumer-Repos must map artifact refs to their own systems.
+  qa:
+    outcome: passed
+    evidence_summary: External test, coverage, security, and performance evidence was referenced.
+    unresolved_risks:
+      - Consumer-Repos must provide their own artifact refs.
+
+evaluation:
+  compliance_status: passed
+  categories:
+    - id: tests
+      required_metrics:
+        - id: tests-passed
+          name: Test suite pass status
+          source: external-test-runner
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.qa
+            - artifact://test-report
+          blocks_merge: true
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          source: external-coverage-report
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: "84"
+          status: passed
+          evidence_refs:
+            - artifact://coverage-report
+          blocks_merge: false
+    - id: review
+      required_metrics:
+        - id: review-score
+          name: Human review score
+          source: human-review
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "4"
+          actual_value: "4"
+          status: passed
+          evidence_refs:
+            - evidence.review
+          blocks_merge: false
+    - id: security
+      required_metrics:
+        - id: critical-findings
+          name: Critical security findings
+          source: external-security-scan
+          required: true
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: "0"
+          status: passed
+          evidence_refs:
+            - artifact://security-report
+          blocks_merge: true
+    - id: performance
+      required_metrics:
+        - id: p95-latency-ms
+          name: P95 latency in milliseconds
+          source: external-benchmark
+          required: false
+          thresholds:
+            operator: less_than_or_equal
+            value: "250"
+          actual_value: "210"
+          status: passed
+          evidence_refs:
+            - artifact://performance-report
+          blocks_merge: false
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Demonstrate provider-neutral Evaluation Governance.
+    acceptance_criteria:
+      - common evaluation categories are represented
+      - evidence references remain external
+    approved_scope:
+      - evaluation governance example
+    non_goals:
+      - no evaluation tooling execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Example expectations are clear enough for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Evaluation Governance remains declarative metadata.
+    approved_scope:
+      - evaluation governance example
+    module_boundaries:
+      - examples only
+    contract_impact: No provider contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep evidence refs provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Evaluation Governance declarations that reference external evidence artifacts.
+    changed_files:
+      - workflows/examples/evaluation-governance-workflow.yml
+    test_summary: External test, coverage, security, and performance outcomes are represented as declared evaluation metadata.
+    docs_updates:
+      - workflows/examples/evaluation-governance-workflow.yml
+    known_limitations:
+      - PolicyFlow does not generate the referenced artifacts
+    unresolved_questions:
+      - Consumer-Repos must decide their own artifact URI conventions
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - provider-neutral categories and evidence references are clear
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Review approved for QA handoff.
+    residual_risk: Consumer-Repos must supply their own evidence artifacts.
+    qa_focus_areas:
+      - workflow validation
+      - evidence reference clarity
+    test_expectations:
+      - example workflow remains valid
+      - invalid fixtures fail for expected reasons
+  qa:
+    owner_agent: qa-agent
+    qa_report: Workflow validation confirms the example is structurally valid.
+    quality_gate_status: passed
+    unresolved_risks:
+      - Consumer-Repos must provide their own artifact refs.
+    approval_required: false
+    merge_readiness: true
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: qa
+  active_agent: qa-agent
+  last_transition: qa completed
+
+handoffs: []

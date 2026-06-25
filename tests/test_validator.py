@@ -281,6 +281,9 @@ def test_evaluation_failure_can_be_declared_without_executing_checks() -> None:
     payload = evaluation_fixture_payload()
     payload["evaluation"]["compliance_status"] = "failed"
     payload["evaluation"]["categories"][0]["required_metrics"][0]["status"] = "passed"
+    payload["evaluation"]["categories"][0]["required_metrics"][0][
+        "actual_value"
+    ] = "passed"
     payload["evaluation"]["categories"][2]["required_metrics"][0]["status"] = "failed"
 
     result = validate_workflow_data(payload)
@@ -288,6 +291,48 @@ def test_evaluation_failure_can_be_declared_without_executing_checks() -> None:
     assert result.evaluation is not None
     assert result.evaluation.compliance_status == "failed"
     assert result.evaluation.categories[2].required_metrics[0].status == "failed"
+
+
+def test_evaluation_governance_example_covers_common_categories() -> None:
+    result = validate_workflow_file(
+        Path("workflows/examples/evaluation-governance-workflow.yml")
+    )
+
+    assert result.evaluation is not None
+    assert result.evaluation.compliance_status == "passed"
+    assert [category.id for category in result.evaluation.categories] == [
+        "tests",
+        "coverage",
+        "review",
+        "security",
+        "performance",
+    ]
+
+
+def test_evaluation_threshold_mismatch_fixture_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("evaluation-threshold-mismatch.yml"))
+
+    assert (
+        "evaluation metric 'coverage.coverage-percent' actual_value 72 does not "
+        "satisfy threshold greater_than_or_equal 80."
+        in exc_info.value.errors
+    )
+
+
+def test_evaluation_template_documents_common_categories() -> None:
+    template = Path("workflows/templates/feature-workflow.template.yml").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "#     - id: tests",
+        "#     - id: coverage",
+        "#     - id: review",
+        "#     - id: security",
+        "#     - id: performance",
+    ):
+        assert expected in template
 
 
 def test_missing_risk_level_fails() -> None:
