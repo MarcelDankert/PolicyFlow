@@ -395,6 +395,28 @@ def test_loop_governance_loop_requires_evidence_refs() -> None:
     )
 
 
+def test_loop_governance_max_iterations_must_be_positive() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("loop-governance-invalid-max.yml"))
+
+    assert (
+        "loop_governance loop 'review-feedback' declaration error: "
+        "max_iterations must be a positive integer."
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_current_iteration_cannot_exceed_max() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("loop-governance-iteration-exceeded.yml"))
+
+    assert (
+        "loop_governance loop 'review-feedback' compliance failure: "
+        "current_iteration 4 exceeds max_iterations 3."
+        in exc_info.value.errors
+    )
+
+
 def test_missing_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))

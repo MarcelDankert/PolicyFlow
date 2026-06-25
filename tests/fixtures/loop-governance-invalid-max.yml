@@ -1,0 +1,112 @@
+workflow:
+  id: loop-governance-invalid-max
+  type: feature
+
+context:
+  workflow_file: tests/fixtures/loop-governance-invalid-max.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Loop governance fixture declares an invalid max iteration limit.
+    implementation: Implementation is intentionally invalid for validator tests.
+    tests: Tests assert non-positive max_iterations fail as declaration errors.
+    residual_uncertainty: None; this fixture is expected to fail validation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Invalid non-positive max_iterations fixture.
+    scope_locked:
+      - loop governance max iteration validation
+    non_goals_locked:
+      - no loop execution
+    risk_rationale: MEDIUM risk fixture for Loop Governance validation.
+  architecture-check:
+    decision: Non-positive max_iterations should fail as a declaration error.
+    constraints:
+      - no runtime behavior
+    approval_path: architecture-agent review
+
+loop_governance:
+  loops:
+    - id: review-feedback
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+      max_iterations: 0
+      current_iteration: 0
+      status: pending
+      stop_conditions:
+        - id: review-findings-resolved
+          description: All blocking review findings are resolved.
+      escalation_conditions:
+        - id: iteration-limit-reached
+          trigger: max_iterations_exceeded
+          escalate_to: human-arbitration
+      evidence_refs:
+        - evidence.review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Invalid fixture for loop max iteration validation.
+    acceptance_criteria:
+      - non-positive max_iterations fail validation
+    approved_scope:
+      - loop governance max iteration validation
+    non_goals:
+      - no loop execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Fixture is intentionally invalid.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Invalid max_iterations is represented as invalid metadata.
+    approved_scope:
+      - loop governance max iteration validation
+    module_boundaries:
+      - validator fixtures
+    contract_impact: None.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no runtime behavior
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []
