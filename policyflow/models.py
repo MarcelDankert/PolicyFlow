@@ -376,6 +376,7 @@ class EvaluationThreshold(BaseModel):
 class EvaluationMetric(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(min_length=1)
+    category: str | None = Field(default=None, min_length=1)
     source: str = Field(min_length=1)
     required: bool = False
     thresholds: EvaluationThreshold

@@ -79,12 +79,17 @@ Required fields:
 - `categories[].required_metrics[]`: one or more metric declarations
 - `required_metrics[].id`: stable metric identifier within the category
 - `required_metrics[].name`: human-readable metric name
+- `required_metrics[].category`: optional metric-level category metadata for
+  reusable or domain-specific metrics. If omitted, the parent `categories[].id`
+  is the metric category.
 - `required_metrics[].source`: external source that produced or will produce the
   value
 - `required_metrics[].required`: whether the metric is required for the
   evaluation category
 - `required_metrics[].thresholds.operator`: provider-neutral comparison rule
 - `required_metrics[].thresholds.value`: expected threshold value
+- `required_metrics[].actual_value`: observed value supplied by external
+  evidence, CI, review, scanner, benchmark, or domain tooling
 - `required_metrics[].status`: metric status, using the same status vocabulary
   as the overall compliance claim
 - `required_metrics[].evidence_refs`: references to workflow evidence or

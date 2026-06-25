@@ -115,6 +115,7 @@ evaluation:
       required_metrics:
         - id: tests-passed
           name: Test suite pass status
+          category: tests
           source: ci
           required: true
           thresholds:
@@ -129,6 +130,7 @@ evaluation:
       required_metrics:
         - id: coverage-percent
           name: Coverage percentage
+          category: coverage
           source: ci
           required: false
           thresholds:
@@ -148,6 +150,9 @@ Field intent:
 - `categories`: evaluation groups such as `tests`, `coverage`, `review`,
   `security`, `performance`, or Consumer-Repo-specific domain categories
 - `required_metrics`: concrete measured checks required for that category
+- `required_metrics[].category`: optional metric-level category metadata for
+  reusable or domain-specific metric declarations. When omitted, consumers
+  should treat the parent `categories[].id` value as the metric category.
 - `thresholds`: expected value or comparison rule for a metric
 - `evidence_refs`: references to workflow evidence, CI artifacts, review
   records, scanner reports, benchmark output, or domain-specific evidence
@@ -157,6 +162,8 @@ Field intent:
 Validation behavior:
 
 - The `evaluation` block is optional for current 0.x compatibility.
+- Metric-level `category` is optional. Existing workflows that only use parent
+  `categories[].id` remain valid.
 - When `evaluation` is declared, MEDIUM risk workflows must include a `tests`
   category and HIGH risk workflows must include `tests` and `security`
   categories. Each required category must contain at least one metric marked
