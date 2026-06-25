@@ -266,6 +266,22 @@ CI, scanners, test tooling, benchmark tools, and human reviewers remain
 external. PolicyFlow validates declared evaluation governance metadata; it does
 not execute or fetch the underlying checks.
 
+## Loop Governance
+
+When a workflow needs bounded feedback loops, declare an optional
+`loop_governance` block with source and target phases, allowed feedback sources,
+iteration limits, stop conditions, escalation conditions, status, and evidence
+references. See [loop-governance.md](loop-governance.md) for the full
+Consumer-Repo guide. The repository source path is `docs/loop-governance.md`.
+Use `workflows/examples/loop-governance-workflow.yml` as a provider-neutral
+example covering review, QA, security, human arbitration, and
+Querypilot-inspired SQL safety loops.
+
+Reviewers, QA systems, scanners, SQL review tools, agent runtimes, and human
+owners remain external. PolicyFlow validates declared loop governance metadata;
+it does not execute loops, schedule loop execution, route messages, provide
+memory, or call provider runtimes.
+
 ## Upgrade Managed Assets
 
 Preview managed asset changes after upgrading the PolicyFlow package:

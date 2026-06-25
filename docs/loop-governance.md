@@ -42,6 +42,41 @@ or terminated loops reference a declared stop condition with
 `stop_conditions.<id>`. Escalated loops reference a declared escalation condition
 with `escalation_conditions.<id>`.
 
+## Escalation Expectations
+
+Every governed loop declares at least one `escalation_conditions` entry.
+Escalation conditions describe when normal feedback handling is no longer
+enough and where the decision should go next, such as a security agent, QA lead,
+human owner, or data owner.
+
+PolicyFlow validates escalation declarations and evidence references. It does
+not decide that an escalation should happen, execute escalation work, assign a
+person, open a ticket, send a message, rerun an agent, or call a provider API.
+
+High-risk or protected-area workflows must not hide escalation requirements in
+free text. When a loop is marked `escalated`, `evidence_refs` should include a
+condition-specific reference such as
+`escalation_conditions.security-critical-findings` plus any external artifact
+that supports the escalation.
+
+## Consumer Usage
+
+Use Loop Governance when a workflow needs reviewable feedback-loop boundaries:
+
+- review feedback that returns to implementation
+- QA regression findings that require bounded rework
+- security findings that may require escalation
+- human arbitration for unresolved scope or risk disputes
+- Querypilot-inspired SQL safety checks where query plans, rollback evidence,
+  or data-owner arbitration remain external
+
+Add the optional `loop_governance` block to the workflow before implementation
+starts. Keep loop status, iteration count, stop conditions, escalation
+conditions, and evidence references aligned as the Consumer-Repo process
+progresses. The loop declaration documents governance expectations; the
+Consumer-Repo still owns the actual reviews, tests, scans, SQL analysis,
+approvals, and remediation.
+
 ## Examples
 
 Use `workflows/examples/loop-governance-workflow.yml` as the canonical example.
