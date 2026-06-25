@@ -369,9 +369,16 @@ def _write_bootstrap_metadata(
 
 def policyflow_version() -> str:
     try:
+        from policyflow import __version__
+
+        return __version__
+    except ImportError:
+        pass
+
+    try:
         return version("policyflow")
     except PackageNotFoundError:
-        return "0.1.1"
+        return "0.2.0"
 
 
 def _as_posix(path: Path) -> str:
