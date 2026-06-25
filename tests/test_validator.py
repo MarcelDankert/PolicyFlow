@@ -1,10 +1,11 @@
+import copy
 from pathlib import Path
 
 import pytest
 
 import policyflow.validator as validator_module
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.validator import validate_workflow_file
+from policyflow.validator import validate_workflow_data, validate_workflow_file
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -12,6 +13,14 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 def fixture_path(name: str) -> Path:
     return FIXTURES_DIR / name
+
+
+def evaluation_fixture_payload() -> dict:
+    return copy.deepcopy(
+        validator_module._load_workflow_yaml(
+            fixture_path("valid-evaluation-schema.yml")
+        )
+    )
 
 
 def test_valid_low_workflow_passes() -> None:
@@ -187,6 +196,98 @@ def test_evaluation_metric_requires_evidence_refs() -> None:
         "evaluation.categories.0.required_metrics.0.evidence_refs: Field required"
         in exc_info.value.errors
     )
+
+
+def test_medium_evaluation_requires_tests_category() -> None:
+    payload = evaluation_fixture_payload()
+    payload["evaluation"]["categories"] = [
+        category
+        for category in payload["evaluation"]["categories"]
+        if category["id"] != "tests"
+    ]
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "MEDIUM risk evaluation must include required categories: tests"
+        in exc_info.value.errors
+    )
+
+
+def test_high_evaluation_requires_security_category() -> None:
+    payload = evaluation_fixture_payload()
+    payload["context"]["risk_level"] = "HIGH"
+    payload["governance"]["human_approval_required"] = True
+    payload["governance"]["approval_evidence"] = ["evidence.approval"]
+    payload["governance"]["required_reviews"] = [
+        "architecture-agent",
+        "review-agent",
+        "qa-agent",
+        "security-agent",
+    ]
+    payload["execution"]["phases"].append({"phase": "approval", "state": "pending"})
+    payload["evidence"]["approval"] = {
+        "approved_by": "arch-board",
+        "reference": "approval://policyflow/test",
+        "scope_confirmed": True,
+    }
+    payload["evaluation"]["categories"] = [
+        category
+        for category in payload["evaluation"]["categories"]
+        if category["id"] != "security"
+    ]
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "HIGH risk evaluation must include required categories: security"
+        in exc_info.value.errors
+    )
+
+
+def test_evaluation_passed_requires_required_metrics_to_pass_or_be_waived() -> None:
+    payload = evaluation_fixture_payload()
+    payload["evaluation"]["compliance_status"] = "passed"
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "evaluation.compliance_status passed requires required metric "
+        "'tests.tests-passed' to be passed or waived."
+        in exc_info.value.errors
+    )
+
+
+def test_evaluation_passed_rejects_failed_blocking_metric() -> None:
+    payload = evaluation_fixture_payload()
+    payload["evaluation"]["compliance_status"] = "passed"
+    payload["evaluation"]["categories"][0]["required_metrics"][0]["status"] = "passed"
+    payload["evaluation"]["categories"][2]["required_metrics"][0]["status"] = "failed"
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "evaluation.compliance_status passed cannot include blocking metric "
+        "'security.critical-findings' with status failed."
+        in exc_info.value.errors
+    )
+
+
+def test_evaluation_failure_can_be_declared_without_executing_checks() -> None:
+    payload = evaluation_fixture_payload()
+    payload["evaluation"]["compliance_status"] = "failed"
+    payload["evaluation"]["categories"][0]["required_metrics"][0]["status"] = "passed"
+    payload["evaluation"]["categories"][2]["required_metrics"][0]["status"] = "failed"
+
+    result = validate_workflow_data(payload)
+
+    assert result.evaluation is not None
+    assert result.evaluation.compliance_status == "failed"
+    assert result.evaluation.categories[2].required_metrics[0].status == "failed"
 
 
 def test_missing_risk_level_fails() -> None:
