@@ -1,0 +1,160 @@
+workflow:
+  id: evaluation-requirements-validation
+  name: Evaluation Requirements Validation
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Validate declared evaluation governance requirements without executing evaluation tools.
+
+context:
+  workflow_file: workflows/features/evaluation-requirements-validation.yml
+  issue_key: "#70"
+  goal: Make declared evaluation governance requirements fail clearly when they are incomplete, internally inconsistent, or incompatible with risk expectations.
+  scope:
+    - validator errors for missing or inconsistent evaluation requirement fields
+    - risk-based evaluation requirements where an evaluation block is declared
+    - fixtures and tests for evaluation validation behavior
+  non_goals:
+    - no evaluation tool execution
+    - no hosted scheduling or workflow engine behavior
+    - no provider SDK coupling
+    - no mandatory evaluation block for existing workflows without an explicit migration decision
+  affected_modules:
+    - policyflow/validator.py
+    - tests/test_validator.py
+    - tests/fixtures
+    - workflows/features
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope is derived directly from issue #70 and keeps evaluation declarative.
+    implementation: Validator changes are bounded to declared evaluation blocks.
+    tests: Fixture coverage will exercise successful and failing evaluation governance states.
+    residual_uncertainty: Review should confirm whether future releases should require evaluation blocks by risk level.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Evaluation requirements validation was scoped before implementation.
+    scope_locked:
+      - validator errors for declared evaluation requirements
+      - risk-based requirements inside declared evaluation blocks
+      - tests and fixtures
+    non_goals_locked:
+      - no scanner execution
+      - no benchmark execution
+      - no provider SDK coupling
+      - no global requirement to add evaluation to all existing workflows
+    risk_rationale: MEDIUM risk because validator semantics can affect consumer workflow validity.
+  architecture-check:
+    decision: Keep evaluation validation declarative and backward-compatible for workflows that do not yet declare evaluation.
+    constraints:
+      - validate declared metadata only
+      - do not execute or infer external tool results
+      - preserve optional evaluation blocks until a separate migration decision
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added validation for declared evaluation requirements, risk-based categories, unique IDs, and passed-state consistency.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/evaluation-requirements-validation.yml
+    test_summary: Evaluation validator tests, full pytest suite, active workflow validation, and standard example workflow validations passed.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - evaluation remains optional for workflows that do not declare an evaluation block
+      - PolicyFlow records evaluation status but does not execute checks
+    unresolved_questions:
+      - a future migration decision can decide whether evaluation blocks become mandatory by risk level
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define validator requirements for declared evaluation governance.
+    acceptance_criteria:
+      - missing required evaluation fields produce clear errors
+      - risk-based requirements are enforced where an evaluation block is declared
+      - evaluation failures remain modelable metadata
+    approved_scope:
+      - evaluation requirement validation
+      - validator fixtures and tests
+    non_goals:
+      - no evaluation tool execution
+      - no mandatory evaluation block migration
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: The issue boundary is stable and aligns with the evaluation foundation roadmap.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Evaluation remains a governance description layer; validation checks declared facts but does not own runtime execution.
+    approved_scope:
+      - declarative evaluation validation
+      - fixture-backed validator behavior
+    module_boundaries:
+      - policyflow validator
+      - workflow fixtures
+    contract_impact: Existing workflows without evaluation remain valid; declared evaluation blocks receive stricter consistency checks.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep checks deterministic and file-based
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented declared evaluation requirement validation while preserving the no-runtime-execution boundary.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/evaluation-requirements-validation.yml
+    test_summary: Full test and workflow validation evidence was collected for the implementation slice.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - evaluation blocks are not globally required yet
+    unresolved_questions:
+      - whether v1.x should enforce evaluation blocks for MEDIUM and HIGH workflows
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []

@@ -36,6 +36,10 @@ REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
         "approval",
     },
 }
+REQUIRED_EVALUATION_CATEGORIES_BY_RISK: dict[str, set[str]] = {
+    RiskLevel.MEDIUM.value: {"tests"},
+    RiskLevel.HIGH.value: {"tests", "security"},
+}
 EXPIRING_OVERRIDE_WINDOW_DAYS = 7
 HIGH_RISK_APPROVAL_EVIDENCE_ERROR = (
     "HIGH risk workflows with human approval required must declare "
@@ -170,6 +174,7 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
         errors.append("HIGH risk workflows must include non-empty approval evidence.")
 
     _append_high_risk_approval_evidence_errors(errors, risk_level, governance, evidence)
+    _append_evaluation_errors(errors, risk_level, data.get("evaluation"))
 
     protected_areas = _normalize_protected_areas(
         governance.get("protected_areas_touched")
@@ -262,6 +267,125 @@ def _append_high_risk_approval_evidence_errors(
 
     if approval_evidence.get("approved_by") in (None, ""):
         errors.append(HIGH_RISK_APPROVAL_EVIDENCE_ERROR)
+
+
+def _append_evaluation_errors(
+    errors: list[str], risk_level: Any, evaluation: Any
+) -> None:
+    if evaluation is None:
+        return
+
+    if not isinstance(evaluation, dict):
+        errors.append("evaluation must be a mapping")
+        return
+
+    categories = evaluation.get("categories")
+    if not isinstance(categories, list):
+        return
+    if not categories:
+        return
+
+    category_ids = [
+        category.get("id")
+        for category in categories
+        if isinstance(category, dict) and isinstance(category.get("id"), str)
+    ]
+    duplicate_category_ids = sorted(_duplicate_values(category_ids))
+    if duplicate_category_ids:
+        errors.append(
+            "evaluation categories must have unique ids: "
+            + ", ".join(duplicate_category_ids)
+        )
+
+    required_categories = REQUIRED_EVALUATION_CATEGORIES_BY_RISK.get(risk_level, set())
+    missing_categories = sorted(required_categories - set(category_ids))
+    if missing_categories:
+        errors.append(
+            f"{risk_level} risk evaluation must include required categories: "
+            + ", ".join(missing_categories)
+        )
+
+    for category in categories:
+        if not isinstance(category, dict):
+            continue
+
+        category_id = category.get("id")
+        metrics = category.get("required_metrics")
+        if not isinstance(category_id, str) or not isinstance(metrics, list):
+            continue
+
+        metric_ids = [
+            metric.get("id")
+            for metric in metrics
+            if isinstance(metric, dict) and isinstance(metric.get("id"), str)
+        ]
+        duplicate_metric_ids = sorted(_duplicate_values(metric_ids))
+        if duplicate_metric_ids:
+            errors.append(
+                f"evaluation category '{category_id}' metrics must have unique ids: "
+                + ", ".join(duplicate_metric_ids)
+            )
+
+        if (
+            category_id in required_categories
+            and not _category_has_required_metric(metrics)
+        ):
+            errors.append(
+                f"{risk_level} risk evaluation category '{category_id}' must include "
+                "at least one required metric."
+            )
+
+    if evaluation.get("compliance_status") != "passed":
+        return
+
+    for category in categories:
+        if not isinstance(category, dict) or not isinstance(category.get("id"), str):
+            continue
+
+        category_id = category["id"]
+        metrics = category.get("required_metrics")
+        if not isinstance(metrics, list):
+            continue
+
+        for metric in metrics:
+            if not isinstance(metric, dict) or not isinstance(metric.get("id"), str):
+                continue
+
+            metric_ref = f"{category_id}.{metric['id']}"
+            metric_status = metric.get("status")
+            if metric.get("required") is True and metric_status not in {
+                "passed",
+                "waived",
+            }:
+                errors.append(
+                    "evaluation.compliance_status passed requires required metric "
+                    f"'{metric_ref}' to be passed or waived."
+                )
+            if metric.get("blocks_merge") is True and metric_status in {
+                "failed",
+                "blocked",
+            }:
+                errors.append(
+                    "evaluation.compliance_status passed cannot include blocking metric "
+                    f"'{metric_ref}' with status {metric_status}."
+                )
+
+
+def _category_has_required_metric(metrics: list[Any]) -> bool:
+    return any(
+        isinstance(metric, dict) and metric.get("required") is True
+        for metric in metrics
+    )
+
+
+def _duplicate_values(values: list[str]) -> set[str]:
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for value in values:
+        if value in seen:
+            duplicates.add(value)
+        seen.add(value)
+    return duplicates
 
 
 def _append_transition_errors(

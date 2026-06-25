@@ -85,6 +85,21 @@ Field intent:
 - `blocks_merge`: whether the metric is intended to block merge readiness when
   not compliant
 
+Validation behavior:
+
+- The `evaluation` block is optional for current 0.x compatibility.
+- When `evaluation` is declared, MEDIUM risk workflows must include a `tests`
+  category and HIGH risk workflows must include `tests` and `security`
+  categories. Each required category must contain at least one metric marked
+  `required: true`.
+- Category IDs and metric IDs within a category must be unique.
+- `compliance_status: passed` requires all metrics marked `required: true` to
+  have `status: passed` or `status: waived`, and cannot include failed or
+  blocked metrics with `blocks_merge: true`.
+- `failed`, `blocked`, `pending`, and `waived` can be modeled as declared
+  governance states without implying that PolicyFlow executed the underlying
+  check.
+
 PolicyFlow should not execute evaluation tooling. This schema only records the
 required criteria, thresholds, evidence references, and compliance status so
 later validation and reporting can reason about evaluation governance.
