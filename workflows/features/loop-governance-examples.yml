@@ -1,0 +1,165 @@
+workflow:
+  id: loop-governance-examples
+  name: Loop Governance Examples
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add Loop Governance examples for common Consumer-Repo feedback loops.
+
+context:
+  workflow_file: workflows/features/loop-governance-examples.yml
+  issue_key: "#78"
+  goal: Add examples for review, QA, security, human arbitration, and Querypilot-inspired SQL safety loops without introducing runtime execution ownership.
+  scope:
+    - canonical loop governance example workflow
+    - example tests for common feedback loops
+    - loop governance example documentation
+    - fixture references for max iteration, stop condition, and escalation failures
+  non_goals:
+    - no loop execution
+    - no scheduler, message routing, memory, or provider runtime integration
+    - no new validator semantics
+    - no provider SDK or credential coupling
+  affected_modules:
+    - workflows/examples
+    - docs/loop-governance.md
+    - policyflow/assets/docs/loop-governance.md
+    - tests/test_validator.py
+    - tests/test_repository_docs.py
+    - workflows/features
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope follows issue #78 and builds on completed Loop Governance validators.
+    implementation: Examples and docs can reuse existing schema and validator behavior.
+    tests: Tests will validate the example workflow and doc fixture references.
+    residual_uncertainty: Issue #79 will expand user-facing Loop Governance documentation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Loop Governance example scope and non-goals were locked before implementation.
+    scope_locked:
+      - review, QA, security, human arbitration, and SQL safety loops
+      - example workflow validation
+      - fixture references for known failure modes
+    non_goals_locked:
+      - no runtime execution
+      - no new validator semantics
+      - no provider SDK or credential coupling
+    risk_rationale: MEDIUM risk because examples and docs are Consumer-Repo guidance.
+  architecture-check:
+    decision: Keep examples declarative and explicitly outside runtime execution ownership.
+    constraints:
+      - no scheduler or message bus behavior
+      - no memory layer
+      - no provider-specific SQL engine integration
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added a canonical Loop Governance example workflow, example documentation, packaged doc mirror, and tests for example coverage and fixture references.
+    changed_files:
+      - workflows/examples/loop-governance-workflow.yml
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+      - tests/test_validator.py
+      - tests/test_repository_docs.py
+    test_summary: Focused example workflow and repository doc tests, validator and repository doc tests, full pytest suite, active workflow validation, loop example validation, and standard example workflow validation passed.
+    docs_updates:
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+    known_limitations:
+      - issue #79 will expand the full user-facing Loop Governance guide
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add Loop Governance examples.
+    acceptance_criteria:
+      - examples show loop declarations without runtime execution
+      - fixtures cover max iteration, stop condition, and escalation failures
+      - examples include Querypilot-inspired SQL safety loops
+    approved_scope:
+      - example workflow
+      - example docs
+      - tests
+    non_goals:
+      - no loop execution
+      - no new validator semantics
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Example scope is bounded to existing Loop Governance metadata.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Examples remain declarative Consumer-Repo guidance and do not create runtime obligations.
+    approved_scope:
+      - example workflow
+      - example docs
+      - tests
+    module_boundaries:
+      - workflows/examples
+      - docs
+      - validator and repository doc tests
+    contract_impact: Adds canonical example guidance for existing optional Loop Governance schema.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not add validator semantics
+      - keep SQL safety examples provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Loop Governance examples for review, QA, security, human arbitration, and Querypilot-inspired SQL safety loops without runtime execution.
+    changed_files:
+      - workflows/examples/loop-governance-workflow.yml
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+      - tests/test_validator.py
+      - tests/test_repository_docs.py
+    test_summary: Focused example workflow and repository doc tests, validator and repository doc tests, full pytest suite, active workflow validation, loop example validation, and standard example workflow validation passed.
+    docs_updates:
+      - docs/loop-governance.md
+      - policyflow/assets/docs/loop-governance.md
+    known_limitations:
+      - issue #79 owns the fuller Loop Governance documentation pass
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
