@@ -172,6 +172,33 @@ def test_schema_docs_define_evaluation_governance_shape() -> None:
     assert "PolicyFlow should not execute evaluation tooling" in schema
 
 
+def test_schema_docs_define_loop_governance_shape() -> None:
+    schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
+    packaged_schema = (
+        ROOT / "policyflow/assets/docs/schema-compatibility.md"
+    ).read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "loop_governance:",
+        "source_phase:",
+        "target_phase:",
+        "allowed_feedback_sources:",
+        "max_iterations:",
+        "stop_conditions:",
+        "escalation_conditions:",
+        "evidence_refs:",
+        "PolicyFlow does not execute loops",
+        "does not schedule loop execution, route messages, or provide memory",
+    ):
+        assert expected in schema
+
+    assert packaged_schema == schema
+    assert "Loop Governance defines feedback-loop rules declaratively" in roadmap
+
+
 def test_evaluation_governance_docs_define_consumer_usage() -> None:
     evaluation_doc = (ROOT / "docs/evaluation-governance.md").read_text(
         encoding="utf-8"
@@ -218,6 +245,26 @@ def test_workflow_templates_reference_evaluation_schema() -> None:
         assert "evidence_refs" in text
         assert "compliance_status" in text
         assert "PolicyFlow does not run evaluation tooling" in text
+
+
+def test_workflow_templates_reference_loop_governance_schema() -> None:
+    for relative_path in (
+        "workflows/templates/feature-workflow.template.yml",
+        "workflows/templates/bugfix-workflow.template.yml",
+        "workflows/templates/architecture-change-workflow.template.yml",
+        "workflows/templates/low-risk-workflow.template.yml",
+        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
+        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
+        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
+        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
+    ):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "loop_governance:" in text
+        assert "max_iterations" in text
+        assert "stop_conditions" in text
+        assert "escalation_conditions" in text
+        assert "PolicyFlow does not execute loops" in text
 
 
 def test_workflow_templates_reference_release_readiness_evidence() -> None:

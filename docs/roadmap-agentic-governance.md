@@ -51,9 +51,9 @@ Non-scope:
 
 ### 2. Loop Governance
 
-Loop Governance defines how feedback loops between phases are governed. It makes
-iteration limits, stop conditions, escalation conditions, required evidence, and
-allowed feedback sources explicit.
+Loop Governance defines feedback-loop rules declaratively. It makes iteration
+limits, stop conditions, escalation conditions, required evidence, and allowed
+feedback sources explicit.
 
 Scope:
 
