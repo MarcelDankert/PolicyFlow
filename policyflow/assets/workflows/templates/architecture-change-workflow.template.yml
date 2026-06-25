@@ -89,6 +89,28 @@ overrides: []
 # Use release_readiness to record done, preparatory, blocked, or ready for release
 # states. This is governance evidence, not release orchestration or scheduling.
 
+evaluation: {}
+# Optional declarative Evaluation Governance schema. PolicyFlow does not run evaluation tooling;
+# it records categories, required_metrics, thresholds,
+# evidence_refs, and compliance_status for external evidence.
+# evaluation:
+#   compliance_status: pending
+#   categories:
+#     - id: architecture
+#       required_metrics:
+#         - id: architecture-review-score
+#           name: Architecture review score
+#           source: review
+#           required: true
+#           thresholds:
+#             operator: greater_than_or_equal
+#             value: "4"
+#           actual_value: pending
+#           status: pending
+#           evidence_refs:
+#             - evidence.review
+#           blocks_merge: true
+
 steps:
   - step: change-plan
     agent: planning-agent

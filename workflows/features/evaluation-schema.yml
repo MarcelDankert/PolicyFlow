@@ -1,0 +1,204 @@
+workflow:
+  id: evaluation-schema
+  type: feature
+
+context:
+  workflow_file: workflows/features/evaluation-schema.yml
+  issue_key: "#68"
+  goal: Define the declarative Evaluation Governance schema shape for workflow files.
+  scope:
+    - document evaluation schema fields before implementation
+    - cover categories, required metrics, thresholds, evidence references, and compliance status
+    - add optional evaluation schema guidance to workflow templates and packaged assets
+    - add a valid fixture showing the schema shape without making it mandatory yet
+  non_goals:
+    - no evaluation tooling execution
+    - no provider SDK coupling
+    - no hosted runtime, scheduler, memory, or message bus behavior
+    - no validator requirement for evaluation blocks before the model and validation issues
+  affected_modules:
+    - docs/roadmap-agentic-governance.md
+    - docs/schema-compatibility.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - workflows/templates
+    - policyflow/assets/workflows/templates
+    - tests/fixtures/valid-evaluation-schema.yml
+    - tests/test_repository_docs.py
+    - tests/test_validator.py
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue 68 is bounded to defining the schema shape and explicitly excluding evaluation execution.
+    implementation: Changes can stay in docs, templates, packaged assets, fixtures, and tests without validator semantics changes.
+    tests: Repository docs tests and a valid workflow fixture can prove the documented schema shape is present and tolerated.
+    residual_uncertainty: Later issues must decide strict model fields, validation rules, and examples.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 68 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - evaluation schema documentation
+      - workflow template guidance
+      - packaged asset synchronization
+      - valid fixture coverage
+    non_goals_locked:
+      - no evaluation tooling execution
+      - no provider SDK coupling
+      - no runtime or scheduler ownership
+      - no validator requirement for evaluation blocks
+    risk_rationale: MEDIUM risk because this introduces a new governance schema convention for future Consumer-Repo workflows.
+  architecture-check:
+    decision: Define Evaluation Governance as optional declarative workflow data and reserve model enforcement for the next issues.
+    constraints:
+      - do not run tests, scanners, benchmarks, or external evaluation tooling
+      - do not make evaluation mandatory in #68
+      - keep the schema provider-neutral
+      - keep PolicyFlow a governance system, not an evaluation runtime
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added a documented optional top-level evaluation schema shape, template skeletons, packaged asset sync, and a valid fixture.
+    changed_files:
+      - docs/roadmap-agentic-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/templates/feature-workflow.template.yml
+      - workflows/templates/bugfix-workflow.template.yml
+      - workflows/templates/architecture-change-workflow.template.yml
+      - workflows/templates/low-risk-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/bugfix-workflow.template.yml
+      - policyflow/assets/workflows/templates/architecture-change-workflow.template.yml
+      - policyflow/assets/workflows/templates/low-risk-workflow.template.yml
+      - tests/fixtures/valid-evaluation-schema.yml
+      - tests/test_repository_docs.py
+      - tests/test_validator.py
+      - workflows/features/evaluation-schema.yml
+    test_summary: Repository docs tests, validator tests, the evaluation schema fixture, and the active workflow validation pass.
+    docs_updates:
+      - docs/roadmap-agentic-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - evaluation remains optional and declarative in this issue
+      - typed model support and strict validation are reserved for issues 69 and 70
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Define the initial Evaluation Governance schema shape.
+    acceptance_criteria:
+      - evaluation schema fields are documented before implementation
+      - schema covers categories, required metrics, thresholds, evidence references, and compliance status
+      - schema explicitly states that PolicyFlow does not run evaluation tooling
+    approved_scope:
+      - schema docs
+      - template guidance
+      - packaged asset sync
+      - fixture and tests
+    non_goals:
+      - no evaluation tooling execution
+      - no provider SDK coupling
+      - no runtime, scheduler, memory, or message bus behavior
+      - no validator requirement for evaluation blocks before #70
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Optional declarative schema guidance can be verified without changing enforcement semantics.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Evaluation Governance belongs beside workflow evidence as declarative criteria and evidence references, not as execution logic.
+    approved_scope:
+      - optional evaluation block shape
+      - schema compatibility docs
+      - template comments
+      - valid fixture
+    module_boundaries:
+      - docs define the initial schema contract
+      - templates show optional placement
+      - validator only proves current compatibility with the optional block
+    contract_impact: Consumer-Repos can begin declaring evaluation expectations, while strict model and validator behavior remain future work.
+    risk_review_decision: MEDIUM risk is appropriate for a new workflow schema convention.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep evaluation provider-neutral
+      - do not execute evaluation tooling
+      - do not add mandatory validation in this issue
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Evaluation Governance is now documented as an optional top-level workflow block with compliance_status, categories, required_metrics, thresholds, evidence_refs, and merge-blocking intent.
+    changed_files:
+      - docs/roadmap-agentic-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/templates/feature-workflow.template.yml
+      - workflows/templates/bugfix-workflow.template.yml
+      - workflows/templates/architecture-change-workflow.template.yml
+      - workflows/templates/low-risk-workflow.template.yml
+      - policyflow/assets/workflows/templates/feature-workflow.template.yml
+      - policyflow/assets/workflows/templates/bugfix-workflow.template.yml
+      - policyflow/assets/workflows/templates/architecture-change-workflow.template.yml
+      - policyflow/assets/workflows/templates/low-risk-workflow.template.yml
+      - tests/fixtures/valid-evaluation-schema.yml
+      - tests/test_repository_docs.py
+      - tests/test_validator.py
+      - workflows/features/evaluation-schema.yml
+    test_summary: Added docs assertions for the schema shape and template skeletons plus a valid workflow fixture that includes the optional top-level evaluation block.
+    docs_updates:
+      - docs/roadmap-agentic-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - The Pydantic model and validator enforcement are not introduced in this PR.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []

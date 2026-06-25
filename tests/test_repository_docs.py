@@ -151,6 +151,48 @@ def test_release_docs_define_release_readiness_artifact_shape() -> None:
     assert "release-readiness evidence remains declarative" in roadmap
 
 
+def test_schema_docs_define_evaluation_governance_shape() -> None:
+    schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "evaluation:",
+        "categories:",
+        "required_metrics:",
+        "thresholds:",
+        "evidence_refs:",
+        "compliance_status:",
+        "PolicyFlow does not run evaluation tooling",
+    ):
+        assert expected in schema
+
+    assert "Evaluation Governance defines measurable quality criteria" in roadmap
+    assert "PolicyFlow should not execute evaluation tooling" in schema
+
+
+def test_workflow_templates_reference_evaluation_schema() -> None:
+    for relative_path in (
+        "workflows/templates/feature-workflow.template.yml",
+        "workflows/templates/bugfix-workflow.template.yml",
+        "workflows/templates/architecture-change-workflow.template.yml",
+        "workflows/templates/low-risk-workflow.template.yml",
+        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
+        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
+        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
+        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
+    ):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+
+        assert "evaluation:" in text
+        assert "required_metrics" in text
+        assert "thresholds" in text
+        assert "evidence_refs" in text
+        assert "compliance_status" in text
+        assert "PolicyFlow does not run evaluation tooling" in text
+
+
 def test_workflow_templates_reference_release_readiness_evidence() -> None:
     for relative_path in (
         "workflows/templates/feature-workflow.template.yml",
