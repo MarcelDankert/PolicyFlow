@@ -1,0 +1,124 @@
+workflow:
+  id: evaluation-threshold-mismatch
+  type: feature
+
+context:
+  workflow_file: tests/fixtures/evaluation-threshold-mismatch.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Evaluation mismatch fixture declares threshold expectations.
+    implementation: Implementation is intentionally invalid for validator tests.
+    tests: Tests assert that declared values and thresholds are consistent.
+    residual_uncertainty: None; this fixture is expected to fail validation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Invalid threshold mismatch fixture.
+    scope_locked:
+      - threshold mismatch validation
+    non_goals_locked:
+      - no external evaluation execution
+    risk_rationale: MEDIUM risk fixture for Evaluation Governance validation.
+  architecture-check:
+    decision: Keep mismatch validation limited to declared metadata.
+    constraints:
+      - no external artifact reads
+    approval_path: architecture-agent review
+
+evaluation:
+  compliance_status: passed
+  categories:
+    - id: tests
+      required_metrics:
+        - id: tests-passed
+          name: Test suite pass status
+          source: external-test-runner
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          source: external-coverage-report
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: "72"
+          status: passed
+          evidence_refs:
+            - artifact://coverage-report
+          blocks_merge: false
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Invalid fixture for threshold mismatch validation.
+    acceptance_criteria:
+      - threshold mismatch fails validation
+    approved_scope:
+      - threshold mismatch validation
+    non_goals:
+      - no external evaluation execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Fixture is intentionally invalid.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Mismatch is represented as declared metadata.
+    approved_scope:
+      - threshold mismatch validation
+    module_boundaries:
+      - validator fixtures
+    contract_impact: None.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no external artifact reads
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []

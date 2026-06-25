@@ -96,6 +96,9 @@ Validation behavior:
 - `compliance_status: passed` requires all metrics marked `required: true` to
   have `status: passed` or `status: waived`, and cannot include failed or
   blocked metrics with `blocks_merge: true`.
+- Metrics with `status: passed` and a declared `actual_value` must satisfy
+  simple provider-neutral thresholds for `equals`, `greater_than_or_equal`, and
+  `less_than_or_equal`.
 - `failed`, `blocked`, `pending`, and `waived` can be modeled as declared
   governance states without implying that PolicyFlow executed the underlying
   check.
