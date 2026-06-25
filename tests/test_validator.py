@@ -465,6 +465,75 @@ def test_loop_governance_completed_loop_accepts_stop_condition_evidence_ref() ->
     assert result.loop_governance.loops[0].status == "completed"
 
 
+def test_loop_governance_requires_non_empty_escalation_conditions() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("loop-governance-missing-escalation-conditions.yml")
+        )
+
+    assert (
+        "loop_governance loop 'review-feedback' declaration error: "
+        "escalation_conditions must be a non-empty list."
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_escalated_loop_requires_escalation_evidence_ref() -> None:
+    payload = loop_governance_fixture_payload()
+    payload["loop_governance"]["loops"][0]["status"] = "escalated"
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "loop_governance loop 'review-feedback' compliance failure: "
+        "escalated loops must reference at least one declared escalation "
+        "condition in evidence_refs."
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_escalated_loop_accepts_escalation_evidence_ref() -> None:
+    payload = loop_governance_fixture_payload()
+    loop = payload["loop_governance"]["loops"][0]
+    loop["status"] = "escalated"
+    loop["evidence_refs"].append("escalation_conditions.iteration-limit-reached")
+
+    result = validate_workflow_data(payload)
+
+    assert result.loop_governance is not None
+    assert result.loop_governance.loops[0].status == "escalated"
+
+
+def test_high_risk_loop_governance_requires_escalation_conditions() -> None:
+    payload = loop_governance_fixture_payload()
+    payload["context"]["risk_level"] = "HIGH"
+    payload["governance"]["human_approval_required"] = True
+    payload["governance"]["approval_evidence"] = ["evidence.approval"]
+    payload["governance"]["required_reviews"] = [
+        "architecture-agent",
+        "review-agent",
+        "qa-agent",
+        "security-agent",
+    ]
+    payload["execution"]["phases"].append({"phase": "approval", "state": "pending"})
+    payload["evidence"]["approval"] = {
+        "approved_by": "arch-board",
+        "reference": "approval://policyflow/test",
+        "scope_confirmed": True,
+    }
+    payload["loop_governance"]["loops"][0]["escalation_conditions"] = []
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "loop_governance loop 'review-feedback' declaration error: "
+        "escalation_conditions must be a non-empty list."
+        in exc_info.value.errors
+    )
+
+
 def test_missing_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))

@@ -1,0 +1,166 @@
+workflow:
+  id: validate-loop-escalation-rules
+  name: Validate Loop Escalation Rules
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Require explicit escalation rules for governed loops.
+
+context:
+  workflow_file: workflows/features/validate-loop-escalation-rules.yml
+  issue_key: "#77"
+  goal: Require each governed loop to declare escalation conditions and require escalated loop evidence to reference a declared escalation condition.
+  scope:
+    - loop escalation_conditions declaration validation
+    - escalated loop escalation evidence validation
+    - high-risk loop escalation coverage
+    - escalation rule documentation
+    - validator tests and fixture
+  non_goals:
+    - no loop execution
+    - no scheduler, message routing, memory, or provider runtime integration
+    - no provider SDK or credential coupling
+    - no new loop schema fields
+  affected_modules:
+    - policyflow/validator.py
+    - rules/escalation-rules.md
+    - policyflow/assets/rules/escalation-rules.md
+    - tests/test_validator.py
+    - tests/fixtures
+    - workflows/features
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope follows issue #77 and builds on the merged stop_conditions validation.
+    implementation: Validation can mirror the existing stop-condition evidence reference convention without adding runtime behavior.
+    tests: Tests will cover missing escalation conditions, missing escalated evidence, accepted escalation evidence, and high-risk coverage.
+    residual_uncertainty: Examples and user-facing Loop Governance docs remain deferred to issues #78 and #79.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Loop escalation validation scope and non-goals were locked before implementation.
+    scope_locked:
+      - non-empty escalation_conditions validation
+      - escalated loop evidence validation
+      - high-risk loop escalation coverage
+      - escalation rules documentation
+    non_goals_locked:
+      - no loop execution
+      - no scheduler, message routing, or memory
+      - no new schema fields
+    risk_rationale: MEDIUM risk because validator behavior affects Consumer-Repo workflow acceptance.
+  architecture-check:
+    decision: Use existing evidence_refs to reference declared escalation conditions without adding runtime ownership or new schema fields.
+    constraints:
+      - no loop execution ownership
+      - no provider SDK or credential coupling
+      - mirror stop-condition evidence reference convention
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added escalation_conditions declaration validation, escalated loop evidence validation, and matching escalation rule guidance.
+    changed_files:
+      - policyflow/validator.py
+      - rules/escalation-rules.md
+      - policyflow/assets/rules/escalation-rules.md
+      - tests/test_validator.py
+      - tests/fixtures/loop-governance-missing-escalation-conditions.yml
+    test_summary: Targeted loop governance tests, full validator tests, full pytest suite, active workflow validation, and standard example workflow validation passed.
+    docs_updates:
+      - rules/escalation-rules.md
+    known_limitations:
+      - examples and full Loop Governance documentation remain deferred to issues #78 and #79
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Require explicit escalation rules for governed loops.
+    acceptance_criteria:
+      - each loop declares escalation conditions
+      - escalated loop states require escalation evidence
+      - protected-area or high-risk loops cannot hide escalation requirements
+    approved_scope:
+      - validator checks
+      - tests and fixture
+      - escalation rules documentation
+    non_goals:
+      - no loop execution
+      - no new schema fields
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Validation scope is bounded to existing Loop Governance metadata fields.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Escalation validation remains declarative governance and does not create runtime loop execution responsibilities.
+    approved_scope:
+      - validator checks
+      - tests and fixture
+      - escalation rules documentation
+    module_boundaries:
+      - policyflow validator
+      - validator tests
+      - rules documentation
+      - active workflow evidence
+    contract_impact: Tightens optional Loop Governance validation when loop_governance is declared.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - reuse evidence_refs for escalation-condition references
+      - do not infer or execute escalation runtime behavior
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Validator now rejects loops without non-empty escalation_conditions and requires escalated loops to reference a declared escalation condition in evidence_refs.
+    changed_files:
+      - policyflow/validator.py
+      - rules/escalation-rules.md
+      - policyflow/assets/rules/escalation-rules.md
+      - tests/test_validator.py
+      - tests/fixtures/loop-governance-missing-escalation-conditions.yml
+    test_summary: Targeted loop governance tests, full validator tests, full pytest suite, active workflow validation, and standard example workflow validation pass.
+    docs_updates:
+      - rules/escalation-rules.md
+    known_limitations:
+      - issues #78 and #79 own examples and user-facing documentation
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
