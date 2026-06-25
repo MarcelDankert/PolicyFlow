@@ -23,6 +23,14 @@ def evaluation_fixture_payload() -> dict:
     )
 
 
+def loop_governance_fixture_payload() -> dict:
+    return copy.deepcopy(
+        validator_module._load_workflow_yaml(
+            fixture_path("valid-loop-governance-schema.yml")
+        )
+    )
+
+
 def test_valid_low_workflow_passes() -> None:
     result = validate_workflow_file(fixture_path("valid-low.yml"))
 
@@ -415,6 +423,46 @@ def test_loop_governance_current_iteration_cannot_exceed_max() -> None:
         "current_iteration 4 exceeds max_iterations 3."
         in exc_info.value.errors
     )
+
+
+def test_loop_governance_requires_non_empty_stop_conditions() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("loop-governance-missing-stop-conditions.yml")
+        )
+
+    assert (
+        "loop_governance loop 'review-feedback' declaration error: "
+        "stop_conditions must be a non-empty list."
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_completed_loop_requires_stop_condition_evidence_ref() -> None:
+    payload = loop_governance_fixture_payload()
+    payload["loop_governance"]["loops"][0]["status"] = "completed"
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "loop_governance loop 'review-feedback' compliance failure: "
+        "completed or terminated loops must reference at least one declared "
+        "stop condition in evidence_refs."
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_completed_loop_accepts_stop_condition_evidence_ref() -> None:
+    payload = loop_governance_fixture_payload()
+    loop = payload["loop_governance"]["loops"][0]
+    loop["status"] = "completed"
+    loop["evidence_refs"].append("stop_conditions.review-findings-resolved")
+
+    result = validate_workflow_data(payload)
+
+    assert result.loop_governance is not None
+    assert result.loop_governance.loops[0].status == "completed"
 
 
 def test_missing_risk_level_fails() -> None:

@@ -447,6 +447,8 @@ def _append_loop_governance_errors(
         loop_id = loop.get("id") if isinstance(loop.get("id"), str) else str(index)
         max_iterations = loop.get("max_iterations")
         current_iteration = loop.get("current_iteration")
+        stop_conditions = loop.get("stop_conditions")
+        evidence_refs = loop.get("evidence_refs")
 
         if type(max_iterations) is not int or max_iterations <= 0:
             errors.append(
@@ -464,6 +466,46 @@ def _append_loop_governance_errors(
                 f"current_iteration {current_iteration} exceeds "
                 f"max_iterations {max_iterations}."
             )
+
+        if not isinstance(stop_conditions, list) or not stop_conditions:
+            errors.append(
+                f"loop_governance loop '{loop_id}' declaration error: "
+                "stop_conditions must be a non-empty list."
+            )
+            continue
+
+        if loop.get("status") not in {"completed", "terminated"}:
+            continue
+
+        stop_condition_ids = {
+            condition.get("id")
+            for condition in stop_conditions
+            if isinstance(condition, dict) and isinstance(condition.get("id"), str)
+        }
+        if not _evidence_refs_stop_condition(evidence_refs, stop_condition_ids):
+            errors.append(
+                f"loop_governance loop '{loop_id}' compliance failure: "
+                "completed or terminated loops must reference at least one "
+                "declared stop condition in evidence_refs."
+            )
+
+
+def _evidence_refs_stop_condition(
+    evidence_refs: Any, stop_condition_ids: set[str]
+) -> bool:
+    if not isinstance(evidence_refs, list) or not stop_condition_ids:
+        return False
+
+    accepted_refs = {
+        f"stop_conditions.{stop_condition_id}"
+        for stop_condition_id in stop_condition_ids
+    }
+    accepted_refs.update(
+        f"loop_governance.stop_conditions.{stop_condition_id}"
+        for stop_condition_id in stop_condition_ids
+    )
+
+    return any(ref in accepted_refs for ref in evidence_refs if isinstance(ref, str))
 
 
 def _duplicate_values(values: list[str]) -> set[str]:
