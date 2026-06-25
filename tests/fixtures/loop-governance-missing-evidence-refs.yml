@@ -1,0 +1,110 @@
+workflow:
+  id: loop-governance-missing-evidence-refs
+  type: feature
+
+context:
+  workflow_file: tests/fixtures/loop-governance-missing-evidence-refs.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Loop governance fixture omits required evidence references.
+    implementation: Implementation is intentionally invalid for validator tests.
+    tests: Tests assert evidence refs are part of the typed model.
+    residual_uncertainty: None; this fixture is expected to fail validation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Invalid missing evidence refs fixture.
+    scope_locked:
+      - loop governance model
+    non_goals_locked:
+      - no loop execution
+    risk_rationale: MEDIUM risk fixture for Loop Governance model validation.
+  architecture-check:
+    decision: Loop metadata should declare evidence refs.
+    constraints:
+      - no runtime behavior
+    approval_path: architecture-agent review
+
+loop_governance:
+  loops:
+    - id: review-feedback
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+      max_iterations: 3
+      current_iteration: 0
+      status: pending
+      stop_conditions:
+        - id: review-findings-resolved
+          description: All blocking review findings are resolved.
+      escalation_conditions:
+        - id: iteration-limit-reached
+          trigger: max_iterations_exceeded
+          escalate_to: human-arbitration
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Invalid fixture for missing loop evidence refs.
+    acceptance_criteria:
+      - missing loop evidence refs fail validation
+    approved_scope:
+      - loop governance model
+    non_goals:
+      - no loop execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Fixture is intentionally invalid.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Missing evidence refs are represented as invalid metadata.
+    approved_scope:
+      - loop governance model
+    module_boundaries:
+      - validator fixtures
+    contract_impact: None.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no runtime behavior
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []
