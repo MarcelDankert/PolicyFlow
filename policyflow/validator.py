@@ -175,6 +175,7 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
 
     _append_high_risk_approval_evidence_errors(errors, risk_level, governance, evidence)
     _append_evaluation_errors(errors, risk_level, data.get("evaluation"))
+    _append_loop_governance_errors(errors, data.get("loop_governance"))
 
     protected_areas = _normalize_protected_areas(
         governance.get("protected_areas_touched")
@@ -424,6 +425,45 @@ def _category_has_required_metric(metrics: list[Any]) -> bool:
         isinstance(metric, dict) and metric.get("required") is True
         for metric in metrics
     )
+
+
+def _append_loop_governance_errors(
+    errors: list[str], loop_governance: Any
+) -> None:
+    if loop_governance is None:
+        return
+
+    if not isinstance(loop_governance, dict):
+        return
+
+    loops = loop_governance.get("loops")
+    if not isinstance(loops, list):
+        return
+
+    for index, loop in enumerate(loops):
+        if not isinstance(loop, dict):
+            continue
+
+        loop_id = loop.get("id") if isinstance(loop.get("id"), str) else str(index)
+        max_iterations = loop.get("max_iterations")
+        current_iteration = loop.get("current_iteration")
+
+        if type(max_iterations) is not int or max_iterations <= 0:
+            errors.append(
+                f"loop_governance loop '{loop_id}' declaration error: "
+                "max_iterations must be a positive integer."
+            )
+            continue
+
+        if type(current_iteration) is not int:
+            continue
+
+        if current_iteration > max_iterations:
+            errors.append(
+                f"loop_governance loop '{loop_id}' compliance failure: "
+                f"current_iteration {current_iteration} exceeds "
+                f"max_iterations {max_iterations}."
+            )
 
 
 def _duplicate_values(values: list[str]) -> set[str]:
