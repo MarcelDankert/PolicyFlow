@@ -1,0 +1,162 @@
+workflow:
+  id: loop-governance-model
+  name: Loop Governance Model
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add typed models for declarative Loop Governance.
+
+context:
+  workflow_file: workflows/features/loop-governance-model.yml
+  issue_key: "#74"
+  goal: Add typed Loop Governance models for loop identity, phases, feedback sources, iteration fields, stop conditions, escalation conditions, evidence references, and status.
+  scope:
+    - typed Loop Governance models
+    - schema normalization for loop_governance
+    - validator tests and fixtures for valid and invalid loop declarations
+  non_goals:
+    - no max_iterations compliance validation
+    - no stop condition compliance validation
+    - no escalation rule compliance validation
+    - no loop execution, scheduling, message routing, memory, or provider runtime integration
+  affected_modules:
+    - policyflow/models.py
+    - policyflow/schemas.py
+    - tests/test_validator.py
+    - tests/fixtures
+    - workflows/features
+  risk_level: MEDIUM
+  confidence:
+    planning: Scope follows issue #74 and builds on the merged Loop Governance schema definition.
+    implementation: Model work is bounded to typed parsing and normalization, not validator semantics.
+    tests: Valid and invalid loop fixture tests will verify typed access and missing-field behavior.
+    residual_uncertainty: Later issues will define iteration, stop-condition, and escalation validation semantics.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Loop Governance model scope and non-goals were locked before implementation.
+    scope_locked:
+      - typed loop governance models
+      - loop_governance schema normalization
+      - valid and invalid loop fixtures
+    non_goals_locked:
+      - no validator compliance semantics
+      - no loop execution
+      - no scheduler, message routing, or memory
+    risk_rationale: MEDIUM risk because typed models define future Consumer-Repo contract shape.
+  architecture-check:
+    decision: Keep Loop Governance typed as declarative metadata separate from runtime loop execution.
+    constraints:
+      - no runtime execution ownership
+      - no provider SDK or credential coupling
+      - leave compliance validation to later issues
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added optional typed Loop Governance models, preserved loop_governance during schema normalization, and covered valid plus invalid loop declarations.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - tests/test_validator.py
+      - tests/fixtures/valid-loop-governance-schema.yml
+      - tests/fixtures/loop-governance-empty-loops.yml
+      - tests/fixtures/loop-governance-missing-evidence-refs.yml
+    test_summary: Targeted loop governance tests, full validator tests, full pytest suite, active workflow validation, and standard example workflow validation passed.
+    docs_updates:
+      - none
+    known_limitations:
+      - max_iterations compliance validation remains deferred
+      - stop and escalation rule compliance remains deferred
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add typed models for Loop Governance.
+    acceptance_criteria:
+      - model supports loop identity, phases, feedback sources, iteration limits, stop conditions, escalation conditions, evidence references, and status
+      - model remains separate from runtime execution concerns
+      - tests cover valid and invalid loop declarations
+    approved_scope:
+      - typed models
+      - schema normalization
+      - fixtures and tests
+    non_goals:
+      - no loop execution
+      - no validator compliance semantics
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Model scope is bounded and follows the accepted schema shape.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Typed Loop Governance remains declarative metadata and does not alter runtime ownership.
+    approved_scope:
+      - loop_governance models
+      - normalization
+      - fixtures and tests
+    module_boundaries:
+      - policyflow models
+      - schema normalization
+      - validator fixtures
+    contract_impact: Adds optional typed schema surface without requiring existing workflows to declare loops.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not enforce max_iterations yet
+      - do not enforce stop or escalation compliance yet
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Loop Governance is now represented as optional typed declarative metadata on WorkflowDocument.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - tests/test_validator.py
+      - tests/fixtures
+    test_summary: Targeted loop governance tests, full validator tests, full pytest suite, active workflow validation, and standard example workflow validation pass.
+    docs_updates:
+      - none
+    known_limitations:
+      - later tickets own loop compliance semantics
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

@@ -73,6 +73,15 @@ class EvaluationComplianceStatus(str, Enum):
     WAIVED = "waived"
 
 
+class LoopGovernanceStatus(str, Enum):
+    PENDING = "pending"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    TERMINATED = "terminated"
+    ESCALATED = "escalated"
+    BLOCKED = "blocked"
+
+
 class WorkflowMetadata(BaseModel):
     id: str = Field(min_length=1)
     type: str = Field(min_length=1)
@@ -317,6 +326,48 @@ class WorkflowHandoff(BaseModel):
         return value
 
 
+class LoopStopCondition(BaseModel):
+    id: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+
+
+class LoopEscalationCondition(BaseModel):
+    id: str = Field(min_length=1)
+    trigger: str = Field(min_length=1)
+    escalate_to: str = Field(min_length=1)
+
+
+class WorkflowLoop(BaseModel):
+    id: str = Field(min_length=1)
+    source_phase: ExecutionPhaseName
+    target_phase: ExecutionPhaseName
+    allowed_feedback_sources: list[str]
+    max_iterations: int
+    current_iteration: int
+    status: LoopGovernanceStatus
+    stop_conditions: list[LoopStopCondition]
+    escalation_conditions: list[LoopEscalationCondition]
+    evidence_refs: list[str]
+
+    @field_validator("evidence_refs")
+    @classmethod
+    def validate_evidence_refs(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("evidence_refs must be a non-empty list")
+        return value
+
+
+class WorkflowLoopGovernance(BaseModel):
+    loops: list[WorkflowLoop]
+
+    @field_validator("loops")
+    @classmethod
+    def validate_loops(cls, value: list[WorkflowLoop]) -> list[WorkflowLoop]:
+        if not value:
+            raise ValueError("loops must be a non-empty list")
+        return value
+
+
 class EvaluationThreshold(BaseModel):
     operator: str = Field(min_length=1)
     value: str = Field(min_length=1)
@@ -376,6 +427,7 @@ class WorkflowDocument(BaseModel):
     execution: WorkflowExecution
     evidence: WorkflowEvidence | None = None
     evaluation: WorkflowEvaluation | None = None
+    loop_governance: WorkflowLoopGovernance | None = None
     contracts: WorkflowContracts | None = None
     overrides: list[WorkflowOverride] | None = None
     runtime: WorkflowRuntime | None = None

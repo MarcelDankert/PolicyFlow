@@ -335,6 +335,66 @@ def test_evaluation_template_documents_common_categories() -> None:
         assert expected in template
 
 
+def test_loop_governance_schema_fixture_passes() -> None:
+    result = validate_workflow_file(fixture_path("valid-loop-governance-schema.yml"))
+    data = fixture_path("valid-loop-governance-schema.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert result.loop_governance is not None
+    assert len(result.loop_governance.loops) == 1
+    loop = result.loop_governance.loops[0]
+    assert loop.id == "review-feedback"
+    assert loop.source_phase == "review"
+    assert loop.target_phase == "implementation"
+    assert loop.allowed_feedback_sources == [
+        "review-findings",
+        "qa-findings",
+        "security-scan",
+        "human-arbitration",
+        "evaluation-failure",
+    ]
+    assert loop.max_iterations == 3
+    assert loop.current_iteration == 1
+    assert loop.status == "active"
+    assert loop.stop_conditions[0].id == "review-findings-resolved"
+    assert loop.escalation_conditions[0].trigger == "max_iterations_exceeded"
+    assert loop.evidence_refs == ["evidence.review"]
+    for expected in (
+        "loop_governance:",
+        "source_phase:",
+        "target_phase:",
+        "allowed_feedback_sources:",
+        "max_iterations:",
+        "stop_conditions:",
+        "escalation_conditions:",
+        "evidence_refs:",
+    ):
+        assert expected in data
+
+
+def test_loop_governance_model_requires_loops() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("loop-governance-empty-loops.yml"))
+
+    assert (
+        "loop_governance.loops: Value error, loops must be a non-empty list"
+        in exc_info.value.errors
+    )
+
+
+def test_loop_governance_loop_requires_evidence_refs() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(
+            fixture_path("loop-governance-missing-evidence-refs.yml")
+        )
+
+    assert (
+        "loop_governance.loops.0.evidence_refs: Field required"
+        in exc_info.value.errors
+    )
+
+
 def test_missing_risk_level_fails() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("missing-risk-level.yml"))
