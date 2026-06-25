@@ -1,0 +1,176 @@
+workflow:
+  id: evaluation-model
+  type: feature
+
+context:
+  workflow_file: workflows/features/evaluation-model.yml
+  issue_key: "#69"
+  goal: Add typed models for Evaluation Governance.
+  scope:
+    - add typed Pydantic models for the optional top-level evaluation block
+    - preserve evaluation during workflow normalization
+    - support metric name, source, threshold, actual value, status, evidence refs, and blocking state
+    - cover positive and malformed evaluation model fixtures
+  non_goals:
+    - no evaluation tooling execution
+    - no risk-based evaluation requirements
+    - no PR body evaluation evidence mapping
+    - no provider SDK coupling or runtime orchestration behavior
+  affected_modules:
+    - policyflow/models.py
+    - policyflow/schemas.py
+    - tests/test_validator.py
+    - tests/fixtures
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue 69 builds on the merged #68 schema shape and is bounded to typed model support.
+    implementation: Changes are limited to models, normalization, and focused fixtures/tests.
+    tests: Positive and negative validator fixtures cover typed access and malformed evaluation blocks.
+    residual_uncertainty: Risk-based requirements and PR evidence mapping remain reserved for later issues.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue 69 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - typed evaluation models
+      - evaluation normalization
+      - focused positive and malformed fixtures
+    non_goals_locked:
+      - no evaluation tooling execution
+      - no risk-based evaluation requirements
+      - no PR body evaluation evidence mapping
+      - no provider SDK coupling or runtime orchestration
+    risk_rationale: MEDIUM risk because typed model support changes the workflow schema surface consumed by integrations.
+  architecture-check:
+    decision: Preserve evaluation as optional top-level declarative governance data and avoid validation semantics beyond model shape.
+    constraints:
+      - keep evaluation optional
+      - keep categories provider-neutral strings
+      - do not execute or calculate evaluation results
+      - do not introduce risk-based requirements in this issue
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added typed Evaluation Governance models, preserved evaluation during normalization, and covered valid and malformed evaluation fixtures.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - tests/test_validator.py
+      - tests/fixtures/evaluation-empty-categories.yml
+      - tests/fixtures/evaluation-missing-evidence-refs.yml
+      - workflows/features/evaluation-model.yml
+    test_summary: Validator tests pass with typed evaluation access and malformed evaluation fixture failures.
+    docs_updates:
+      - workflows/features/evaluation-model.yml
+    known_limitations:
+      - Risk-based evaluation requirements are not enforced in this issue.
+      - PR body evaluation evidence mapping remains out of scope.
+    unresolved_questions: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add typed model support for the optional Evaluation Governance block.
+    acceptance_criteria:
+      - evaluation model supports metric name, source, threshold, actual value or status, evidence reference, and blocking state
+      - models remain provider-neutral and runtime-neutral
+      - public compatibility expectations remain documented
+    approved_scope:
+      - policyflow models
+      - schema normalization
+      - validator fixtures/tests
+    non_goals:
+      - no evaluation tooling execution
+      - no risk-based validation requirements
+      - no PR body mapping
+      - no runtime/provider coupling
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Typed model support is bounded and testable through existing validator entrypoints.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Evaluation remains a top-level governance model, not execution or provider integration.
+    approved_scope:
+      - WorkflowEvaluation model
+      - EvaluationCategory, EvaluationMetric, and EvaluationThreshold models
+      - normalization preservation
+      - focused model tests
+    module_boundaries:
+      - models.py owns typed shape
+      - schemas.py preserves normalized top-level evaluation data
+      - validator uses existing Pydantic parsing path
+    contract_impact: Consumers can now inspect evaluation through typed WorkflowDocument access when the optional block is present.
+    risk_review_decision: MEDIUM risk accepted for schema surface changes without enforcement changes.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep evaluation optional
+      - avoid strict category enums
+      - avoid risk-based enforcement
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: WorkflowDocument now exposes optional top-level evaluation data through typed WorkflowEvaluation, EvaluationCategory, EvaluationMetric, and EvaluationThreshold models.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - tests/test_validator.py
+      - tests/fixtures/evaluation-empty-categories.yml
+      - tests/fixtures/evaluation-missing-evidence-refs.yml
+      - workflows/features/evaluation-model.yml
+    test_summary: Added typed access assertions for valid-evaluation-schema and negative fixtures for empty categories and missing evidence_refs.
+    docs_updates:
+      - workflows/features/evaluation-model.yml
+    known_limitations:
+      - Evaluation tooling execution, risk-based requirements, and PR evidence mapping are reserved for later issues.
+    unresolved_questions: []
+
+overrides: []
+
+runtime:
+  status: handoff_pending
+  current_phase: implementation
+  active_agent: review-agent
+  last_transition: implementation completed and ready for review
+  block_reason:
+
+handoffs:
+  - from_phase: implementation
+    to_phase: review
+    status: pending
+    required_inputs:
+      - implementation_summary
+      - changed_files
+      - test_summary
+    produced_outputs:
+      - review_findings
+      - residual_risk
+    blockers: []
+    override_refs: []

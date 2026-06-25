@@ -65,6 +65,14 @@ class HandoffStatus(str, Enum):
     BLOCKED = "blocked"
 
 
+class EvaluationComplianceStatus(str, Enum):
+    PENDING = "pending"
+    PASSED = "passed"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    WAIVED = "waived"
+
+
 class WorkflowMetadata(BaseModel):
     id: str = Field(min_length=1)
     type: str = Field(min_length=1)
@@ -309,12 +317,65 @@ class WorkflowHandoff(BaseModel):
         return value
 
 
+class EvaluationThreshold(BaseModel):
+    operator: str = Field(min_length=1)
+    value: str = Field(min_length=1)
+
+
+class EvaluationMetric(BaseModel):
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    required: bool = False
+    thresholds: EvaluationThreshold
+    actual_value: str | None = None
+    status: EvaluationComplianceStatus
+    evidence_refs: list[str]
+    blocks_merge: bool = False
+
+    @field_validator("evidence_refs")
+    @classmethod
+    def validate_evidence_refs(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("evidence_refs must be a non-empty list")
+        return value
+
+
+class EvaluationCategory(BaseModel):
+    id: str = Field(min_length=1)
+    required_metrics: list[EvaluationMetric]
+
+    @field_validator("required_metrics")
+    @classmethod
+    def validate_required_metrics(
+        cls, value: list[EvaluationMetric]
+    ) -> list[EvaluationMetric]:
+        if not value:
+            raise ValueError("required_metrics must be a non-empty list")
+        return value
+
+
+class WorkflowEvaluation(BaseModel):
+    compliance_status: EvaluationComplianceStatus
+    categories: list[EvaluationCategory]
+
+    @field_validator("categories")
+    @classmethod
+    def validate_categories(
+        cls, value: list[EvaluationCategory]
+    ) -> list[EvaluationCategory]:
+        if not value:
+            raise ValueError("categories must be a non-empty list")
+        return value
+
+
 class WorkflowDocument(BaseModel):
     workflow: WorkflowMetadata
     context: WorkflowContext
     governance: WorkflowGovernance
     execution: WorkflowExecution
     evidence: WorkflowEvidence | None = None
+    evaluation: WorkflowEvaluation | None = None
     contracts: WorkflowContracts | None = None
     overrides: list[WorkflowOverride] | None = None
     runtime: WorkflowRuntime | None = None

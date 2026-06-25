@@ -137,6 +137,24 @@ def test_evaluation_schema_fixture_passes() -> None:
     data = fixture_path("valid-evaluation-schema.yml").read_text(encoding="utf-8")
 
     assert result.context.risk_level == "MEDIUM"
+    assert result.evaluation is not None
+    assert result.evaluation.compliance_status == "pending"
+    assert [category.id for category in result.evaluation.categories] == [
+        "tests",
+        "coverage",
+        "security",
+    ]
+    tests_metric = result.evaluation.categories[0].required_metrics[0]
+    assert tests_metric.id == "tests-passed"
+    assert tests_metric.name == "Test suite pass status"
+    assert tests_metric.source == "ci"
+    assert tests_metric.required is True
+    assert tests_metric.thresholds.operator == "equals"
+    assert tests_metric.thresholds.value == "passed"
+    assert tests_metric.actual_value == "pending"
+    assert tests_metric.status == "pending"
+    assert tests_metric.evidence_refs == ["evidence.qa"]
+    assert tests_metric.blocks_merge is True
     for expected in (
         "evaluation:",
         "categories:",
@@ -149,6 +167,26 @@ def test_evaluation_schema_fixture_passes() -> None:
         "security",
     ):
         assert expected in data
+
+
+def test_evaluation_model_requires_categories() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("evaluation-empty-categories.yml"))
+
+    assert (
+        "evaluation.categories: Value error, categories must be a non-empty list"
+        in exc_info.value.errors
+    )
+
+
+def test_evaluation_metric_requires_evidence_refs() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("evaluation-missing-evidence-refs.yml"))
+
+    assert (
+        "evaluation.categories.0.required_metrics.0.evidence_refs: Field required"
+        in exc_info.value.errors
+    )
 
 
 def test_missing_risk_level_fails() -> None:
