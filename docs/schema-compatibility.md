@@ -24,9 +24,78 @@ New generated workflows must use the canonical schema:
 - `evidence`: machine-readable phase evidence
 - `contracts`: machine-readable role contracts for completed canonical phases
 - `evaluation`: optional declarative evaluation governance criteria
+- `loop_governance`: optional declarative feedback-loop governance criteria
 - `overrides`: typed approved exceptions
 - `runtime`: current orchestration state
 - `handoffs`: concrete phase handoffs
+
+## Loop Governance Schema
+
+Loop Governance is an optional top-level workflow block that declares how
+feedback loops between workflow phases are governed. PolicyFlow does not execute loops and does not schedule loop execution, route messages, or provide memory.
+Consumer-Repos, agent runtimes, CI systems, and human processes remain
+responsible for performing the underlying feedback work.
+
+Initial schema shape:
+
+```yaml
+loop_governance:
+  loops:
+    - id: review-feedback
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+        - qa-findings
+        - security-scan
+        - human-arbitration
+        - evaluation-failure
+      max_iterations: 3
+      current_iteration: 0
+      status: pending
+      stop_conditions:
+        - id: review-findings-resolved
+          description: All blocking review findings are resolved.
+      escalation_conditions:
+        - id: iteration-limit-reached
+          trigger: max_iterations_exceeded
+          escalate_to: human-arbitration
+      evidence_refs:
+        - evidence.review
+```
+
+Field intent:
+
+- `loop_governance.loops`: declared feedback-loop governance rules
+- `id`: stable loop identifier
+- `source_phase`: phase where feedback originates
+- `target_phase`: phase expected to respond to the feedback
+- `allowed_feedback_sources`: permitted sources such as review findings, QA
+  findings, security scan results, human arbitration, or evaluation failures
+- `max_iterations`: maximum allowed loop iterations before escalation or stop
+  handling is required
+- `current_iteration`: declared current iteration count for reporting and later
+  validation
+- `status`: loop governance state such as `pending`, `active`, `completed`,
+  `terminated`, `escalated`, or `blocked`
+- `stop_conditions`: explicit conditions that can terminate or complete the loop
+- `escalation_conditions`: explicit conditions that require escalation when loop
+  governance cannot complete normally
+- `evidence_refs`: references to workflow evidence or external artifacts that
+  support loop progress, completion, termination, or escalation
+
+Compatibility behavior:
+
+- The `loop_governance` block is optional for current 0.x compatibility.
+- Declaring loop governance does not cause PolicyFlow to execute, schedule, or
+  retry work.
+- Later model and validator releases can add structural validation for
+  `max_iterations`, stop conditions, escalation conditions, and evidence without
+  making PolicyFlow the loop executor.
+
+PolicyFlow should not execute loops. This schema only records declared feedback
+loop governance criteria and evidence references so later validation and
+reporting can reason about loop compliance.
 
 ## Evaluation Governance Schema
 

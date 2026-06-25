@@ -111,6 +111,34 @@ evaluation: {}
 #             - evidence.review
 #           blocks_merge: true
 
+loop_governance: {}
+# Optional declarative Loop Governance schema. PolicyFlow does not execute loops;
+# it records source_phase, target_phase, allowed_feedback_sources,
+# max_iterations, stop_conditions, escalation_conditions, and evidence_refs.
+# loop_governance:
+#   loops:
+#     - id: architecture-review-feedback
+#       source_phase: review
+#       target_phase: implementation
+#       allowed_feedback_sources:
+#         - review-findings
+#         - qa-findings
+#         - security-scan
+#         - human-arbitration
+#         - evaluation-failure
+#       max_iterations: 3
+#       current_iteration: 0
+#       status: pending
+#       stop_conditions:
+#         - id: architecture-findings-resolved
+#           description: All blocking architecture review findings are resolved.
+#       escalation_conditions:
+#         - id: iteration-limit-reached
+#           trigger: max_iterations_exceeded
+#           escalate_to: human-arbitration
+#       evidence_refs:
+#         - evidence.review
+
 steps:
   - step: change-plan
     agent: planning-agent
