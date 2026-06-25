@@ -252,6 +252,20 @@ context:
 The PR `Confidence summary` should summarize these four fields instead of
 introducing a separate confidence claim.
 
+## Evaluation Governance
+
+When a workflow needs measurable quality criteria, declare an optional
+`evaluation` block with categories, required metrics, thresholds, status, and
+evidence references. See
+[evaluation-governance.md](evaluation-governance.md) for the full Consumer-Repo
+guide. The repository source path is `docs/evaluation-governance.md`. Use
+`workflows/examples/evaluation-governance-workflow.yml` as a provider-neutral
+example covering tests, coverage, review, security, and performance.
+
+CI, scanners, test tooling, benchmark tools, and human reviewers remain
+external. PolicyFlow validates declared evaluation governance metadata; it does
+not execute or fetch the underlying checks.
+
 ## Upgrade Managed Assets
 
 Preview managed asset changes after upgrading the PolicyFlow package:
