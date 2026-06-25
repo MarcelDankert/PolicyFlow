@@ -9,11 +9,11 @@ the first PR governance checks without manually copying PolicyFlow directories.
 Install and pin PolicyFlow:
 
 ```bash
-python -m pip install policyflow==0.1.0
+python -m pip install policyflow==0.1.1
 ```
 
-Release links: [PyPI](https://pypi.org/project/policyflow/0.1.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.0).
+Release links: [PyPI](https://pypi.org/project/policyflow/0.1.1/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.1.1).
 
 Use the same package pin in local setup, CI, and GitHub Actions. See
 [release-and-upgrade.md](release-and-upgrade.md) for release notes and upgrade
