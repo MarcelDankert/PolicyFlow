@@ -1,0 +1,178 @@
+workflow:
+  id: release-0-3-0
+  name: Release 0.3.0
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Prepare the PolicyFlow 0.3.0 Loop Governance Foundation release.
+
+context:
+  workflow_file: workflows/features/release-0-3-0.yml
+  issue_key: "v1.2 milestone release"
+  goal: Prepare version, release notes, docs pins, packaged asset pins, and release validation for PolicyFlow 0.3.0.
+  scope:
+    - package version bump to 0.3.0
+    - README, getting-started, release-and-upgrade, and packaged docs release pins
+    - packaged GitHub governance workflow pin
+    - changelog release notes for Loop Governance Foundation
+    - release packaging and full test validation
+  non_goals:
+    - no new Loop Governance behavior beyond already merged v1.2 work
+    - no publishing before PR review and merge
+    - no release orchestration automation
+  affected_modules:
+    - pyproject.toml
+    - policyflow/__init__.py
+    - policyflow/bootstrap.py
+    - README.md
+    - CHANGELOG.md
+    - docs
+    - policyflow/assets
+    - tests
+  risk_level: LOW
+  confidence:
+    planning: v1.2 milestone issues are closed and the release scope is version and documentation preparation.
+    implementation: Version and release pin changes are mechanical and covered by repository docs, bootstrap, packaging, and full tests.
+    tests: Release packaging tests, full pytest suite, package build, and artifact inspection will validate the release prep.
+    residual_uncertainty: Actual PyPI and GitHub Release publication remains a separate post-merge release operation.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+
+evidence:
+  planning:
+    summary: Release preparation scope was locked after completing the v1.2 Loop Governance Foundation milestone.
+    scope_locked:
+      - version bump
+      - release notes
+      - docs and managed asset pins
+      - release validation
+    non_goals_locked:
+      - no release publication before merge
+      - no new feature behavior
+      - no release orchestration automation
+    risk_rationale: LOW risk release preparation for already merged milestone work.
+  implementation:
+    summary: Prepared PolicyFlow 0.3.0 release metadata, documentation pins, managed asset pins, changelog notes, and release validation.
+    changed_files:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - README.md
+      - CHANGELOG.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_bootstrap.py
+      - tests/test_repository_docs.py
+      - workflows/features/release-0-3-0.yml
+    validation:
+      - command: pytest -q tests/test_repository_docs.py tests/test_bootstrap.py tests/test_release_packaging.py
+        result: passed, 38 tests
+      - command: python -m build --outdir %TEMP%/policyflow-0.3.0-dist
+        result: passed, produced wheel and sdist
+      - command: artifact inspection for policyflow-0.3.0 wheel and sdist
+        result: passed, version metadata and managed assets present
+      - command: pytest -q
+        result: passed, 194 tests
+      - command: policyflow validate workflows/features/release-0-3-0.yml
+        result: passed
+      - command: policyflow validate workflows/examples/example-feature-workflow.yml
+        result: passed with existing expiring override warning
+      - command: policyflow validate workflows/examples/example-bugfix-workflow.yml
+        result: passed
+      - command: policyflow validate workflows/examples/example-architecture-change-workflow.yml
+        result: passed
+      - command: policyflow validate workflows/examples/loop-governance-workflow.yml
+        result: passed
+      - command: git diff --check
+        result: passed with CRLF conversion warnings only
+    release_artifacts:
+      - policyflow-0.3.0-py3-none-any.whl
+      - policyflow-0.3.0.tar.gz
+    limitations:
+      - PyPI publication remains a post-merge release operation.
+      - GitHub Release creation remains a post-merge release operation.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Prepare the 0.3.0 release PR after the v1.2 milestone completed.
+    acceptance_criteria:
+      - package version declares 0.3.0
+      - release notes describe Loop Governance Foundation
+      - docs and managed asset pins reference 0.3.0
+      - release packaging and full tests pass
+    approved_scope:
+      - release preparation
+      - docs pins
+      - release validation
+    non_goals:
+      - no publication before merge
+      - no new feature behavior
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Release prep is bounded to metadata, docs, managed asset pins, and validation.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Updated package version, release pins, changelog, managed assets, and tests for 0.3.0.
+    changed_files:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - README.md
+      - CHANGELOG.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_bootstrap.py
+      - tests/test_repository_docs.py
+      - workflows/features/release-0-3-0.yml
+    test_summary: Targeted release docs, bootstrap, packaging tests, full pytest suite, package build, artifact inspection, active workflow validation, example workflow validations, and git diff check passed.
+    docs_updates:
+      - README.md
+      - CHANGELOG.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/release-and-upgrade.md
+    known_limitations:
+      - release artifacts are not published by this PR
+      - GitHub Release creation remains a post-merge release operation
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

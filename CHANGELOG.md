@@ -6,6 +6,29 @@ asset compatibility changes.
 
 ## Unreleased
 
+## 0.3.0
+
+Released: 2026-06-25
+
+Loop Governance Foundation release.
+
+- Added optional top-level `loop_governance` workflow governance for declared
+  feedback loops between workflow phases.
+- Added typed Loop Governance models for loop identity, source and target
+  phases, allowed feedback sources, iteration fields, stop conditions,
+  escalation conditions, evidence references, and status.
+- Added validator checks for positive `max_iterations`, current iteration
+  limits, non-empty stop and escalation conditions, completed or terminated
+  stop-condition evidence, and escalated loop evidence.
+- Added provider-neutral Loop Governance examples covering review feedback, QA
+  regression, security review, human arbitration, and Querypilot-inspired SQL
+  safety loops.
+- Documented Consumer-Repo Loop Governance usage, scope, non-scope, required
+  fields, evidence, escalation expectations, examples, and runtime boundaries.
+- Updated packaged managed docs, rules, workflow templates, and Consumer-Repo
+  governance workflow pins so Consumer-Repos can adopt the Loop Governance
+  Foundation through the PyPI package.
+
 ## 0.2.0
 
 Released: 2026-06-25
