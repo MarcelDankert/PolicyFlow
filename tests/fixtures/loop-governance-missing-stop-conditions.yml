@@ -1,0 +1,110 @@
+workflow:
+  id: loop-governance-missing-stop-conditions
+  type: feature
+
+context:
+  workflow_file: tests/fixtures/loop-governance-missing-stop-conditions.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Loop governance fixture declares an invalid empty stop condition list.
+    implementation: Implementation is intentionally invalid for validator tests.
+    tests: Tests assert empty stop_conditions fail as declaration errors.
+    residual_uncertainty: None; this fixture is expected to fail validation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: pending
+    - phase: review
+      state: pending
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Invalid empty stop_conditions fixture.
+    scope_locked:
+      - loop governance stop condition validation
+    non_goals_locked:
+      - no loop execution
+    risk_rationale: MEDIUM risk fixture for Loop Governance validation.
+  architecture-check:
+    decision: Empty stop_conditions should fail as a declaration error.
+    constraints:
+      - no runtime behavior
+    approval_path: architecture-agent review
+
+loop_governance:
+  loops:
+    - id: review-feedback
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+      max_iterations: 3
+      current_iteration: 1
+      status: active
+      stop_conditions: []
+      escalation_conditions:
+        - id: iteration-limit-reached
+          trigger: max_iterations_exceeded
+          escalate_to: human-arbitration
+      evidence_refs:
+        - evidence.review
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Invalid fixture for loop stop condition validation.
+    acceptance_criteria:
+      - empty stop_conditions fail validation
+    approved_scope:
+      - loop governance stop condition validation
+    non_goals:
+      - no loop execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Fixture is intentionally invalid.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Empty stop_conditions are represented as invalid metadata.
+    approved_scope:
+      - loop governance stop condition validation
+    module_boundaries:
+      - validator fixtures
+    contract_impact: None.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no runtime behavior
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: implementation
+  active_agent: senior-dev-agent
+  last_transition: architecture-check completed
+
+handoffs: []
