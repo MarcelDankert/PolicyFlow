@@ -23,6 +23,7 @@ Non-goals:
 - Memory Store
 - Provider Credential Manager
 - Merge Bot
+- Automerge Executor
 - LangGraph, CrewAI, or AutoGen replacement
 
 ## Pillars
@@ -235,6 +236,18 @@ Querypilot should produce evidence that PolicyFlow can validate and report, but
 PolicyFlow should not execute Querypilot agents, host its runtime, manage its
 credentials, or schedule its feedback loops.
 
+## Automerge Governance Boundary
+
+Automerge is useful as a Consumer-Repo operational choice, but it is not part of the v2 core platform scope. PolicyFlow should not merge pull requests, enable GitHub auto-merge, change branch protection, bypass review rules, or act as a merge bot.
+
+A future Consumer Governance extension may define declarative automerge policy, such as which risk levels may allow automerge, which checks and evidence must be present, and which conditions always forbid automerge. The execution of that policy remains outside PolicyFlow and belongs to the Consumer-Repo, GitHub settings, or a separately authorized repository automation.
+
+The default v2 stance is conservative:
+
+- LOW-risk automerge may be described as a future governance policy option.
+- MEDIUM-risk automerge should require an explicit human signal before any Consumer-Repo automation acts.
+- HIGH-risk automerge is out of scope and should remain a deliberate human merge decision.
+
 ## Open Decisions
 
 - How much runtime mutation remains allowed?
@@ -247,4 +260,6 @@ credentials, or schedule its feedback loops.
 - Which evaluation failures should block validation versus produce warnings?
 - How should human arbitration evidence be represented across GitHub-governed
   and local-only Consumer-Repos?
+- Should Automerge Governance become a future Consumer Governance extension, or
+  remain a Consumer-Repo-only concern?
 
