@@ -231,6 +231,34 @@ def test_evaluation_governance_docs_define_consumer_usage() -> None:
     assert "docs/evaluation-governance.md" in readme
 
 
+def test_metric_governance_docs_define_metric_boundaries() -> None:
+    metric_doc = (ROOT / "docs/metric-governance.md").read_text(encoding="utf-8")
+    packaged_doc = (
+        ROOT / "policyflow/assets/docs/metric-governance.md"
+    ).read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "## Metric Governance Model",
+        "Metric declaration",
+        "Metric source",
+        "Metric evidence",
+        "PolicyFlow validation",
+        "PolicyFlow does not calculate all metrics",
+        "Consumer-Repos own metric collection",
+        "Querypilot metric examples",
+        "only `SELECT` allowed",
+        "SQL guardrails passed",
+        "docs/metric-governance.md",
+    ):
+        assert expected in metric_doc or expected in roadmap
+
+    assert packaged_doc == metric_doc
+    assert "docs/metric-governance.md" in roadmap
+
+
 def test_workflow_templates_reference_evaluation_schema() -> None:
     for relative_path in (
         "workflows/templates/feature-workflow.template.yml",
@@ -347,6 +375,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
     for relative_path in (
         "evaluation-governance.md",
         "getting-started.md",
+        "metric-governance.md",
         "overview.md",
         "governance-enforcement-roadmap.md",
         "public-api.md",

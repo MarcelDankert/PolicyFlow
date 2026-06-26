@@ -1,0 +1,134 @@
+workflow:
+  id: metric-governance-docs
+  name: Metric Governance Documentation
+  version: 1
+  type: documentation
+  status: active
+  template_reference: workflows/templates/low-risk-workflow.template.yml
+  description: Document how metric declarations, sources, evidence, and PolicyFlow validation relate.
+
+context:
+  workflow_file: workflows/features/metric-governance-docs.yml
+  issue_key: "#84"
+  goal: Explain how metrics relate to evidence and risk.
+  scope:
+    - docs/metric-governance.md
+    - policyflow/assets/docs/metric-governance.md
+    - docs/roadmap-agentic-governance.md
+    - tests/test_repository_docs.py
+  non_goals:
+    - no metric schema changes
+    - no validator behavior changes
+    - no metric calculation or provider integration
+    - no runtime, scheduler, memory, or orchestrator ownership
+  affected_modules:
+    - docs
+    - policyflow/assets/docs
+    - tests/test_repository_docs.py
+    - workflows/features/metric-governance-docs.yml
+  risk_level: LOW
+  confidence:
+    planning: Issue #84 is docs-only and depends on the merged review and QA metric examples.
+    implementation: Changes are bounded to documentation, packaged docs, and documentation tests.
+    tests: Repository documentation tests can verify the documented boundaries and packaged asset sync.
+    residual_uncertainty: Querypilot remains a future reference pilot; this change documents expected metric examples only.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+
+evidence:
+  planning:
+    summary: Issue #84 scope, non-goals, LOW risk, and documentation-only boundary were locked before implementation.
+    scope_locked:
+      - distinguish metric declaration, source, evidence, and validation
+      - clarify PolicyFlow does not calculate all metrics
+      - link Querypilot metric examples
+    non_goals_locked:
+      - no validator behavior changes
+      - no provider-specific metric execution
+      - no runtime or orchestration ownership
+    risk_rationale: LOW risk because this is documentation-only and preserves existing product boundaries.
+  implementation:
+    summary: Added Metric Governance documentation, packaged asset copy, roadmap links, and repository documentation coverage.
+    changed_files:
+      - docs/metric-governance.md
+      - policyflow/assets/docs/metric-governance.md
+      - docs/roadmap-agentic-governance.md
+      - tests/test_repository_docs.py
+      - workflows/features/metric-governance-docs.yml
+    test_summary: Targeted repository docs test passed for metric governance boundaries and packaged asset sync.
+    docs_updates:
+      - docs/metric-governance.md
+      - policyflow/assets/docs/metric-governance.md
+      - docs/roadmap-agentic-governance.md
+    known_limitations:
+      - Querypilot remains a future reference pilot and does not produce artifacts in this repository.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document metric governance boundaries and Querypilot metric examples.
+    acceptance_criteria:
+      - documentation distinguishes metric declaration, metric source, metric evidence, and PolicyFlow validation
+      - documentation clarifies that PolicyFlow does not calculate all metrics
+      - Querypilot metric examples are linked
+    approved_scope:
+      - docs/metric-governance.md
+      - policyflow/assets/docs/metric-governance.md
+      - docs/roadmap-agentic-governance.md
+      - tests/test_repository_docs.py
+    non_goals:
+      - no schema changes
+      - no validator behavior changes
+      - no provider integration
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Documentation assertions can be verified by repository docs tests and workflow validation.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Documented Metric Governance boundaries, Querypilot examples, and the distinction between declarations, sources, evidence, and validation.
+    changed_files:
+      - docs/metric-governance.md
+      - policyflow/assets/docs/metric-governance.md
+      - docs/roadmap-agentic-governance.md
+      - tests/test_repository_docs.py
+      - workflows/features/metric-governance-docs.yml
+    test_summary: Repository docs test passed for the new metric governance documentation.
+    docs_updates:
+      - docs/metric-governance.md
+      - policyflow/assets/docs/metric-governance.md
+      - docs/roadmap-agentic-governance.md
+    known_limitations:
+      - no metric schema or validator behavior changes
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
