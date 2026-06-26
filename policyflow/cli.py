@@ -20,7 +20,14 @@ from policyflow.runtime import (
     record_handoff as record_workflow_handoff,
     start_phase as start_workflow_phase,
 )
-from policyflow.reporting import audit_directory, audit_lines, status_lines, workflow_status
+from policyflow.reporting import (
+    audit_directory,
+    audit_lines,
+    evaluation_report_directory,
+    evaluation_report_lines,
+    status_lines,
+    workflow_status,
+)
 from policyflow.sync import sync_consumer_assets
 from policyflow.validator import (
     inspect_workflow_file,
@@ -255,6 +262,22 @@ def audit(directory: Path, json_output: bool = typer.Option(False, "--json")) ->
         return
 
     for line in audit_lines(payload):
+        console.print(line, markup=False)
+
+
+@app.command("evaluation-report")
+def evaluation_report(
+    directory: Path, json_output: bool = typer.Option(False, "--json")
+) -> None:
+    """Show evaluation governance compliance across workflow files."""
+
+    payload = evaluation_report_directory(directory)
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    for line in evaluation_report_lines(payload):
         console.print(line, markup=False)
 
 

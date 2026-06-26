@@ -1,0 +1,162 @@
+workflow:
+  id: evaluation-compliance-report
+  name: Evaluation Compliance Report
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Report evaluation governance compliance across workflow files.
+
+context:
+  workflow_file: workflows/features/evaluation-compliance-report.yml
+  issue_key: "#86"
+  goal: Report evaluation governance compliance across workflow files.
+  scope:
+    - evaluation compliance report payload
+    - CLI command with human-readable output
+    - CLI command with JSON output
+    - tests for compliant and non-compliant directories
+  non_goals:
+    - no workflow schema changes
+    - no validator semantic changes
+    - no metric calculation or external artifact reads
+    - no provider integration, runtime execution, scheduler, memory, or orchestration behavior
+  affected_modules:
+    - policyflow/reporting.py
+    - policyflow/cli.py
+    - tests/test_runtime_cli.py
+    - workflows/features/evaluation-compliance-report.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #86 builds on the merged audit governance summaries and focuses on a reporting-only CLI surface.
+    implementation: Changes should derive from existing audit/evaluation summaries without altering validation semantics.
+    tests: CLI tests can cover compliant, missing, and non-compliant evaluation directories in text and JSON modes.
+    residual_uncertainty: Later v1.4 JSON-contract work may stabilize naming and documentation for downstream consumers.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #86 scope, non-goals, MEDIUM risk, and reporting-only boundary were locked before implementation.
+    scope_locked:
+      - evaluation compliance report
+      - CLI and JSON output
+      - compliant and non-compliant directory tests
+    non_goals_locked:
+      - no schema or validator changes
+      - no metric calculation
+      - no runtime, scheduler, memory, provider, or orchestration ownership
+    risk_rationale: MEDIUM risk because the report is a new consumer-facing CLI and JSON surface.
+  architecture-check:
+    decision: Build the evaluation report as a read-only projection over existing audit evaluation summaries.
+    constraints:
+      - do not duplicate validator semantics
+      - do not fetch or calculate external evidence
+      - keep missing evaluations reportable without making them validation errors
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added a read-only evaluation compliance report with CLI text and JSON output.
+    changed_files:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/evaluation-compliance-report.yml
+    test_summary: Targeted evaluation-report tests, full runtime CLI tests, and workflow validation passed.
+    docs_updates:
+      - none
+    known_limitations:
+      - later v1.4 issues may stabilize and document the full audit JSON contract.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add an evaluation compliance report across workflow files.
+    acceptance_criteria:
+      - report identifies missing required evaluations, failing gates, and missing evidence references
+      - report is available through CLI and JSON output
+      - tests cover compliant and non-compliant directories
+    approved_scope:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/evaluation-compliance-report.yml
+    non_goals:
+      - no schema changes
+      - no validator semantic changes
+      - no external execution or artifact reads
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Existing audit summaries provide the raw evaluation compliance signals for a focused report.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The report should remain a read-only projection and not become an evaluation runner.
+    approved_scope:
+      - reporting payload
+      - CLI text and JSON output
+      - tests
+    module_boundaries:
+      - policyflow/reporting.py owns report shaping
+      - policyflow/cli.py exposes the command
+      - validator semantics remain unchanged
+    contract_impact: Adds a consumer-facing CLI and JSON report without changing existing audit keys.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - read-only reporting only
+      - preserve existing audit behavior
+      - no provider-specific execution
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added `policyflow evaluation-report` and JSON payload generation from existing audit evaluation summaries.
+    changed_files:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/evaluation-compliance-report.yml
+    test_summary: CLI tests cover compliant and non-compliant directories, including missing evaluations, failing gates, and missing evidence references.
+    docs_updates:
+      - none
+    known_limitations:
+      - report does not calculate metric values or fetch external evidence artifacts
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
