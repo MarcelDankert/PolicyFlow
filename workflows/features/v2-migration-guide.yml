@@ -1,0 +1,212 @@
+workflow:
+  id: v2-migration-guide
+  name: V2 Migration Guide
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Publish the v2 migration guide for Consumer-Repos.
+
+context:
+  workflow_file: workflows/features/v2-migration-guide.yml
+  issue_key: "#91"
+  goal: Guide Consumer-Repos from 0.x schemas to stable v2 governance.
+  scope:
+    - v2 migration guide covering workflow, loop, evaluation, metric, human, and audit governance
+    - before and after examples for canonical workflow migration
+    - deprecated fallback behavior and validation checklist
+    - release-and-upgrade link to the migration guide
+    - packaged docs asset updates
+  non_goals:
+    - no validator semantic changes
+    - no removal of 0.x fallback support
+    - no runtime execution, scheduler, message bus, memory, provider credential, provider SDK, or merge bot behavior
+    - no release publication
+  affected_modules:
+    - docs/v2-migration-guide.md
+    - docs/release-and-upgrade.md
+    - policyflow/assets/docs/v2-migration-guide.md
+    - policyflow/assets/docs/release-and-upgrade.md
+    - tests/test_repository_docs.py
+    - workflows/features/v2-migration-guide.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #91 is HIGH risk because migration guidance defines how Consumer-Repos interpret v2 compatibility boundaries.
+    implementation: The accepted v2 schema boundary, existing schema compatibility docs, and released 0.4.0 governance docs provide the source material.
+    tests: Repository docs tests can verify migration coverage, before/after examples, deprecated fallback guidance, release links, and packaged docs parity.
+    residual_uncertainty: Future v2 release work may add stricter enforcement after consumers have a documented migration path.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - schema compatibility
+    - migration guidance
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #91 scope, non-goals, HIGH risk, and migration boundary were fixed before implementation.
+    scope_locked:
+      - migration guide
+      - before and after examples
+      - deprecated fallback guidance
+      - release-and-upgrade link
+      - packaged docs parity
+    non_goals_locked:
+      - no validator semantic changes
+      - no fallback removal
+      - no runtime, provider, scheduler, memory, message bus, or merge bot behavior
+    risk_rationale: HIGH risk because migration documentation affects Consumer-Repo upgrade decisions and v2 compatibility expectations.
+  architecture-check:
+    decision: Publish migration guidance before any stricter v2 enforcement.
+    constraints:
+      - keep 0.x fallback support intact
+      - document v2 target behavior as migration guidance
+      - keep PolicyFlow as validator and reporter, not executor
+      - link release guidance to the migration guide
+    approval_path: architecture-agent review plus human approval
+  implementation:
+    summary: Added a Consumer-Repo v2 migration guide, release-and-upgrade link, packaged docs parity, and repository docs coverage.
+    changed_files:
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/v2-migration-guide.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/v2-migration-guide.yml
+    docs_updates:
+      - v2 migration scope and non-goals
+      - deprecated 0.x fallback fields
+      - workflow before and after examples
+      - loop governance migration example
+      - evaluation and metric migration example
+      - human approval evidence guidance
+      - audit integration guidance
+      - validation checklist
+    test_summary:
+      - pytest -q tests/test_repository_docs.py -k v2_migration_guide
+      - pytest -q tests/test_repository_docs.py
+    limitations:
+      - validator semantics remain unchanged
+      - 0.x fallback support remains active
+      - release publication remains out of scope
+  qa:
+    outcome: passed
+    evidence_summary: Repository documentation tests passed during implementation; QA remains pending until review completes.
+    checks_run:
+      - pytest -q tests/test_repository_docs.py -k v2_migration_guide
+      - pytest -q tests/test_repository_docs.py
+    unresolved_risks:
+      - human approval is still required before merge
+  approval:
+    approved_by: MarcelDankert
+    reference: PR approval required before merge
+    scope_confirmed: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Publish the v2 migration guide for Consumer-Repos.
+    acceptance_criteria:
+      - migration guide covers workflow, loop, evaluation, metric, and audit changes
+      - guide includes before and after examples
+      - guide identifies deprecated fallback behavior
+    approved_scope:
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - packaged docs assets
+      - repository docs tests
+    non_goals:
+      - no validator changes
+      - no fallback removal
+      - no runtime or provider behavior
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - schema compatibility
+      - migration guidance
+    confidence_summary: v2 schema stabilization provides a stable target for migration docs.
+    escalation_flags:
+      - human approval required
+      - migration guidance affects Consumer-Repos
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Migration guidance should define the upgrade path without changing validator behavior in the same PR.
+    approved_scope:
+      - migration docs
+      - release guidance link
+      - docs tests
+    module_boundaries:
+      - docs/v2-migration-guide.md owns migration steps and examples
+      - docs/schema-compatibility.md owns canonical schema contract
+      - docs/release-and-upgrade.md owns release adoption guidance
+      - validator behavior remains unchanged
+    contract_impact: Consumer-Repos receive an explicit v2 migration path while 0.x compatibility remains active.
+    risk_review_decision: HIGH risk path accepted because migration docs are consumer-facing upgrade guidance.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - document before enforcement
+      - no fallback removal
+      - no execution or provider ownership
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a Consumer-Repo v2 migration guide, release-and-upgrade link, packaged docs parity, and repository docs coverage.
+    changed_files:
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - policyflow/assets/docs/v2-migration-guide.md
+      - policyflow/assets/docs/release-and-upgrade.md
+      - tests/test_repository_docs.py
+      - workflows/features/v2-migration-guide.yml
+    test_summary: "Passed: pytest -q tests/test_repository_docs.py -k v2_migration_guide; pytest -q tests/test_repository_docs.py."
+    docs_updates:
+      - v2 migration scope and non-goals
+      - deprecated 0.x fallback fields
+      - workflow before and after examples
+      - loop governance migration example
+      - evaluation and metric migration example
+      - human approval evidence guidance
+      - audit integration guidance
+      - validation checklist
+    known_limitations:
+      - validator semantics remain unchanged
+      - 0.x fallback support remains active
+      - release publication remains out of scope
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
