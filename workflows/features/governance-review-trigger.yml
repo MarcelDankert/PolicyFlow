@@ -1,0 +1,185 @@
+workflow:
+  id: governance-review-trigger
+  name: Governance Review Trigger
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Automatically rerun PolicyFlow governance checks when PR reviews are submitted or dismissed.
+
+context:
+  workflow_file: workflows/features/governance-review-trigger.yml
+  issue_key: "#123"
+  goal: Add pull_request_review triggers so approval changes rerun PolicyFlow governance checks automatically.
+  scope:
+    - repository governance workflow review trigger
+    - packaged Consumer-Repo governance workflow review trigger
+    - PR number resolution for pull_request and pull_request_review events
+    - documentation for fail-fast plus automatic review-change reruns
+    - tests for repository and packaged workflow assets
+  non_goals:
+    - no long-running CI wait loops
+    - no change to approval validation semantics
+    - no scheduler, provider SDK, credential, memory, or runtime orchestration behavior
+    - no release publication
+  affected_modules:
+    - .github/workflows/policyflow-governance.yml
+    - github/workflows/policyflow-governance.yml
+    - policyflow/assets/github/workflows/policyflow-governance.yml
+    - README.md
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - tests/test_consumer_github_workflow.py
+    - tests/test_repository_docs.py
+    - workflows/features/governance-review-trigger.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #123 is independent of the open metric requirements work and bounded to GitHub Actions trigger behavior.
+    implementation: Changes are limited to workflow event triggers, PR number resolution, docs, and structural tests.
+    tests: Workflow asset tests and repository docs tests can prove trigger and guidance behavior without exercising GitHub Actions live.
+    residual_uncertainty: GitHub Actions will ultimately verify live rerun behavior after PR review events.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #123 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - review trigger for governance workflows
+      - PR number resolution for review events
+      - docs and tests
+    non_goals_locked:
+      - no CI wait loop
+      - no approval semantic changes
+      - no provider/runtime ownership
+    risk_rationale: MEDIUM risk because Consumer-Repo GitHub governance workflow behavior changes.
+  architecture-check:
+    decision: Keep fail-fast governance checks and retrigger them on review changes instead of waiting inside CI.
+    constraints:
+      - use pull_request_review submitted and dismissed events
+      - preserve pull_request behavior
+      - fetch live PR body and reviews for both event families
+      - do not change approval matching semantics
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added pull_request_review submitted and dismissed triggers, event-aware PR number resolution, and documentation for automatic approval-change reruns.
+    changed_files:
+      - .github/workflows/policyflow-governance.yml
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/governance-review-trigger.yml
+    test_summary: Consumer GitHub workflow tests, repository docs tests, active workflow validation, and diff check passed.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - PR body edits may still require a manual rerun or new commit because GitHub may not fire Actions for body edits alone.
+      - Live GitHub review-event behavior is ultimately verified by GitHub Actions after this PR receives review events.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Automatically rerun governance checks when PR reviews are submitted or dismissed.
+    acceptance_criteria:
+      - repository workflow runs on pull_request_review submitted and dismissed
+      - packaged Consumer-Repo workflow includes the same trigger
+      - missing approval still fails fast
+      - docs explain automatic review-change reruns instead of CI wait loops
+      - tests cover repository and packaged workflow assets
+    approved_scope:
+      - workflow triggers
+      - PR number resolution
+      - docs and tests
+    non_goals:
+      - no long-running CI wait loop
+      - no approval semantic changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Trigger behavior is bounded and structurally testable.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Review-triggered reruns improve approval UX without weakening fail-fast governance.
+    approved_scope:
+      - pull_request_review trigger
+      - event-aware PR number resolution
+      - mirrored packaged workflow asset
+      - docs and tests
+    module_boundaries:
+      - GitHub Actions workflow files own event behavior
+      - validator approval semantics remain unchanged
+      - docs explain expected user behavior
+    contract_impact: Consumer-Repos bootstrapped from PolicyFlow can rerun governance checks automatically when reviews change.
+    risk_review_decision: MEDIUM risk accepted for GitHub workflow behavior changes.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - fail missing approval instead of waiting
+      - do not add provider-specific approval rules
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: PolicyFlow governance workflows now rerun on pull_request_review submitted and dismissed events while preserving fail-fast approval validation.
+    changed_files:
+      - .github/workflows/policyflow-governance.yml
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/governance-review-trigger.yml
+    test_summary: pytest -q tests/test_consumer_github_workflow.py tests/test_repository_docs.py passed; active workflow validation and git diff check passed.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - approval validation still fails until the required APPROVED review exists
+      - PR body edit reruns remain separate from review-event reruns
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

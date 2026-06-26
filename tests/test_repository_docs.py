@@ -119,11 +119,16 @@ def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
 
     assert "editing a PR body may not trigger a new GitHub Actions run" in getting_started
     assert "rerun the failed PolicyFlow job or push a new commit" in getting_started
+    assert "reruns on `pull_request_review`" in getting_started
+    assert "submitted and dismissed events" in getting_started
+    assert "without keeping a CI job waiting" in getting_started
     assert "draft PRs are planning or preview artifacts" in getting_started
     assert "stacked PRs are dependency-bound" in getting_started
     assert "not normal merge candidates until upstream dependencies are merged or otherwise satisfied" in getting_started
     assert "documentation-only guidance" in roadmap
     assert "Draft and stacked PRs need explicit merge-readiness semantics" in readme
+    assert "the governance workflow reruns on" in readme
+    assert "`pull_request_review` submitted and dismissed events" in readme
 
 
 def test_release_docs_define_release_readiness_artifact_shape() -> None:
