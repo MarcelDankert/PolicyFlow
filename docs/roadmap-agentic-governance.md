@@ -164,6 +164,10 @@ Possible issues:
 
 Goal: connect metrics and evidence more strongly.
 
+Reference docs:
+
+- `docs/metric-governance.md`
+
 Possible issues:
 
 - Define metrics schema
@@ -202,6 +206,12 @@ Querypilot should be the first reference project for Loop Governance and
 Evaluation Governance. Its domain has clear agentic risk boundaries because
 natural-language requests can produce SQL, SQL must remain safe, and generated
 outputs can be evaluated with concrete checks.
+
+Metric governance for Querypilot should keep metric declaration, metric source,
+metric evidence, and PolicyFlow validation separate. PolicyFlow can validate
+that Querypilot metrics are declared and backed by evidence references; the
+Querypilot Consumer-Repo remains responsible for producing SQL guardrail,
+execution, coverage, latency, review, and security evidence.
 
 Candidate Querypilot evaluation metrics:
 
