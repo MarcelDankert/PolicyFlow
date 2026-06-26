@@ -204,6 +204,34 @@ def test_evaluation_metric_schema_supports_domain_specific_category() -> None:
     assert parsed_metric.source == "querypilot-sql-guardrail"
 
 
+def test_required_evaluation_metric_rejects_missing_workflow_evidence_ref() -> None:
+    payload = evaluation_fixture_payload()
+    metric = payload["evaluation"]["categories"][0]["required_metrics"][0]
+    metric["status"] = "passed"
+    metric["actual_value"] = "passed"
+    metric["evidence_refs"] = ["evidence.review"]
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "evaluation metric 'tests.tests-passed' references missing workflow "
+        "evidence 'evidence.review'."
+        in exc_info.value.errors
+    )
+
+
+def test_pending_required_evaluation_metric_allows_future_workflow_evidence_ref() -> None:
+    payload = evaluation_fixture_payload()
+    metric = payload["evaluation"]["categories"][0]["required_metrics"][0]
+    metric["evidence_refs"] = ["evidence.review"]
+
+    result = validate_workflow_data(payload)
+
+    assert result.evaluation is not None
+    assert result.evaluation.categories[0].required_metrics[0].status == "pending"
+
+
 def test_evaluation_model_requires_categories() -> None:
     with pytest.raises(WorkflowValidationError) as exc_info:
         validate_workflow_file(fixture_path("evaluation-empty-categories.yml"))
@@ -305,6 +333,11 @@ def test_evaluation_passed_rejects_failed_blocking_metric() -> None:
 
 def test_evaluation_failure_can_be_declared_without_executing_checks() -> None:
     payload = evaluation_fixture_payload()
+    payload["evidence"]["qa"] = {
+        "outcome": "passed",
+        "evidence_summary": "Test evidence is declared externally.",
+        "unresolved_risks": [],
+    }
     payload["evaluation"]["compliance_status"] = "failed"
     payload["evaluation"]["categories"][0]["required_metrics"][0]["status"] = "passed"
     payload["evaluation"]["categories"][0]["required_metrics"][0][

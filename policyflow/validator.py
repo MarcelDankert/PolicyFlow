@@ -174,7 +174,9 @@ def _collect_validation_findings(data: dict[str, Any]) -> tuple[list[str], list[
         errors.append("HIGH risk workflows must include non-empty approval evidence.")
 
     _append_high_risk_approval_evidence_errors(errors, risk_level, governance, evidence)
-    _append_evaluation_errors(errors, risk_level, data.get("evaluation"))
+    _append_evaluation_errors(
+        errors, risk_level, data.get("evaluation"), data.get("evidence")
+    )
     _append_loop_governance_errors(errors, data.get("loop_governance"))
 
     protected_areas = _normalize_protected_areas(
@@ -271,7 +273,7 @@ def _append_high_risk_approval_evidence_errors(
 
 
 def _append_evaluation_errors(
-    errors: list[str], risk_level: Any, evaluation: Any
+    errors: list[str], risk_level: Any, evaluation: Any, evidence: Any
 ) -> None:
     if evaluation is None:
         return
@@ -335,6 +337,7 @@ def _append_evaluation_errors(
                 f"{risk_level} risk evaluation category '{category_id}' must include "
                 "at least one required metric."
             )
+        _append_evaluation_evidence_ref_errors(errors, category_id, metrics, evidence)
         _append_evaluation_threshold_errors(errors, category_id, metrics)
 
     if evaluation.get("compliance_status") != "passed":
@@ -370,6 +373,38 @@ def _append_evaluation_errors(
                 errors.append(
                     "evaluation.compliance_status passed cannot include blocking metric "
                     f"'{metric_ref}' with status {metric_status}."
+                )
+
+
+def _append_evaluation_evidence_ref_errors(
+    errors: list[str], category_id: str, metrics: list[Any], evidence: Any
+) -> None:
+    declared_evidence = evidence if isinstance(evidence, dict) else {}
+
+    for metric in metrics:
+        if not isinstance(metric, dict) or not isinstance(metric.get("id"), str):
+            continue
+        if metric.get("required") is not True:
+            continue
+        if metric.get("status") == "pending":
+            continue
+
+        metric_ref = f"{category_id}.{metric['id']}"
+        evidence_refs = metric.get("evidence_refs")
+        if not isinstance(evidence_refs, list):
+            continue
+
+        for evidence_ref in evidence_refs:
+            if not isinstance(evidence_ref, str) or not evidence_ref.startswith(
+                "evidence."
+            ):
+                continue
+
+            evidence_key = evidence_ref.removeprefix("evidence.")
+            if declared_evidence.get(evidence_key) is None:
+                errors.append(
+                    f"evaluation metric '{metric_ref}' references missing workflow "
+                    f"evidence '{evidence_ref}'."
                 )
 
 
