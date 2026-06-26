@@ -70,7 +70,9 @@ def validate_github_approvals(
 ) -> WorkflowDocument:
     """Validate GitHub review metadata against workflow approval requirements."""
 
-    return validate_github_pr_approvals(workflow_path, pr_body_path, reviews_path)
+    return validate_github_pr_approvals(
+        workflow_path, pr_body_path, reviews_path
+    ).workflow
 
 
 def get_workflow_status(path: str | Path) -> dict[str, Any]:

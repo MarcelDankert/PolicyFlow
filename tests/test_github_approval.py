@@ -5,7 +5,10 @@ from typer.testing import CliRunner
 
 from policyflow.cli import app
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.github_approval import validate_github_pr_approvals
+from policyflow.github_approval import (
+    ApprovalValidationResult,
+    validate_github_pr_approvals,
+)
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -38,6 +41,21 @@ def test_github_pr_approvals_fail_when_human_approval_login_lacks_approved_revie
         "GitHub PR approvals must include an APPROVED review from login: arch-board"
         in exc_info.value.errors
     )
+
+
+def test_github_pr_approvals_can_report_pending_without_failing() -> None:
+    result = validate_github_pr_approvals(
+        fixture_path("valid-high.yml"),
+        fixture_path("valid-high-pr-body.md"),
+        fixture_path("github-reviews-missing-human-approval.json"),
+        allow_pending=True,
+    )
+
+    assert isinstance(result, ApprovalValidationResult)
+    assert result.workflow.context.risk_level == "HIGH"
+    assert result.status == "pending"
+    assert result.pending_logins == ["arch-board"]
+    assert result.errors == []
 
 
 def test_github_pr_approvals_fail_when_override_approver_lacks_approved_review() -> None:
@@ -81,3 +99,20 @@ def test_validate_github_approvals_command_succeeds() -> None:
 
     assert result.exit_code == 0
     assert "[SUCCESS] GitHub approval validation passed." in result.stdout
+
+
+def test_validate_github_approvals_command_allows_pending_when_requested() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "validate-github-approvals",
+            str(fixture_path("valid-high.yml")),
+            str(fixture_path("valid-high-pr-body.md")),
+            str(fixture_path("github-reviews-missing-human-approval.json")),
+            "--allow-pending",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "[PENDING] GitHub approval pending." in result.stdout
+    assert "arch-board" in result.stdout

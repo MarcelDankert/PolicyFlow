@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -8,17 +9,37 @@ from policyflow.exceptions import WorkflowValidationError
 from policyflow.validator import HIGH_RISK_APPROVAL_EVIDENCE_ERROR, validate_pull_request
 
 
+@dataclass(frozen=True)
+class ApprovalValidationResult:
+    workflow: Any
+    status: str
+    pending_logins: list[str]
+    errors: list[str]
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.workflow, name)
+
+
 def validate_github_pr_approvals(
-    workflow_path: str | Path, pr_body_path: str | Path, reviews_path: str | Path
-):
+    workflow_path: str | Path,
+    pr_body_path: str | Path,
+    reviews_path: str | Path,
+    *,
+    allow_pending: bool = False,
+) -> ApprovalValidationResult:
     workflow = validate_pull_request(workflow_path, pr_body_path)
     reviews = _load_reviews_json(Path(reviews_path))
     approved_logins = _approved_review_logins(reviews)
     required_logins = _required_approval_logins(workflow)
 
     errors: list[str] = []
+    pending_logins: list[str] = []
     for login in required_logins:
         if login not in approved_logins:
+            pending_logins.append(login)
+
+    if pending_logins and not allow_pending:
+        for login in pending_logins:
             errors.append(
                 f"GitHub PR approvals must include an APPROVED review from login: {login}"
             )
@@ -26,7 +47,12 @@ def validate_github_pr_approvals(
     if errors:
         raise WorkflowValidationError(errors)
 
-    return workflow
+    return ApprovalValidationResult(
+        workflow=workflow,
+        status="pending" if pending_logins else "approved",
+        pending_logins=sorted(pending_logins),
+        errors=[],
+    )
 
 
 def _load_reviews_json(path: Path) -> list[dict[str, Any]]:

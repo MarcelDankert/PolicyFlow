@@ -1,0 +1,212 @@
+workflow:
+  id: pending-approval-governance
+  name: Pending Approval Governance
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Separate pending human approval from PolicyFlow check failure.
+
+context:
+  workflow_file: workflows/features/pending-approval-governance.yml
+  issue_key: "#134"
+  goal: Separate pending human approval from PolicyFlow governance check failure so HIGH-risk PRs can wait for GitHub approval without stale failed required checks.
+  scope:
+    - non-strict pending approval mode for generated GitHub governance workflow
+    - strict validation behavior preserved for local and explicit CI use
+    - CLI output and tests for pending approval
+    - generated and packaged GitHub workflow updates
+    - documentation for approval lifecycle split
+  non_goals:
+    - no merge bot behavior
+    - no bypass of GitHub required review rules
+    - no automatic pull request approval
+    - no hosted runtime, provider credentials, scheduler, message bus, or memory behavior
+  affected_modules:
+    - policyflow/github_approval.py
+    - policyflow/cli.py
+    - policyflow/api.py
+    - github/workflows/policyflow-governance.yml
+    - policyflow/assets/github/workflows/policyflow-governance.yml
+    - .github/workflows/policyflow-governance.yml
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - tests/test_github_approval.py
+    - tests/test_consumer_github_workflow.py
+    - workflows/features/pending-approval-governance.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #134 changes approval gating semantics in generated GitHub governance workflows and therefore follows the HIGH-risk path.
+    implementation: The strict validator can remain unchanged while generated workflows opt into pending-approval success semantics.
+    tests: Targeted approval and workflow-template tests can prove strict behavior, pending behavior, docs, and packaged asset parity.
+    residual_uncertainty: Consumer repos must still configure GitHub required approving reviews to block merge while approval is pending.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - GitHub governance workflow
+    - approval semantics
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #134 scope, non-goals, HIGH risk, and approval lifecycle boundary were fixed before implementation.
+    scope_locked:
+      - pending approval mode for generated governance workflow
+      - strict approval validation preserved
+      - docs and tests
+      - packaged asset parity
+    non_goals_locked:
+      - no merge bot behavior
+      - no bypass of GitHub review rules
+      - no automatic approval
+      - no runtime or provider ownership
+    risk_rationale: HIGH risk because approval semantics and generated GitHub governance workflows affect protected merge behavior.
+  architecture-check:
+    decision: Keep `validate-github-approvals` strict by default and let generated GitHub workflows opt into pending-approval success.
+    constraints:
+      - GitHub required approving reviews remain the merge-blocking mechanism
+      - malformed approval evidence still fails
+      - mismatched PR approval claims still fail
+      - no workflow should approve or merge PRs
+    approval_path: architecture-agent review plus human approval
+  approval:
+    approved_by: MarcelDankert
+    reference: PR approval required before merge
+    scope_confirmed: true
+  implementation:
+    summary: Added pending approval mode while preserving strict approval validation and public API strict return behavior by default.
+    changed_files:
+      - policyflow/github_approval.py
+      - policyflow/cli.py
+      - policyflow/api.py
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - .github/workflows/policyflow-governance.yml
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_github_approval.py
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/pending-approval-governance.yml
+    test_summary: Targeted GitHub approval, public API, workflow asset, and docs tests passed, and the active workflow validates.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - Generated workflows require GitHub required approving review rules to block merge while approval is pending.
+      - This change does not approve, merge, or rerun PRs.
+      - GitHub PR approval by MarcelDankert is required before this HIGH-risk PR can be merge-ready.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Separate pending human approval from generated PolicyFlow check failure.
+    acceptance_criteria:
+      - HIGH-risk PRs without matching GitHub approval report approval pending without failing generated governance workflow
+      - GitHub required review rules remain merge-blocking for missing human approval
+      - strict validation remains available
+      - generated workflow uses pending-approval mode
+      - docs explain the lifecycle split
+    approved_scope:
+      - GitHub approval validator
+      - CLI mode
+      - generated workflow assets
+      - docs
+      - tests
+    non_goals:
+      - no merge bot behavior
+      - no GitHub review bypass
+      - no automatic approval
+      - no provider/runtime behavior
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - GitHub governance workflow
+      - approval semantics
+    confidence_summary: Strict behavior can remain the default while generated PR workflows opt into a pending approval mode.
+    escalation_flags:
+      - human approval required
+      - approval semantics changed
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Pending approval should be modeled as lifecycle state, not as invalid governance metadata, when the generated GitHub workflow is used with required review rules.
+    approved_scope:
+      - non-strict CLI flag
+      - generated workflow opt-in
+      - docs and tests
+    module_boundaries:
+      - policyflow/github_approval.py owns approval validation outcomes
+      - policyflow/cli.py exposes strict and pending modes
+      - GitHub workflow assets choose the generated Consumer-Repo default
+      - GitHub branch protection owns merge blocking for missing reviews
+    contract_impact: Generated workflows no longer fail only because approval is pending, but explicit strict validation still fails on missing approvals.
+    risk_review_decision: HIGH risk path accepted because approval workflow behavior changes.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - preserve strict validation by default
+      - do not hide invalid approval evidence
+      - keep generated workflow provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added `--allow-pending` approval validation mode, preserved strict public API behavior, updated generated governance workflows to use pending mode, and documented the split between PolicyFlow governance validity and GitHub review lifecycle.
+    changed_files:
+      - policyflow/github_approval.py
+      - policyflow/cli.py
+      - policyflow/api.py
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - .github/workflows/policyflow-governance.yml
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_github_approval.py
+      - tests/test_consumer_github_workflow.py
+      - tests/test_repository_docs.py
+      - workflows/features/pending-approval-governance.yml
+    test_summary: Tests cover strict failure, pending success, CLI output, public API compatibility, generated workflow opt-in, repository workflow opt-in, docs guidance, and packaged asset parity.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - Missing approval is pending only when `--allow-pending` is explicitly requested.
+      - Strict validation remains the default for local and explicit CI consumers.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
