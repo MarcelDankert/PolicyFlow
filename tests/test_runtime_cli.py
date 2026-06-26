@@ -664,6 +664,151 @@ def test_evaluation_report_identifies_non_compliant_directory(
     assert "failing_gates=1" in text_result.stdout
 
 
+def test_loop_report_json_summarizes_review_and_qa_loops(tmp_path: Path) -> None:
+    loop_path = tmp_path / "loop-governance-workflow.yml"
+    loop_path.write_text(
+        Path("workflows/examples/loop-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["loop-report", str(tmp_path), "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["summary"] == {
+        "total_workflows": 1,
+        "loops_declared": 1,
+        "missing_loop_governance": 0,
+        "passed": 1,
+        "failed": 0,
+        "total_loops": 5,
+        "exceeded_iterations": 0,
+        "missing_stop_evidence": 0,
+        "missing_escalation_evidence": 0,
+        "unresolved_blocked_loops": 1,
+    }
+    assert payload["workflows"] == [
+        {
+            "path": str(loop_path),
+            "workflow_id": "loop-governance-workflow",
+            "valid": True,
+            "declared": True,
+            "compliance_status": "passed",
+            "missing_loop_governance": False,
+            "total_loops": 5,
+            "status_counts": {
+                "active": 2,
+                "completed": 1,
+                "escalated": 1,
+                "terminated": 1,
+            },
+            "exceeded_iterations": [],
+            "missing_stop_evidence": [],
+            "missing_escalation_evidence": [],
+            "unresolved_blocked_loops": ["security-review"],
+            "errors": [],
+        }
+    ]
+
+
+def test_loop_report_identifies_non_compliant_directory(tmp_path: Path) -> None:
+    plain_path = tmp_path / "runtime-startable-medium.yml"
+    plain_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    exceeded_path = tmp_path / "loop-governance-iteration-exceeded.yml"
+    exceeded_path.write_text(
+        fixture_path("loop-governance-iteration-exceeded.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    missing_stop = load_yaml(Path("workflows/examples/loop-governance-workflow.yml"))
+    missing_stop["workflow"]["id"] = "loop-missing-stop-evidence"
+    missing_stop["context"]["workflow_file"] = str(tmp_path / "loop-missing-stop-evidence.yml")
+    missing_stop["loop_governance"]["loops"][1]["evidence_refs"] = [
+        "evidence.qa",
+        "artifact://regression-report",
+    ]
+    missing_stop_path = tmp_path / "loop-missing-stop-evidence.yml"
+    missing_stop_path.write_text(yaml.safe_dump(missing_stop, sort_keys=False), encoding="utf-8")
+
+    missing_escalation = load_yaml(Path("workflows/examples/loop-governance-workflow.yml"))
+    missing_escalation["workflow"]["id"] = "loop-missing-escalation-evidence"
+    missing_escalation["context"]["workflow_file"] = str(
+        tmp_path / "loop-missing-escalation-evidence.yml"
+    )
+    missing_escalation["loop_governance"]["loops"][2]["evidence_refs"] = [
+        "evidence.review",
+        "artifact://security-report",
+    ]
+    missing_escalation_path = tmp_path / "loop-missing-escalation-evidence.yml"
+    missing_escalation_path.write_text(
+        yaml.safe_dump(missing_escalation, sort_keys=False), encoding="utf-8"
+    )
+
+    json_result = runner.invoke(app, ["loop-report", str(tmp_path), "--json"])
+    text_result = runner.invoke(app, ["loop-report", str(tmp_path)])
+
+    assert json_result.exit_code == 0
+    payload = json.loads(json_result.stdout)
+    assert payload["summary"] == {
+        "total_workflows": 4,
+        "loops_declared": 3,
+        "missing_loop_governance": 1,
+        "passed": 0,
+        "failed": 3,
+        "total_loops": 11,
+        "exceeded_iterations": 1,
+        "missing_stop_evidence": 1,
+        "missing_escalation_evidence": 1,
+        "unresolved_blocked_loops": 2,
+    }
+
+    plain_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("runtime-startable-medium.yml")
+    )
+    exceeded_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("loop-governance-iteration-exceeded.yml")
+    )
+    missing_stop_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("loop-missing-stop-evidence.yml")
+    )
+    missing_escalation_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("loop-missing-escalation-evidence.yml")
+    )
+
+    assert plain_entry["missing_loop_governance"] is True
+    assert plain_entry["compliance_status"] == "missing"
+    assert exceeded_entry["exceeded_iterations"] == [
+        "loop_governance loop 'review-feedback' compliance failure: current_iteration 4 exceeds max_iterations 3."
+    ]
+    assert missing_stop_entry["missing_stop_evidence"] == [
+        "loop_governance loop 'qa-regression' compliance failure: completed or terminated loops must reference at least one declared stop condition in evidence_refs."
+    ]
+    assert missing_escalation_entry["missing_escalation_evidence"] == [
+        "loop_governance loop 'security-review' compliance failure: escalated loops must reference at least one declared escalation condition in evidence_refs."
+    ]
+
+    assert text_result.exit_code == 0
+    assert "missing_loop_governance=yes" in text_result.stdout
+    assert "exceeded_iterations=1" in text_result.stdout
+    assert "missing_stop_evidence=1" in text_result.stdout
+    assert "missing_escalation_evidence=1" in text_result.stdout
+
+
 def test_run_phase_executes_runner_and_records_handoff(tmp_path: Path) -> None:
     workflow_path = tmp_path / "runtime-startable-medium.yml"
     workflow_path.write_text(
