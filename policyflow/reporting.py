@@ -61,6 +61,8 @@ def workflow_status(path: Path) -> dict[str, Any]:
         "errors": [],
         "valid": True,
         "merge_ready": merge_ready,
+        "loop_governance": _loop_governance_summary(raw, []),
+        "evaluation": _evaluation_summary(raw, []),
     }
 
 
@@ -71,6 +73,7 @@ def audit_directory(directory: Path) -> dict[str, Any]:
         try:
             workflows.append(workflow_status(path))
         except WorkflowValidationError as exc:
+            raw = _load_invalid_workflow_raw(path)
             workflows.append(
                 {
                     "path": str(path),
@@ -88,6 +91,8 @@ def audit_directory(directory: Path) -> dict[str, Any]:
                     "errors": exc.errors,
                     "valid": False,
                     "merge_ready": False,
+                    "loop_governance": _loop_governance_summary(raw, exc.errors),
+                    "evaluation": _evaluation_summary(raw, exc.errors),
                 }
             )
 
@@ -126,7 +131,10 @@ def audit_lines(audit: dict[str, Any]) -> list[str]:
     for workflow in audit["workflows"]:
         if not workflow["valid"]:
             lines.append(
-                f"{Path(workflow['path']).name} | invalid | errors={'; '.join(workflow['errors'])}"
+                f"{Path(workflow['path']).name} | invalid | "
+                f"loop={workflow['loop_governance']['compliance_status']} | "
+                f"evaluation={workflow['evaluation']['compliance_status']} | "
+                f"errors={'; '.join(workflow['errors'])}"
             )
             continue
 
@@ -134,6 +142,8 @@ def audit_lines(audit: dict[str, Any]) -> list[str]:
             f"{workflow['workflow_id']} | risk={workflow['risk_level']} | "
             f"phase={workflow['current_phase'] or 'none'} | runtime={workflow['runtime_status']} | "
             f"handoffs={workflow['open_handoffs']} | blockers={len(workflow['blockers'])} | "
+            f"loop={workflow['loop_governance']['compliance_status']} | "
+            f"evaluation={workflow['evaluation']['compliance_status']} | "
             f"merge_ready={'yes' if workflow['merge_ready'] else 'no'}"
         )
 
@@ -147,6 +157,121 @@ def _phase_states(raw: dict[str, Any]) -> dict[str, str]:
         for phase in phases
         if isinstance(phase, dict)
     }
+
+
+def _load_invalid_workflow_raw(path: Path) -> dict[str, Any]:
+    try:
+        raw = load_workflow_raw(path)
+    except Exception:
+        return {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def _loop_governance_summary(
+    raw: dict[str, Any], validation_errors: list[str]
+) -> dict[str, Any]:
+    loops = _raw_loops(raw)
+    errors = [
+        error for error in validation_errors if error.startswith("loop_governance")
+    ]
+
+    if not loops:
+        return {
+            "declared": False,
+            "compliance_status": "not_declared",
+            "total_loops": 0,
+            "status_counts": {},
+            "errors": errors,
+        }
+
+    status_counts: dict[str, int] = {}
+    for loop in loops:
+        status = str(loop.get("status", "unknown"))
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    return {
+        "declared": True,
+        "compliance_status": "failed" if errors else "passed",
+        "total_loops": len(loops),
+        "status_counts": status_counts,
+        "errors": errors,
+    }
+
+
+def _evaluation_summary(
+    raw: dict[str, Any], validation_errors: list[str]
+) -> dict[str, Any]:
+    evaluation = raw.get("evaluation")
+    errors = [
+        error
+        for error in validation_errors
+        if error.startswith("evaluation") or error.startswith("HIGH evaluation")
+    ]
+
+    if not isinstance(evaluation, dict):
+        return {
+            "declared": False,
+            "compliance_status": "not_declared",
+            "categories": 0,
+            "required_metrics": 0,
+            "blocking_metrics": 0,
+            "failed_metrics": 0,
+            "blocking_failed_metrics": 0,
+            "errors": errors,
+        }
+
+    categories = [
+        category
+        for category in evaluation.get("categories", [])
+        if isinstance(category, dict)
+    ]
+    metrics = [
+        metric
+        for category in categories
+        for metric in category.get("required_metrics", [])
+        if isinstance(metric, dict)
+    ]
+    failed_metrics = [
+        metric
+        for metric in metrics
+        if metric.get("status") in {"failed", "blocked"} or _metric_has_error(metric, errors)
+    ]
+    blocking_failed_metrics = [
+        metric for metric in failed_metrics if metric.get("blocks_merge") is True
+    ]
+
+    compliance_status = str(evaluation.get("compliance_status", "unknown"))
+    if errors:
+        compliance_status = "failed"
+
+    return {
+        "declared": True,
+        "compliance_status": compliance_status,
+        "categories": len(categories),
+        "required_metrics": sum(1 for metric in metrics if metric.get("required") is True),
+        "blocking_metrics": sum(1 for metric in metrics if metric.get("blocks_merge") is True),
+        "failed_metrics": len(failed_metrics),
+        "blocking_failed_metrics": len(blocking_failed_metrics),
+        "errors": errors,
+    }
+
+
+def _raw_loops(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    loop_governance = raw.get("loop_governance")
+    if not isinstance(loop_governance, dict):
+        return []
+    return [
+        loop
+        for loop in loop_governance.get("loops", [])
+        if isinstance(loop, dict)
+    ]
+
+
+def _metric_has_error(metric: dict[str, Any], errors: list[str]) -> bool:
+    metric_id = metric.get("id")
+    if not isinstance(metric_id, str):
+        return False
+    return any(f".{metric_id}'" in error or f".{metric_id} " in error for error in errors)
 
 
 def _override_statuses(raw: dict[str, Any]) -> dict[str, int]:
