@@ -115,6 +115,16 @@ evidence_refs:
   - evidence.review
 ```
 
+Consumer-Repos own the evidence lifecycle. PolicyFlow validates declarations and
+references, but it does not create test reports, scanner output, benchmark
+results, review scores, or domain-specific measurement artifacts.
+
+For required metrics with a non-`pending` status, references that use the
+`evidence.*` form must point to an existing workflow evidence block. For
+example, a required metric with `status: passed` and `evidence_refs:
+["evidence.qa"]` requires an `evidence.qa` block in the workflow. Pending
+metrics may reference future workflow evidence while work is still in progress.
+
 Use provider-neutral artifact references for generated outputs:
 
 ```yaml
@@ -127,6 +137,8 @@ evidence_refs:
 
 These references are reviewable pointers. PolicyFlow validates that the
 references are declared; it does not fetch, execute, or recalculate them.
+External artifact identifiers remain provider-neutral and are not fetched or
+authenticated by PolicyFlow.
 
 ## Examples
 

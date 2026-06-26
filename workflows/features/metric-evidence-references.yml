@@ -1,0 +1,168 @@
+workflow:
+  id: metric-evidence-references
+  name: Metric Evidence References
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Link Evaluation Governance metrics to concrete workflow evidence blocks or external artifacts.
+
+context:
+  workflow_file: workflows/features/metric-evidence-references.yml
+  issue_key: "#81"
+  goal: Link metrics to concrete evidence blocks or external artifact identifiers.
+  scope:
+    - validator checks for metric evidence references that point to missing workflow evidence blocks
+    - preserve external artifact evidence references as provider-neutral identifiers
+    - documentation for Consumer-Repo evidence ownership
+    - focused tests and fixtures for valid and invalid metric evidence references
+  non_goals:
+    - no metric calculation or external evaluation execution
+    - no risk-based required metric changes
+    - no examples expansion beyond focused validation fixtures
+    - no provider SDK coupling, hosted scheduler, message bus, memory, or workflow engine behavior
+  affected_modules:
+    - policyflow/validator.py
+    - tests/test_validator.py
+    - docs/evaluation-governance.md
+    - policyflow/assets/docs/evaluation-governance.md
+    - workflows/features/metric-evidence-references.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #81 builds on #80 and is bounded to validating declared metric evidence references.
+    implementation: The validator can check `evidence.*` references against already parsed workflow evidence while leaving external artifact IDs provider-neutral.
+    tests: Focused regression tests will prove missing workflow evidence refs fail and external refs remain accepted.
+    residual_uncertainty: Risk-based required metric categories remain reserved for issue #82.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #81 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - metric evidence reference validation
+      - external artifact reference compatibility
+      - Consumer-Repo evidence ownership docs
+      - focused tests and fixtures
+    non_goals_locked:
+      - no metric execution
+      - no risk-based requirement changes
+      - no provider/runtime ownership
+    risk_rationale: MEDIUM risk because validation semantics affect Consumer-Repo workflow acceptance.
+  architecture-check:
+    decision: Validate only references to PolicyFlow workflow evidence blocks and keep external artifact identifiers declarative.
+    constraints:
+      - do not execute evidence producers
+      - do not require provider-specific URI schemes
+      - do not change risk-based metric category requirements
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added semantic validation for required non-pending metric references to workflow evidence blocks and documented Consumer-Repo evidence ownership.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/metric-evidence-references.yml
+    test_summary: Focused evaluation validator tests, repository docs tests, active workflow validation, and evaluation example workflow validation passed.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - Pending metrics may reference future workflow evidence.
+      - External artifact identifiers remain declarative and are not fetched or authenticated.
+      - Risk-based metric requirement changes remain reserved for issue #82.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Link Evaluation Governance metrics to concrete workflow evidence blocks or external artifact identifiers.
+    acceptance_criteria:
+      - metrics can reference workflow evidence or external evidence identifiers
+      - validator detects missing required metric evidence references
+      - documentation explains expected Consumer-Repo evidence ownership
+    approved_scope:
+      - validator semantics
+      - fixtures and tests
+      - evaluation governance docs
+    non_goals:
+      - no metric calculation
+      - no risk-based required metric changes
+      - no provider/runtime coupling
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Evidence reference validation can be implemented without changing metric execution boundaries.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Metric evidence references are governance links to declared facts, not evidence collection or provider execution.
+    approved_scope:
+      - validate `evidence.*` references against declared workflow evidence blocks
+      - preserve external artifact references
+      - document evidence ownership
+    module_boundaries:
+      - policyflow/validator.py owns semantic validation
+      - docs/evaluation-governance.md owns Consumer-Repo evidence ownership guidance
+    contract_impact: Workflows that reference missing PolicyFlow evidence blocks from required metrics will fail validation.
+    risk_review_decision: MEDIUM risk remains appropriate for stricter validation of declared references.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - do not reject external artifact identifiers
+      - do not execute or fetch evidence
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Required evaluation metrics with non-pending status now fail validation when an `evidence.*` reference points to a missing workflow evidence block.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/metric-evidence-references.yml
+    test_summary: pytest -q tests/test_validator.py tests/test_repository_docs.py passed, and policyflow validation passed for the active workflow and evaluation governance example.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - PolicyFlow does not create, fetch, or recalculate metric evidence.
+      - Risk-based metric requirements are left to issue #82.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
