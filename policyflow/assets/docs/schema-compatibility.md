@@ -164,10 +164,12 @@ Validation behavior:
 - The `evaluation` block is optional for current 0.x compatibility.
 - Metric-level `category` is optional. Existing workflows that only use parent
   `categories[].id` remain valid.
-- When `evaluation` is declared, MEDIUM risk workflows must include a `tests`
-  category and HIGH risk workflows must include `tests` and `security`
+- When `evaluation` is declared, LOW and MEDIUM risk workflows must include a
+  `tests` category. HIGH risk workflows must include `tests` and `security`
   categories. Each required category must contain at least one metric marked
   `required: true`.
+- Metric compliance does not replace approval governance. HIGH-risk workflows
+  still require human approval.
 - Category IDs and metric IDs within a category must be unique.
 - `compliance_status: passed` requires all metrics marked `required: true` to
   have `status: passed` or `status: waived`, and cannot include failed or

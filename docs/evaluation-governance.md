@@ -24,8 +24,12 @@ criteria beyond phase evidence alone:
   requiring PolicyFlow to execute the underlying check
 
 The `evaluation` block is optional for current `0.x` compatibility. When it is
-declared, MEDIUM risk workflows must include a `tests` category. HIGH risk
-workflows must include `tests` and `security` categories.
+declared, LOW and MEDIUM risk workflows must include a `tests` category. HIGH
+risk workflows must include `tests` and `security` categories. Required
+categories must include at least one metric marked `required: true`.
+
+Metric compliance does not replace approval governance. HIGH-risk workflows
+still require human approval even when all declared metrics pass.
 
 ## Non-Scope
 

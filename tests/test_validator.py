@@ -252,6 +252,30 @@ def test_evaluation_metric_requires_evidence_refs() -> None:
     )
 
 
+def test_low_evaluation_requires_tests_category_when_declared() -> None:
+    payload = evaluation_fixture_payload()
+    payload["context"]["risk_level"] = "LOW"
+    payload["governance"]["required_reviews"] = ["review-agent"]
+    payload["execution"]["phases"] = [
+        phase
+        for phase in payload["execution"]["phases"]
+        if phase["phase"] in {"planning", "implementation", "review"}
+    ]
+    payload["evaluation"]["categories"] = [
+        category
+        for category in payload["evaluation"]["categories"]
+        if category["id"] != "tests"
+    ]
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert (
+        "LOW risk evaluation must include required categories: tests"
+        in exc_info.value.errors
+    )
+
+
 def test_medium_evaluation_requires_tests_category() -> None:
     payload = evaluation_fixture_payload()
     payload["evaluation"]["categories"] = [
@@ -299,6 +323,24 @@ def test_high_evaluation_requires_security_category() -> None:
         "HIGH risk evaluation must include required categories: security"
         in exc_info.value.errors
     )
+
+
+def test_high_evaluation_metrics_do_not_replace_human_approval() -> None:
+    payload = evaluation_fixture_payload()
+    payload["context"]["risk_level"] = "HIGH"
+    payload["governance"]["human_approval_required"] = False
+    payload["governance"]["approval_evidence"] = []
+    payload["governance"]["required_reviews"] = [
+        "architecture-agent",
+        "review-agent",
+        "qa-agent",
+    ]
+    payload["execution"]["phases"].append({"phase": "approval", "state": "pending"})
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_data(payload)
+
+    assert "HIGH risk workflows require human approval." in exc_info.value.errors
 
 
 def test_evaluation_passed_requires_required_metrics_to_pass_or_be_waived() -> None:

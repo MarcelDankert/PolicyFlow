@@ -18,6 +18,10 @@ Human approval:
 Confidence threshold:
 - `0.75`
 
+Evaluation Governance, when declared:
+- `tests` category required
+- at least one metric in `tests` must be marked `required: true`
+
 Preferred workflow path:
 - `workflows/templates/low-risk-workflow.template.yml`
 
@@ -34,6 +38,10 @@ Human approval:
 Confidence threshold:
 - `0.85`
 
+Evaluation Governance, when declared:
+- `tests` category required
+- at least one metric in `tests` must be marked `required: true`
+
 ## HIGH
 
 Required reviews:
@@ -49,9 +57,16 @@ Confidence:
 - advisory only
 - confidence cannot bypass approval
 
+Evaluation Governance, when declared:
+- `tests` and `security` categories required
+- at least one metric in each required category must be marked `required: true`
+- metric compliance cannot replace human approval
+
 ## Workflow Rule
 
 Any workflow is invalid if:
 - `required_reviews` is weaker than this matrix
 - `human_approval_required` is weaker than this matrix
 - a LOW-risk fast path is used for MEDIUM or HIGH work
+- declared Evaluation Governance omits required metric categories for the
+  workflow risk level

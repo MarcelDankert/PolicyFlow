@@ -1,0 +1,201 @@
+workflow:
+  id: risk-based-metric-requirements
+  name: Risk Based Metric Requirements
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Validate required Evaluation Governance metric categories by workflow risk level.
+
+context:
+  workflow_file: workflows/features/risk-based-metric-requirements.yml
+  issue_key: "#82"
+  goal: Define and validate which Evaluation Governance metric categories are required by LOW, MEDIUM, and HIGH risk workflows when evaluation governance is declared.
+  scope:
+    - document LOW, MEDIUM, and HIGH metric expectations
+    - enforce required metric categories when the optional evaluation schema is present
+    - preserve HIGH-risk human approval requirements
+    - focused validator tests for LOW, MEDIUM, and HIGH expectations
+  non_goals:
+    - no metric calculation or external evaluation execution
+    - no provider SDK coupling, hosted scheduling, memory, message bus, or workflow engine behavior
+    - no examples expansion beyond focused test payloads
+    - no release or migration automation
+  affected_modules:
+    - rules/risk-review-matrix.md
+    - policyflow/assets/rules/risk-review-matrix.md
+    - docs/evaluation-governance.md
+    - docs/schema-compatibility.md
+    - policyflow/assets/docs/evaluation-governance.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - policyflow/validator.py
+    - tests/test_validator.py
+    - workflows/features/risk-based-metric-requirements.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #82 explicitly changes validation semantics for evaluation declarations and therefore follows the HIGH-risk governance path.
+    implementation: Existing MEDIUM/HIGH category checks already cover part of the target; this work can clarify LOW behavior, docs, and approval preservation without introducing runtime execution.
+    tests: Focused validator tests will cover LOW, MEDIUM, HIGH, and HIGH human approval preservation, followed by full tests and workflow validation.
+    residual_uncertainty: v1.3 examples and broader metric governance docs remain reserved for issues #83 and #84.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - validator semantics
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #82 scope, non-goals, and HIGH risk were fixed before implementation.
+    scope_locked:
+      - risk-based metric category documentation
+      - validator category requirements when evaluation is declared
+      - human approval preservation for HIGH risk
+      - focused tests
+    non_goals_locked:
+      - no metric execution
+      - no provider/runtime ownership
+      - no release automation
+    risk_rationale: HIGH risk because validator semantics affect consumer workflow acceptance.
+  architecture-check:
+    decision: Enforce risk-based metric expectations only when the optional evaluation governance block is declared.
+    constraints:
+      - keep evaluation optional
+      - do not weaken HIGH-risk human approval behavior
+      - do not execute or fetch metric evidence
+      - keep metric requirements provider-neutral
+    approval_path: architecture-agent review
+  approval:
+    approved_by: MarcelDankert
+    reference: PR approval required before merge
+    scope_confirmed: true
+  implementation:
+    summary: Added LOW risk `tests` category enforcement for declared Evaluation Governance, documented LOW/MEDIUM/HIGH metric expectations, and covered HIGH approval preservation.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - rules/risk-review-matrix.md
+      - policyflow/assets/rules/risk-review-matrix.md
+      - docs/evaluation-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/risk-based-metric-requirements.yml
+    test_summary: Focused risk/evaluation tests, validator tests, repository docs tests, active workflow validation, and evaluation governance example validation passed.
+    docs_updates:
+      - rules/risk-review-matrix.md
+      - policyflow/assets/rules/risk-review-matrix.md
+      - docs/evaluation-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - Evaluation Governance remains optional.
+      - PolicyFlow does not execute, fetch, or calculate metric evidence.
+      - v1.3 examples and broader metric governance docs remain reserved for issues #83 and #84.
+      - GitHub PR approval by MarcelDankert is required before this HIGH-risk PR can be merge-ready.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Validate required Evaluation Governance metric categories by risk level.
+    acceptance_criteria:
+      - LOW, MEDIUM, and HIGH expectations are documented
+      - validator enforces required metric categories when enabled by schema
+      - HIGH-risk requirements preserve human approval as mandatory
+    approved_scope:
+      - validator semantics
+      - risk review docs
+      - focused tests
+    non_goals:
+      - no metric calculation
+      - no external evidence execution
+      - no provider/runtime coupling
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - validator semantics
+    confidence_summary: Existing evaluation validation provides a bounded path for risk-level requirements.
+    escalation_flags:
+      - validator semantics changed
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Risk-based metric requirements are governance validation rules, not runtime measurement logic.
+    approved_scope:
+      - LOW/MEDIUM/HIGH category requirement docs
+      - validator checks for declared evaluation blocks
+      - human approval preservation test coverage
+    module_boundaries:
+      - policyflow/validator.py owns semantic validation
+      - rules/risk-review-matrix.md owns risk-level expectations
+      - docs/evaluation-governance.md owns user-facing evaluation guidance
+    contract_impact: Consumer workflows that declare evaluation governance must satisfy the category expectations for their risk level.
+    risk_review_decision: HIGH risk accepted because validator behavior changes but remains opt-in to declared evaluation governance.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - preserve optional evaluation block
+      - preserve HIGH human approval enforcement
+      - do not add provider-specific metric categories
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Declared Evaluation Governance now requires a `tests` category for LOW and MEDIUM risk workflows, and `tests` plus `security` for HIGH risk workflows.
+    changed_files:
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - rules/risk-review-matrix.md
+      - policyflow/assets/rules/risk-review-matrix.md
+      - docs/evaluation-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/risk-based-metric-requirements.yml
+    test_summary: pytest -q tests/test_validator.py tests/test_repository_docs.py passed, and policyflow validation passed for the active workflow and evaluation governance example.
+    docs_updates:
+      - rules/risk-review-matrix.md
+      - policyflow/assets/rules/risk-review-matrix.md
+      - docs/evaluation-governance.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - Evaluation Governance remains opt-in for 0.x compatibility.
+      - Passing metrics do not replace HIGH-risk human approval.
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
