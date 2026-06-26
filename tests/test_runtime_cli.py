@@ -559,6 +559,111 @@ def test_audit_summarizes_invalid_loop_and_evaluation_governance(
     assert "evaluation=failed" in text_result.stdout
 
 
+def test_evaluation_report_json_summarizes_compliant_directory(tmp_path: Path) -> None:
+    evaluation_path = tmp_path / "evaluation-governance-workflow.yml"
+    evaluation_path.write_text(
+        Path("workflows/examples/evaluation-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["evaluation-report", str(tmp_path), "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["summary"] == {
+        "total_workflows": 1,
+        "evaluations_declared": 1,
+        "missing_required_evaluations": 0,
+        "passed": 1,
+        "failed": 0,
+        "failing_gates": 0,
+        "missing_evidence_references": 0,
+    }
+    assert payload["workflows"] == [
+        {
+            "path": str(evaluation_path),
+            "workflow_id": "evaluation-governance-workflow",
+            "valid": True,
+            "declared": True,
+            "compliance_status": "passed",
+            "missing_required_evaluation": False,
+            "failing_gates": [],
+            "missing_evidence_references": [],
+            "errors": [],
+        }
+    ]
+
+
+def test_evaluation_report_identifies_non_compliant_directory(
+    tmp_path: Path,
+) -> None:
+    plain_path = tmp_path / "runtime-startable-medium.yml"
+    plain_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    missing_evidence_path = tmp_path / "evaluation-threshold-mismatch.yml"
+    missing_evidence_path.write_text(
+        fixture_path("evaluation-threshold-mismatch.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    failing_gate_path = tmp_path / "evaluation-metrics-non-compliant.yml"
+    failing_gate_path.write_text(
+        fixture_path("evaluation-metrics-non-compliant.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    json_result = runner.invoke(app, ["evaluation-report", str(tmp_path), "--json"])
+    text_result = runner.invoke(app, ["evaluation-report", str(tmp_path)])
+
+    assert json_result.exit_code == 0
+    payload = json.loads(json_result.stdout)
+    assert payload["summary"] == {
+        "total_workflows": 3,
+        "evaluations_declared": 2,
+        "missing_required_evaluations": 1,
+        "passed": 0,
+        "failed": 2,
+        "failing_gates": 2,
+        "missing_evidence_references": 1,
+    }
+
+    plain_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("runtime-startable-medium.yml")
+    )
+    missing_evidence_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("evaluation-threshold-mismatch.yml")
+    )
+    failing_gate_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("evaluation-metrics-non-compliant.yml")
+    )
+
+    assert plain_entry["missing_required_evaluation"] is True
+    assert plain_entry["compliance_status"] == "missing"
+    assert missing_evidence_entry["missing_evidence_references"] == [
+        "evaluation metric 'tests.tests-passed' references missing workflow evidence 'evidence.qa'."
+    ]
+    assert missing_evidence_entry["failing_gates"] == [
+        "evaluation metric 'coverage.coverage-percent' actual_value 72 does not satisfy threshold greater_than_or_equal 80."
+    ]
+    assert failing_gate_entry["failing_gates"] == [
+        "evaluation metric 'qa.unresolved-risk-count' actual_value 2 does not satisfy threshold equals 0."
+    ]
+
+    assert text_result.exit_code == 0
+    assert "missing_required_evaluation=yes" in text_result.stdout
+    assert "missing_evidence_refs=1" in text_result.stdout
+    assert "failing_gates=1" in text_result.stdout
+
+
 def test_run_phase_executes_runner_and_records_handoff(tmp_path: Path) -> None:
     workflow_path = tmp_path / "runtime-startable-medium.yml"
     workflow_path.write_text(

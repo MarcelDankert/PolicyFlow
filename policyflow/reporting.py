@@ -99,6 +99,37 @@ def audit_directory(directory: Path) -> dict[str, Any]:
     return {"directory": str(directory), "workflows": workflows}
 
 
+def evaluation_report_directory(directory: Path) -> dict[str, Any]:
+    audit = audit_directory(directory)
+    workflows = [
+        _evaluation_report_workflow(workflow)
+        for workflow in audit["workflows"]
+    ]
+    summary = {
+        "total_workflows": len(workflows),
+        "evaluations_declared": sum(1 for workflow in workflows if workflow["declared"]),
+        "missing_required_evaluations": sum(
+            1 for workflow in workflows if workflow["missing_required_evaluation"]
+        ),
+        "passed": sum(
+            1 for workflow in workflows if workflow["compliance_status"] == "passed"
+        ),
+        "failed": sum(
+            1 for workflow in workflows if workflow["compliance_status"] == "failed"
+        ),
+        "failing_gates": sum(len(workflow["failing_gates"]) for workflow in workflows),
+        "missing_evidence_references": sum(
+            len(workflow["missing_evidence_references"]) for workflow in workflows
+        ),
+    }
+
+    return {
+        "directory": str(directory),
+        "summary": summary,
+        "workflows": workflows,
+    }
+
+
 def status_lines(status: dict[str, Any]) -> list[str]:
     lines = [
         f"Workflow ID: {status['workflow_id']}",
@@ -121,6 +152,34 @@ def status_lines(status: dict[str, Any]) -> list[str]:
         lines.append(f"Blockers: {', '.join(status['blockers'])}")
     if status["warnings"]:
         lines.append(f"Warnings: {' | '.join(status['warnings'])}")
+
+    return lines
+
+
+def evaluation_report_lines(report: dict[str, Any]) -> list[str]:
+    summary = report["summary"]
+    lines = [
+        (
+            "Evaluation report | "
+            f"workflows={summary['total_workflows']} | "
+            f"declared={summary['evaluations_declared']} | "
+            f"missing_required={summary['missing_required_evaluations']} | "
+            f"passed={summary['passed']} | failed={summary['failed']} | "
+            f"failing_gates={summary['failing_gates']} | "
+            f"missing_evidence_refs={summary['missing_evidence_references']}"
+        )
+    ]
+
+    for workflow in report["workflows"]:
+        lines.append(
+            f"{Path(workflow['path']).name} | "
+            f"workflow={workflow['workflow_id'] or 'unknown'} | "
+            f"evaluation={workflow['compliance_status']} | "
+            f"declared={'yes' if workflow['declared'] else 'no'} | "
+            f"missing_required_evaluation={'yes' if workflow['missing_required_evaluation'] else 'no'} | "
+            f"failing_gates={len(workflow['failing_gates'])} | "
+            f"missing_evidence_refs={len(workflow['missing_evidence_references'])}"
+        )
 
     return lines
 
@@ -148,6 +207,37 @@ def audit_lines(audit: dict[str, Any]) -> list[str]:
         )
 
     return lines
+
+
+def _evaluation_report_workflow(workflow: dict[str, Any]) -> dict[str, Any]:
+    evaluation = workflow["evaluation"]
+    missing_evidence_references = [
+        error
+        for error in evaluation["errors"]
+        if "references missing workflow evidence" in error
+    ]
+    failing_gates = [
+        error
+        for error in evaluation["errors"]
+        if error not in missing_evidence_references
+    ]
+
+    compliance_status = evaluation["compliance_status"]
+    missing_required_evaluation = not evaluation["declared"]
+    if missing_required_evaluation:
+        compliance_status = "missing"
+
+    return {
+        "path": workflow["path"],
+        "workflow_id": workflow["workflow_id"],
+        "valid": workflow["valid"],
+        "declared": evaluation["declared"],
+        "compliance_status": compliance_status,
+        "missing_required_evaluation": missing_required_evaluation,
+        "failing_gates": failing_gates,
+        "missing_evidence_references": missing_evidence_references,
+        "errors": evaluation["errors"],
+    }
 
 
 def _phase_states(raw: dict[str, Any]) -> dict[str, str]:
