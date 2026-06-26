@@ -218,17 +218,38 @@ def validate_pr(workflow_path: Path, pr_body_path: Path) -> None:
 
 @app.command("validate-github-approvals")
 def validate_github_approvals(
-    workflow_path: Path, pr_body_path: Path, reviews_path: Path
+    workflow_path: Path,
+    pr_body_path: Path,
+    reviews_path: Path,
+    allow_pending: bool = typer.Option(
+        False,
+        "--allow-pending",
+        help=(
+            "Treat missing matching GitHub approvals as a pending lifecycle state "
+            "instead of a failed validation."
+        ),
+    ),
 ) -> None:
     """Validate PR approval logins against GitHub review metadata."""
 
     try:
-        validate_github_pr_approvals(workflow_path, pr_body_path, reviews_path)
+        result = validate_github_pr_approvals(
+            workflow_path,
+            pr_body_path,
+            reviews_path,
+            allow_pending=allow_pending,
+        )
     except WorkflowValidationError as exc:
         console.print("[red][ERROR][/red] GitHub approval validation failed.")
         for error in exc.errors:
             console.print(f"  - {error}")
         raise typer.Exit(code=1) from exc
+
+    if result.status == "pending":
+        console.print("[yellow][PENDING][/yellow] GitHub approval pending.")
+        for login in result.pending_logins:
+            console.print(f"  - awaiting APPROVED review from login: {login}")
+        return
 
     console.print("[green][SUCCESS][/green] GitHub approval validation passed.")
 

@@ -131,6 +131,23 @@ def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
     assert "`pull_request_review` submitted and dismissed events" in readme
 
 
+def test_docs_define_pending_approval_lifecycle_split() -> None:
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    packaged_getting_started = (
+        ROOT / "policyflow/assets/docs/getting-started.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "policyflow validate-github-approvals --allow-pending",
+        "pending approval instead of a failed governance check",
+        "Use GitHub required approving review rules to block merge while approval is pending",
+        "strict local or CI runs can omit `--allow-pending`",
+    ):
+        assert expected in getting_started
+
+    assert packaged_getting_started == getting_started
+
+
 def test_release_docs_define_release_readiness_artifact_shape() -> None:
     release = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
     roadmap = (ROOT / "docs/governance-enforcement-roadmap.md").read_text(

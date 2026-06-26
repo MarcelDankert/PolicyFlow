@@ -142,4 +142,4 @@ jobs:
           fi
 
           policyflow validate-pr "$workflow_path" pr-body.md
-          policyflow validate-github-approvals "$workflow_path" pr-body.md pr-reviews.json
+          policyflow validate-github-approvals "$workflow_path" pr-body.md pr-reviews.json --allow-pending
