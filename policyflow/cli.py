@@ -25,6 +25,8 @@ from policyflow.reporting import (
     audit_lines,
     evaluation_report_directory,
     evaluation_report_lines,
+    loop_report_directory,
+    loop_report_lines,
     status_lines,
     workflow_status,
 )
@@ -278,6 +280,22 @@ def evaluation_report(
         return
 
     for line in evaluation_report_lines(payload):
+        console.print(line, markup=False)
+
+
+@app.command("loop-report")
+def loop_report(
+    directory: Path, json_output: bool = typer.Option(False, "--json")
+) -> None:
+    """Show loop governance compliance across workflow files."""
+
+    payload = loop_report_directory(directory)
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    for line in loop_report_lines(payload):
         console.print(line, markup=False)
 
 

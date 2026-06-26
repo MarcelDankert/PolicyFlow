@@ -130,6 +130,43 @@ def evaluation_report_directory(directory: Path) -> dict[str, Any]:
     }
 
 
+def loop_report_directory(directory: Path) -> dict[str, Any]:
+    audit = audit_directory(directory)
+    workflows = [_loop_report_workflow(workflow) for workflow in audit["workflows"]]
+    summary = {
+        "total_workflows": len(workflows),
+        "loops_declared": sum(1 for workflow in workflows if workflow["declared"]),
+        "missing_loop_governance": sum(
+            1 for workflow in workflows if workflow["missing_loop_governance"]
+        ),
+        "passed": sum(
+            1 for workflow in workflows if workflow["compliance_status"] == "passed"
+        ),
+        "failed": sum(
+            1 for workflow in workflows if workflow["compliance_status"] == "failed"
+        ),
+        "total_loops": sum(workflow["total_loops"] for workflow in workflows),
+        "exceeded_iterations": sum(
+            len(workflow["exceeded_iterations"]) for workflow in workflows
+        ),
+        "missing_stop_evidence": sum(
+            len(workflow["missing_stop_evidence"]) for workflow in workflows
+        ),
+        "missing_escalation_evidence": sum(
+            len(workflow["missing_escalation_evidence"]) for workflow in workflows
+        ),
+        "unresolved_blocked_loops": sum(
+            len(workflow["unresolved_blocked_loops"]) for workflow in workflows
+        ),
+    }
+
+    return {
+        "directory": str(directory),
+        "summary": summary,
+        "workflows": workflows,
+    }
+
+
 def status_lines(status: dict[str, Any]) -> list[str]:
     lines = [
         f"Workflow ID: {status['workflow_id']}",
@@ -152,6 +189,40 @@ def status_lines(status: dict[str, Any]) -> list[str]:
         lines.append(f"Blockers: {', '.join(status['blockers'])}")
     if status["warnings"]:
         lines.append(f"Warnings: {' | '.join(status['warnings'])}")
+
+    return lines
+
+
+def loop_report_lines(report: dict[str, Any]) -> list[str]:
+    summary = report["summary"]
+    lines = [
+        (
+            "Loop report | "
+            f"workflows={summary['total_workflows']} | "
+            f"declared={summary['loops_declared']} | "
+            f"missing_loop_governance={summary['missing_loop_governance']} | "
+            f"passed={summary['passed']} | failed={summary['failed']} | "
+            f"total_loops={summary['total_loops']} | "
+            f"exceeded_iterations={summary['exceeded_iterations']} | "
+            f"missing_stop_evidence={summary['missing_stop_evidence']} | "
+            f"missing_escalation_evidence={summary['missing_escalation_evidence']} | "
+            f"unresolved_blocked_loops={summary['unresolved_blocked_loops']}"
+        )
+    ]
+
+    for workflow in report["workflows"]:
+        lines.append(
+            f"{Path(workflow['path']).name} | "
+            f"workflow={workflow['workflow_id'] or 'unknown'} | "
+            f"loop={workflow['compliance_status']} | "
+            f"declared={'yes' if workflow['declared'] else 'no'} | "
+            f"missing_loop_governance={'yes' if workflow['missing_loop_governance'] else 'no'} | "
+            f"total_loops={workflow['total_loops']} | "
+            f"exceeded_iterations={len(workflow['exceeded_iterations'])} | "
+            f"missing_stop_evidence={len(workflow['missing_stop_evidence'])} | "
+            f"missing_escalation_evidence={len(workflow['missing_escalation_evidence'])} | "
+            f"unresolved_blocked_loops={len(workflow['unresolved_blocked_loops'])}"
+        )
 
     return lines
 
@@ -207,6 +278,51 @@ def audit_lines(audit: dict[str, Any]) -> list[str]:
         )
 
     return lines
+
+
+def _loop_report_workflow(workflow: dict[str, Any]) -> dict[str, Any]:
+    loop_governance = workflow["loop_governance"]
+    loops = _raw_loops(_load_invalid_workflow_raw(Path(workflow["path"])))
+    exceeded_iterations = [
+        error
+        for error in loop_governance["errors"]
+        if "current_iteration" in error and "exceeds max_iterations" in error
+    ]
+    missing_stop_evidence = [
+        error
+        for error in loop_governance["errors"]
+        if "completed or terminated loops must reference" in error
+    ]
+    missing_escalation_evidence = [
+        error
+        for error in loop_governance["errors"]
+        if "escalated loops must reference" in error
+    ]
+
+    compliance_status = loop_governance["compliance_status"]
+    missing_loop_governance = not loop_governance["declared"]
+    if missing_loop_governance:
+        compliance_status = "missing"
+
+    return {
+        "path": workflow["path"],
+        "workflow_id": workflow["workflow_id"],
+        "valid": workflow["valid"],
+        "declared": loop_governance["declared"],
+        "compliance_status": compliance_status,
+        "missing_loop_governance": missing_loop_governance,
+        "total_loops": loop_governance["total_loops"],
+        "status_counts": loop_governance["status_counts"],
+        "exceeded_iterations": exceeded_iterations,
+        "missing_stop_evidence": missing_stop_evidence,
+        "missing_escalation_evidence": missing_escalation_evidence,
+        "unresolved_blocked_loops": [
+            loop["id"]
+            for loop in loops
+            if loop.get("status") == "escalated" and isinstance(loop.get("id"), str)
+        ],
+        "errors": loop_governance["errors"],
+    }
 
 
 def _evaluation_report_workflow(workflow: dict[str, Any]) -> dict[str, Any]:

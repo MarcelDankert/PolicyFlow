@@ -1,0 +1,164 @@
+workflow:
+  id: loop-compliance-report
+  name: Loop Compliance Report
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Report loop governance compliance across workflow files.
+
+context:
+  workflow_file: workflows/features/loop-compliance-report.yml
+  issue_key: "#87"
+  goal: Report loop governance compliance across workflow files.
+  scope:
+    - loop compliance report payload
+    - CLI command with human-readable output
+    - CLI command with JSON output
+    - tests for review-loop and QA-loop examples
+    - tests for exceeded iterations and missing loop evidence
+  non_goals:
+    - no workflow schema changes
+    - no validator semantic changes
+    - no loop execution or scheduling
+    - no message bus, memory, runtime, provider, or orchestration behavior
+  affected_modules:
+    - policyflow/reporting.py
+    - policyflow/cli.py
+    - tests/test_runtime_cli.py
+    - workflows/features/loop-compliance-report.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #87 builds on the merged audit governance summaries and mirrors the evaluation-report pattern.
+    implementation: Changes should derive from existing audit loop summaries and validator errors without changing validation semantics.
+    tests: CLI tests can cover review-loop and QA-loop examples plus non-compliant loop directories in text and JSON modes.
+    residual_uncertainty: Later v1.4 JSON-contract work may stabilize naming and documentation for downstream consumers.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #87 scope, non-goals, MEDIUM risk, and reporting-only boundary were locked before implementation.
+    scope_locked:
+      - loop compliance report
+      - CLI and JSON output
+      - review-loop and QA-loop tests
+      - non-compliant loop directory tests
+    non_goals_locked:
+      - no schema or validator changes
+      - no loop execution
+      - no runtime, scheduler, memory, provider, message-bus, or orchestration ownership
+    risk_rationale: MEDIUM risk because the report is a new consumer-facing CLI and JSON surface.
+  architecture-check:
+    decision: Build the loop report as a read-only projection over existing audit loop summaries and validation errors.
+    constraints:
+      - do not duplicate validator semantics
+      - do not execute loops or schedule agents
+      - keep missing loop governance reportable without making it a validation error
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added a read-only loop compliance report with CLI text and JSON output.
+    changed_files:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/loop-compliance-report.yml
+    test_summary: Targeted loop-report tests, full runtime CLI tests, and workflow validation passed.
+    docs_updates:
+      - none
+    known_limitations:
+      - later v1.4 issues may stabilize and document the full audit JSON contract.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a loop compliance report across workflow files.
+    acceptance_criteria:
+      - report identifies exceeded iterations, missing stop evidence, missing escalation evidence, and unresolved blocked loops
+      - report is available through CLI and JSON output
+      - tests cover review-loop and QA-loop examples
+    approved_scope:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/loop-compliance-report.yml
+    non_goals:
+      - no schema changes
+      - no validator semantic changes
+      - no loop execution or scheduling
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Existing audit summaries provide the raw loop compliance signals for a focused report.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The report should remain a read-only projection and not become a loop runner or scheduler.
+    approved_scope:
+      - reporting payload
+      - CLI text and JSON output
+      - tests
+    module_boundaries:
+      - policyflow/reporting.py owns report shaping
+      - policyflow/cli.py exposes the command
+      - validator semantics remain unchanged
+    contract_impact: Adds a consumer-facing CLI and JSON report without changing existing audit keys.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - read-only reporting only
+      - preserve existing audit behavior
+      - no provider-specific execution
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added `policyflow loop-report` and JSON payload generation from existing audit loop summaries.
+    changed_files:
+      - policyflow/reporting.py
+      - policyflow/cli.py
+      - tests/test_runtime_cli.py
+      - workflows/features/loop-compliance-report.yml
+    test_summary: CLI tests cover review-loop and QA-loop examples plus exceeded iterations, missing stop evidence, missing escalation evidence, and unresolved escalated loops.
+    docs_updates:
+      - none
+    known_limitations:
+      - report does not execute loops, schedule agents, or fetch external evidence artifacts
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
