@@ -94,6 +94,11 @@ policyflow status ai/workflows/features/first-feature.yml
 policyflow audit ai/workflows
 ```
 
+Audit and reporting usage is documented in
+[audit-reporting.md](audit-reporting.md). The repository source path is
+`docs/audit-reporting.md`. It covers local and CI usage for workflow audit,
+evaluation reports, loop reports, and the read-only reporting boundary.
+
 Other first workflow shapes:
 
 ```bash

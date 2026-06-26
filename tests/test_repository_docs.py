@@ -231,6 +231,47 @@ def test_audit_json_docs_define_machine_readable_contract() -> None:
     assert packaged_schema == schema
 
 
+def test_audit_reporting_docs_define_usage_and_runtime_boundary() -> None:
+    audit_doc = (ROOT / "docs/audit-reporting.md").read_text(encoding="utf-8")
+    packaged_doc = (
+        ROOT / "policyflow/assets/docs/audit-reporting.md"
+    ).read_text(encoding="utf-8")
+    getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    for expected in (
+        "# Audit Reporting",
+        "## Local Usage",
+        "## CI Usage",
+        "## Governance Examples",
+        "## Runtime Boundary",
+        "policyflow audit ai/workflows",
+        "policyflow audit ai/workflows --json",
+        "policyflow evaluation-report ai/workflows",
+        "policyflow evaluation-report ai/workflows --json",
+        "policyflow loop-report ai/workflows",
+        "policyflow loop-report ai/workflows --json",
+        "policyflow.audit.v1",
+        "workflow_governance",
+        "loop_governance",
+        "evaluation_governance",
+        "human_governance",
+        "Audit reporting is read-only",
+        "PolicyFlow does not execute workflows",
+        "does not run loops",
+        "does not calculate metrics",
+        "does not approve pull requests",
+        "docs/evaluation-governance.md",
+        "docs/loop-governance.md",
+        "docs/metric-governance.md",
+    ):
+        assert expected in audit_doc
+
+    assert packaged_doc == audit_doc
+    assert "docs/audit-reporting.md" in getting_started
+    assert "docs/audit-reporting.md" in readme
+
+
 def test_evaluation_governance_docs_define_consumer_usage() -> None:
     evaluation_doc = (ROOT / "docs/evaluation-governance.md").read_text(
         encoding="utf-8"
@@ -400,6 +441,7 @@ def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
 
 def test_packaged_getting_started_matches_source_doc() -> None:
     for relative_path in (
+        "audit-reporting.md",
         "evaluation-governance.md",
         "getting-started.md",
         "metric-governance.md",

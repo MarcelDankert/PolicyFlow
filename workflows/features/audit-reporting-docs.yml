@@ -1,0 +1,150 @@
+workflow:
+  id: audit-reporting-docs
+  name: Audit Reporting Docs
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/low-risk-workflow.template.yml
+  description: Document audit and reporting usage for Agentic Governance.
+
+context:
+  workflow_file: workflows/features/audit-reporting-docs.yml
+  issue_key: "#89"
+  goal: Document audit and reporting usage for Agentic Governance.
+  scope:
+    - audit reporting documentation
+    - local and CI usage guidance
+    - workflow, loop, evaluation, and human governance examples
+    - README and getting-started links
+    - packaged docs asset updates
+  non_goals:
+    - no CLI behavior changes
+    - no reporting JSON contract changes
+    - no validator semantic changes
+    - no runtime execution, scheduler, message bus, memory, provider credential, or provider SDK behavior
+  affected_modules:
+    - docs/audit-reporting.md
+    - docs/getting-started.md
+    - README.md
+    - policyflow/assets/docs/audit-reporting.md
+    - policyflow/assets/docs/getting-started.md
+    - tests/test_repository_docs.py
+    - workflows/features/audit-reporting-docs.yml
+  risk_level: LOW
+  confidence:
+    planning: Issue #89 is bounded to documentation for already implemented audit and reporting surfaces.
+    implementation: Existing public API and schema docs define the underlying reporting contracts.
+    tests: Repository docs tests can prove coverage, links, and packaged asset parity.
+    residual_uncertainty: Future v2 platform docs may reorganize reporting guidance without changing this issue scope.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+
+evidence:
+  planning:
+    summary: Issue #89 scope, non-goals, LOW risk, and reporting-only boundary were locked before implementation.
+    scope_locked:
+      - docs/audit-reporting.md
+      - README and getting-started links
+      - packaged docs parity
+      - local and CI usage guidance
+    non_goals_locked:
+      - no CLI behavior changes
+      - no reporting JSON contract changes
+      - no runtime, scheduler, memory, provider, or SDK ownership
+    risk_rationale: LOW risk because this change documents existing reporting behavior without altering consumer-facing execution semantics.
+  implementation:
+    summary: Added audit reporting documentation, local and CI usage guidance, runtime boundaries, README and getting-started links, and packaged docs parity.
+    changed_files:
+      - docs/audit-reporting.md
+      - docs/getting-started.md
+      - README.md
+      - policyflow/assets/docs/audit-reporting.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_repository_docs.py
+      - workflows/features/audit-reporting-docs.yml
+    test_summary: Targeted audit reporting docs test and full repository docs test passed.
+    docs_updates:
+      - docs/audit-reporting.md
+      - docs/getting-started.md
+      - README.md
+      - policyflow/assets/docs/audit-reporting.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - reporting guidance documents existing CLI surfaces and does not add new reporting behavior.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document audit and reporting usage for Agentic Governance.
+    acceptance_criteria:
+      - documentation explains local and CI usage
+      - documentation includes workflow, loop, evaluation, and human governance examples
+      - documentation distinguishes audit reporting from runtime execution
+    approved_scope:
+      - docs/audit-reporting.md
+      - docs/getting-started.md
+      - README.md
+      - policyflow/assets/docs/audit-reporting.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_repository_docs.py
+      - workflows/features/audit-reporting-docs.yml
+    non_goals:
+      - no runtime or provider behavior
+      - no CLI changes
+      - no validator changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: Existing reporting contracts provide enough stable source material for focused documentation.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Documented `policyflow audit`, `policyflow evaluation-report`, and `policyflow loop-report` usage for local and CI reporting, including workflow, loop, evaluation, and human governance examples.
+    changed_files:
+      - docs/audit-reporting.md
+      - docs/getting-started.md
+      - README.md
+      - policyflow/assets/docs/audit-reporting.md
+      - policyflow/assets/docs/getting-started.md
+      - tests/test_repository_docs.py
+      - workflows/features/audit-reporting-docs.yml
+    test_summary: Repository docs tests enforce the new guide, required command examples, runtime boundary language, links, and packaged docs parity.
+    docs_updates:
+      - docs/audit-reporting.md
+      - docs/getting-started.md
+      - README.md
+      - policyflow/assets/docs/audit-reporting.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - no CLI, validator, or reporting JSON behavior changed
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
