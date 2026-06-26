@@ -6,6 +6,33 @@ asset compatibility changes.
 
 ## Unreleased
 
+## 0.4.0
+
+Released: 2026-06-26
+
+Metrics, Evidence, Audit, and Reporting release.
+
+- Added Metric Governance documentation for metric declarations, sources,
+  evidence, validation boundaries, Querypilot-inspired examples, and
+  Consumer-Repo ownership of metric collection.
+- Added review and QA metric examples that show how Consumer-Repos can declare
+  review score, test, coverage, security, performance, and domain metrics
+  without making PolicyFlow calculate those metrics.
+- Added audit governance summaries for workflow, loop, evaluation, and human
+  governance across workflow directories.
+- Added read-only evaluation compliance reporting with text and JSON output.
+- Added read-only loop compliance reporting with text and JSON output.
+- Stabilized the machine-readable audit JSON contract as
+  `policyflow.audit.v1` with `workflow_governance`, `loop_governance`,
+  `evaluation_governance`, and `human_governance` summary groups.
+- Documented audit reporting usage for local and CI workflows, including the
+  boundary that PolicyFlow reports declared governance state but does not
+  execute workflows, run loops, calculate metrics, approve pull requests, host
+  runtimes, schedule work, manage memory, or own provider credentials.
+- Updated packaged managed docs and Consumer-Repo governance workflow pins so
+  Consumer-Repos can adopt Metrics, Evidence, Audit, and Reporting through the
+  PyPI package.
+
 ## 0.3.0
 
 Released: 2026-06-25
