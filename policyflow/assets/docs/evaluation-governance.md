@@ -15,7 +15,7 @@ Evaluation Governance is in scope when a workflow needs reviewable quality
 criteria beyond phase evidence alone:
 
 - declare evaluation categories such as `tests`, `coverage`, `review`,
-  `security`, `performance`, or Consumer-Repo-specific domain categories
+  `qa`, `security`, `performance`, or Consumer-Repo-specific domain categories
 - declare required metrics, thresholds, actual values, status, evidence
   references, and merge-blocking intent
 - validate declared evaluation metadata for internal consistency
@@ -152,12 +152,20 @@ The canonical example workflow is
 It demonstrates:
 
 - `tests`: external test result with `equals passed`
+- `tests`: external test pass rate with `greater_than_or_equal 95`
+- `qa`: QA pass status with `equals passed`
+- `qa`: unresolved risk count with `equals 0`
 - `coverage`: coverage percentage with `greater_than_or_equal 80`
 - `review`: human review score with `greater_than_or_equal 4`
 - `security`: critical findings with `equals 0`
 - `performance`: p95 latency with `less_than_or_equal 250`
 
-Invalid fixture examples live under `tests/fixtures/`:
+Fixture examples live under `tests/fixtures/`:
+
+- `evaluation-metrics-compliant.yml`: provider-neutral review and QA metrics
+  that satisfy their declared thresholds
+- `evaluation-metrics-non-compliant.yml`: unresolved QA risk count above the
+  declared threshold
 
 - `evaluation-missing-evidence-refs.yml`: required metric evidence is missing
 - `evaluation-threshold-mismatch.yml`: a declared passed metric does not satisfy

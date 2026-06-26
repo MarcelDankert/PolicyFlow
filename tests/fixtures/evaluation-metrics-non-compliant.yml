@@ -1,0 +1,165 @@
+workflow:
+  id: evaluation-metrics-non-compliant
+  type: feature
+
+context:
+  workflow_file: workflows/examples/evaluation-metrics-non-compliant.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Metric expectations are declared before implementation.
+    implementation: Implementation remains bounded by declared evaluation criteria.
+    tests: Test and QA evidence references are declared.
+    residual_uncertainty: Unresolved risk evidence is intentionally non-compliant.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Non-compliant metric example was declared intentionally.
+    scope_locked:
+      - provider-neutral metric examples
+    non_goals_locked:
+      - no metric execution
+    risk_rationale: MEDIUM risk because evaluation criteria influence merge readiness.
+  architecture-check:
+    decision: Keep metric examples provider-neutral.
+    constraints:
+      - external systems produce evidence
+    approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: Review score was recorded externally.
+    residual_risk: QA identified unresolved risk.
+  qa:
+    outcome: failed
+    evidence_summary: QA report declared unresolved risks.
+    unresolved_risks:
+      - release blocker remains unresolved
+
+evaluation:
+  compliance_status: failed
+  categories:
+    - id: tests
+      required_metrics:
+        - id: test-pass-rate
+          name: Test pass rate
+          source: external-test-runner
+          required: true
+          thresholds:
+            operator: greater_than_or_equal
+            value: "95"
+          actual_value: "98"
+          status: passed
+          evidence_refs:
+            - artifact://test-report
+          blocks_merge: true
+    - id: qa
+      required_metrics:
+        - id: unresolved-risk-count
+          name: Unresolved risk count
+          source: external-qa-report
+          required: true
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: "2"
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Demonstrate non-compliant review and QA metric examples.
+    acceptance_criteria:
+      - non-compliant metric fixture fails validation
+    approved_scope:
+      - metric examples
+    non_goals:
+      - no metric execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Fixture intentionally declares an unresolved risk count above threshold.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Examples remain declarative metadata.
+    approved_scope:
+      - metric examples
+    module_boundaries:
+      - workflow fixture only
+    contract_impact: No provider contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no provider-specific integrations
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a non-compliant fixture for unresolved QA risk metrics.
+    changed_files:
+      - tests/fixtures/evaluation-metrics-non-compliant.yml
+    test_summary: Fixture intentionally fails threshold validation for unresolved risk count.
+    docs_updates:
+      - none
+    known_limitations:
+      - fixture is intentionally non-compliant
+    unresolved_questions:
+      - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - unresolved QA risk remains intentional
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Non-compliant fixture approved as negative test evidence.
+    residual_risk: QA fixture intentionally exceeds unresolved risk threshold.
+    qa_focus_areas:
+      - threshold failure message
+    test_expectations:
+      - fixture fails with unresolved risk count threshold mismatch
+  qa:
+    owner_agent: qa-agent
+    qa_report: QA evidence confirmed the fixture fails on unresolved risk count.
+    quality_gate_status: failed
+    unresolved_risks:
+      - release blocker remains unresolved
+    approval_required: false
+    merge_readiness: false
+
+runtime:
+  status: idle
+  current_phase: qa
+  active_agent: qa-agent
+  last_transition: qa completed
+
+handoffs: []

@@ -1,0 +1,174 @@
+workflow:
+  id: evaluation-metric-examples
+  name: Evaluation Metric Examples
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add provider-neutral review and QA metric examples for Evaluation Governance.
+
+context:
+  workflow_file: workflows/features/evaluation-metric-examples.yml
+  issue_key: "#83"
+  goal: Demonstrate practical metrics for review and QA governance.
+  scope:
+    - review score metric example
+    - QA pass status metric example
+    - test pass rate metric example
+    - coverage metric example
+    - unresolved risk metric example
+    - compliant and non-compliant fixtures
+    - Evaluation Governance docs update
+  non_goals:
+    - no metric calculation or external evaluation execution
+    - no provider-specific CI, QA, review, or coverage integration
+    - no validator semantic changes beyond fixture coverage
+    - no release publication
+  affected_modules:
+    - workflows/examples/evaluation-governance-workflow.yml
+    - tests/fixtures
+    - tests/test_validator.py
+    - docs/evaluation-governance.md
+    - policyflow/assets/docs/evaluation-governance.md
+    - workflows/features/evaluation-metric-examples.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #83 follows the completed metric schema, evidence reference, and risk requirement work.
+    implementation: Changes are bounded to examples, fixtures, docs, and tests without validator behavior changes.
+    tests: Example and fixture tests can prove compliant and non-compliant cases are represented.
+    residual_uncertainty: Consumer-Repos still own actual metric collection and artifact URI conventions.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #83 scope, non-goals, and MEDIUM risk were fixed before implementation.
+    scope_locked:
+      - provider-neutral review and QA metric examples
+      - compliant and non-compliant fixtures
+      - docs update
+    non_goals_locked:
+      - no metric execution
+      - no provider-specific integration
+      - no validator semantic changes
+    risk_rationale: MEDIUM risk because examples and fixtures shape Consumer-Repo adoption patterns.
+  architecture-check:
+    decision: Keep examples provider-neutral and declarative, with external systems owning metric production.
+    constraints:
+      - use artifact and evidence references only
+      - do not call CI, coverage, review, or QA providers
+      - keep non-compliant fixture intentionally invalid
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added provider-neutral review, QA, test pass rate, coverage, and unresolved risk metric examples with compliant and non-compliant fixtures.
+    changed_files:
+      - workflows/examples/evaluation-governance-workflow.yml
+      - tests/fixtures/evaluation-metrics-compliant.yml
+      - tests/fixtures/evaluation-metrics-non-compliant.yml
+      - tests/test_validator.py
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/evaluation-metric-examples.yml
+    test_summary: Targeted validator tests pass for the review and QA metric examples, compliant fixture, and non-compliant fixture.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - PolicyFlow still records and validates metric declarations only; external systems produce metric values and artifacts.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add practical provider-neutral examples for review and QA metrics.
+    acceptance_criteria:
+      - examples include review score, QA pass status, test pass rate, coverage, and unresolved risk metrics
+      - examples remain provider-neutral
+      - fixtures include both compliant and non-compliant cases
+    approved_scope:
+      - workflows/examples
+      - tests/fixtures
+      - docs/evaluation-governance.md
+      - tests/test_validator.py
+    non_goals:
+      - no metric calculation
+      - no provider-specific integration
+      - no validator behavior change
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Examples can be verified through workflow validation and explicit fixture tests.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Metric examples are declarative governance assets and should not imply PolicyFlow owns measurement execution.
+    approved_scope:
+      - provider-neutral example workflow
+      - compliant and non-compliant fixtures
+      - docs and tests
+    module_boundaries:
+      - examples and fixtures own illustrative workflow shapes
+      - docs explain ownership boundaries
+      - validator behavior remains unchanged
+    contract_impact: Consumer-Repos gain clearer reference patterns for review and QA metrics.
+    risk_review_decision: MEDIUM risk accepted for consumer-facing examples.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - provider-neutral references only
+      - no external execution semantics
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added review and QA metric examples, matching fixtures, docs, and validator regression coverage.
+    changed_files:
+      - workflows/examples/evaluation-governance-workflow.yml
+      - tests/fixtures/evaluation-metrics-compliant.yml
+      - tests/fixtures/evaluation-metrics-non-compliant.yml
+      - tests/test_validator.py
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+      - workflows/features/evaluation-metric-examples.yml
+    test_summary: Targeted validator tests passed for the new metric examples and fixtures.
+    docs_updates:
+      - docs/evaluation-governance.md
+      - policyflow/assets/docs/evaluation-governance.md
+    known_limitations:
+      - examples remain declarative and do not execute provider-specific tools
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

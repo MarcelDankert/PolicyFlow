@@ -1,0 +1,204 @@
+workflow:
+  id: evaluation-metrics-compliant
+  type: feature
+
+context:
+  workflow_file: workflows/examples/evaluation-metrics-compliant.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Metric expectations are declared before implementation.
+    implementation: Implementation remains bounded by declared evaluation criteria.
+    tests: Test and QA evidence references are declared.
+    residual_uncertainty: Consumer-Repos own external report production.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Evaluation metric examples were declared before implementation.
+    scope_locked:
+      - provider-neutral metric examples
+    non_goals_locked:
+      - no metric execution
+    risk_rationale: MEDIUM risk because evaluation criteria influence merge readiness.
+  architecture-check:
+    decision: Keep metric examples provider-neutral.
+    constraints:
+      - external systems produce evidence
+    approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: Review score was recorded externally.
+    residual_risk: No blocking review risk remains.
+  qa:
+    outcome: passed
+    evidence_summary: QA pass status and unresolved risk count were recorded externally.
+    unresolved_risks: []
+
+evaluation:
+  compliance_status: passed
+  categories:
+    - id: tests
+      required_metrics:
+        - id: test-pass-rate
+          name: Test pass rate
+          source: external-test-runner
+          required: true
+          thresholds:
+            operator: greater_than_or_equal
+            value: "95"
+          actual_value: "98"
+          status: passed
+          evidence_refs:
+            - artifact://test-report
+          blocks_merge: true
+    - id: qa
+      required_metrics:
+        - id: qa-pass-status
+          name: QA pass status
+          source: external-qa-report
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+        - id: unresolved-risk-count
+          name: Unresolved risk count
+          source: external-qa-report
+          required: false
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: "0"
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: false
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          source: external-coverage-report
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: "84"
+          status: passed
+          evidence_refs:
+            - artifact://coverage-report
+          blocks_merge: false
+    - id: review
+      required_metrics:
+        - id: review-score
+          name: Human review score
+          source: human-review
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "4"
+          actual_value: "4"
+          status: passed
+          evidence_refs:
+            - evidence.review
+          blocks_merge: false
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Demonstrate compliant review and QA metric examples.
+    acceptance_criteria:
+      - metrics remain provider-neutral
+    approved_scope:
+      - metric examples
+    non_goals:
+      - no metric execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Metric declarations are bounded to provider-neutral examples.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Examples remain declarative metadata.
+    approved_scope:
+      - metric examples
+    module_boundaries:
+      - workflow fixture only
+    contract_impact: No provider contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no provider-specific integrations
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a compliant fixture for provider-neutral review and QA metrics.
+    changed_files:
+      - tests/fixtures/evaluation-metrics-compliant.yml
+    test_summary: Fixture validates successfully with declared metric thresholds.
+    docs_updates:
+      - none
+    known_limitations:
+      - none
+    unresolved_questions:
+      - none
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - no blocking findings remain
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Metric fixture approved for QA handoff.
+    residual_risk: no residual review risk
+    qa_focus_areas:
+      - metric threshold compliance
+    test_expectations:
+      - fixture validates successfully
+  qa:
+    owner_agent: qa-agent
+    qa_report: QA evidence confirmed metric thresholds are satisfied.
+    quality_gate_status: passed
+    unresolved_risks:
+      - none
+    approval_required: false
+    merge_readiness: true
+
+runtime:
+  status: idle
+  current_phase: qa
+  active_agent: qa-agent
+  last_transition: qa completed
+
+handoffs: []
