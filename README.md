@@ -101,6 +101,11 @@ See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
 Quickstart, including PR validation, GitHub approval checks, runner setup, and
 managed asset sync.
 
+Audit Reporting is documented in
+[docs/audit-reporting.md](docs/audit-reporting.md). It explains local and CI
+usage for workflow audit, evaluation reports, loop reports, human governance
+status, and the read-only boundary between reporting and runtime execution.
+
 Evaluation Governance is documented in
 [docs/evaluation-governance.md](docs/evaluation-governance.md). It explains how
 Consumer-Repos can declare tests, coverage, review, security, and performance
