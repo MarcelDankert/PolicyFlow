@@ -1,0 +1,185 @@
+workflow:
+  id: machine-readable-audit-json
+  name: Machine Readable Audit JSON
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Stabilize machine-readable audit JSON fields for downstream reporting.
+
+context:
+  workflow_file: workflows/features/machine-readable-audit-json.yml
+  issue_key: "#88"
+  goal: Stabilize machine-readable audit fields for downstream reporting.
+  scope:
+    - additive audit JSON schema metadata
+    - aggregate workflow, loop, evaluation, and human governance summaries
+    - per-workflow workflow and human governance status fields
+    - public API and schema compatibility documentation
+    - packaged docs asset updates
+  non_goals:
+    - no removal or renaming of existing audit workflow fields
+    - no validator semantic changes
+    - no runtime execution, scheduler, message bus, memory, provider credential, or provider SDK behavior
+    - no release publication
+  affected_modules:
+    - policyflow/reporting.py
+    - tests/test_runtime_cli.py
+    - tests/test_repository_docs.py
+    - docs/public-api.md
+    - docs/schema-compatibility.md
+    - policyflow/assets/docs/public-api.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - workflows/features/machine-readable-audit-json.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #88 stabilizes consumer-facing audit JSON, so compatibility and migration guidance are explicit scope.
+    implementation: Changes should be additive over existing audit output and documentation.
+    tests: CLI JSON and documentation tests can prove shape, compatibility, and governance coverage.
+    residual_uncertainty: Future releases may version additional report payloads beyond the audit JSON contract.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #88 scope, non-goals, MEDIUM risk, and compatibility requirement were locked before implementation.
+    scope_locked:
+      - audit JSON schema metadata
+      - workflow, loop, evaluation, and human governance summaries
+      - docs and migration guidance
+    non_goals_locked:
+      - no removal or renaming of existing audit fields
+      - no validator semantic changes
+      - no runtime, scheduler, message bus, memory, provider, or SDK ownership
+    risk_rationale: MEDIUM risk because audit JSON is a downstream integration surface.
+  architecture-check:
+    decision: Stabilize audit JSON additively with explicit schema metadata and governance summaries.
+    constraints:
+      - preserve existing workflow audit keys
+      - keep reporting read-only
+      - document migration guidance for consumers
+      - do not introduce execution or provider behavior
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added audit JSON schema metadata, aggregate governance summaries, human governance status, and documentation for the machine-readable contract.
+    changed_files:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - tests/test_repository_docs.py
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/machine-readable-audit-json.yml
+    test_summary: Targeted audit JSON and docs tests, repository docs/runtime CLI tests, and workflow validation passed.
+    docs_updates:
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - future releases may version additional report payloads beyond audit JSON.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Stabilize machine-readable audit JSON fields for downstream reporting.
+    acceptance_criteria:
+      - JSON shape is documented
+      - existing workflow audit consumers remain compatible or receive migration guidance
+      - output covers workflow, loop, evaluation, and human governance statuses
+    approved_scope:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - tests/test_repository_docs.py
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+    non_goals:
+      - no field removals
+      - no validator semantic changes
+      - no runtime or provider behavior
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Additive JSON fields plus docs tests can preserve compatibility while stabilizing the audit contract.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Audit JSON should remain a reporting contract, not an execution or provider integration layer.
+    approved_scope:
+      - additive JSON shape
+      - docs and packaged docs
+      - tests
+    module_boundaries:
+      - policyflow/reporting.py owns audit payload shaping
+      - docs own JSON contract and migration guidance
+      - validator semantics remain unchanged
+    contract_impact: Adds documented machine-readable fields while preserving existing audit workflow keys.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - additive fields only
+      - read-only reporting only
+      - no provider-specific execution
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Stabilized audit JSON with `policyflow.audit.v1`, top-level summaries, workflow_governance, and human_governance while preserving existing workflow audit fields.
+    changed_files:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - tests/test_repository_docs.py
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - workflows/features/machine-readable-audit-json.yml
+    test_summary: Tests cover machine-readable audit JSON shape, old-field compatibility, governance coverage, docs, and packaged docs sync.
+    docs_updates:
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+    known_limitations:
+      - report remains read-only and does not execute workflows, loops, evaluations, approvals, or provider integrations
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
