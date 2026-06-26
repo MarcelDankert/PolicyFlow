@@ -489,6 +489,25 @@ def test_overview_and_roadmap_reflect_current_capabilities() -> None:
     assert "GitHub API-based PR validation after the markdown-file workflow" not in roadmap
 
 
+def test_agentic_governance_roadmap_keeps_automerge_out_of_v2_core() -> None:
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "Automerge Executor",
+        "## Automerge Governance Boundary",
+        "not part of the v2 core platform scope",
+        "PolicyFlow should not merge pull requests",
+        "A future Consumer Governance extension may define declarative automerge policy",
+        "The execution of that policy remains outside PolicyFlow",
+        "LOW-risk automerge may be described as a future governance policy option",
+        "MEDIUM-risk automerge should require an explicit human signal",
+        "HIGH-risk automerge is out of scope",
+    ):
+        assert expected in roadmap
+
+
 def test_release_docs_define_pinned_release_channel_and_artifacts() -> None:
     text = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
 
