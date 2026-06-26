@@ -37,6 +37,7 @@ REQUIRED_PHASES_BY_RISK: dict[str, set[str]] = {
     },
 }
 REQUIRED_EVALUATION_CATEGORIES_BY_RISK: dict[str, set[str]] = {
+    RiskLevel.LOW.value: {"tests"},
     RiskLevel.MEDIUM.value: {"tests"},
     RiskLevel.HIGH.value: {"tests", "security"},
 }
