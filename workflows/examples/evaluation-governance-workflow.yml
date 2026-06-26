@@ -87,6 +87,44 @@ evaluation:
             - evidence.qa
             - artifact://test-report
           blocks_merge: true
+        - id: test-pass-rate
+          name: Test pass rate
+          source: external-test-runner
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "95"
+          actual_value: "98"
+          status: passed
+          evidence_refs:
+            - artifact://test-report
+          blocks_merge: false
+    - id: qa
+      required_metrics:
+        - id: qa-pass-status
+          name: QA pass status
+          source: external-qa-report
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+        - id: unresolved-risk-count
+          name: Unresolved risk count
+          source: external-qa-report
+          required: false
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: "0"
+          status: passed
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: false
     - id: coverage
       required_metrics:
         - id: coverage-percent
@@ -181,7 +219,7 @@ contracts:
     implementation_summary: Added Evaluation Governance declarations that reference external evidence artifacts.
     changed_files:
       - workflows/examples/evaluation-governance-workflow.yml
-    test_summary: External test, coverage, security, and performance outcomes are represented as declared evaluation metadata.
+    test_summary: External test, QA, coverage, security, and performance outcomes are represented as declared evaluation metadata.
     docs_updates:
       - workflows/examples/evaluation-governance-workflow.yml
     known_limitations:

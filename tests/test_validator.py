@@ -403,11 +403,57 @@ def test_evaluation_governance_example_covers_common_categories() -> None:
     assert result.evaluation.compliance_status == "passed"
     assert [category.id for category in result.evaluation.categories] == [
         "tests",
+        "qa",
         "coverage",
         "review",
         "security",
         "performance",
     ]
+
+
+def test_evaluation_governance_example_covers_review_and_qa_metrics() -> None:
+    result = validate_workflow_file(
+        Path("workflows/examples/evaluation-governance-workflow.yml")
+    )
+
+    assert result.evaluation is not None
+    metrics_by_id = {
+        metric.id: metric
+        for category in result.evaluation.categories
+        for metric in category.required_metrics
+    }
+
+    expected_metrics = {
+        "review-score",
+        "qa-pass-status",
+        "test-pass-rate",
+        "coverage-percent",
+        "unresolved-risk-count",
+    }
+    assert expected_metrics <= set(metrics_by_id)
+    assert metrics_by_id["review-score"].source == "human-review"
+    assert metrics_by_id["qa-pass-status"].source == "external-qa-report"
+    assert metrics_by_id["test-pass-rate"].source == "external-test-runner"
+    assert metrics_by_id["unresolved-risk-count"].thresholds.operator == "equals"
+    assert metrics_by_id["unresolved-risk-count"].evidence_refs == ["evidence.qa"]
+
+
+def test_evaluation_metrics_compliant_fixture_passes() -> None:
+    result = validate_workflow_file(fixture_path("evaluation-metrics-compliant.yml"))
+
+    assert result.evaluation is not None
+    assert result.evaluation.compliance_status == "passed"
+
+
+def test_evaluation_metrics_non_compliant_fixture_fails() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_file(fixture_path("evaluation-metrics-non-compliant.yml"))
+
+    assert (
+        "evaluation metric 'qa.unresolved-risk-count' actual_value 2 does not "
+        "satisfy threshold equals 0."
+        in exc_info.value.errors
+    )
 
 
 def test_evaluation_threshold_mismatch_fixture_fails() -> None:
