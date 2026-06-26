@@ -17,10 +17,12 @@ context:
     - CLI output and tests for pending approval
     - generated and packaged GitHub workflow updates
     - documentation for approval lifecycle split
+    - roadmap clarification that automerge execution is outside v2 core scope
   non_goals:
     - no merge bot behavior
     - no bypass of GitHub required review rules
     - no automatic pull request approval
+    - no automerge execution
     - no hosted runtime, provider credentials, scheduler, message bus, or memory behavior
   affected_modules:
     - policyflow/github_approval.py
@@ -30,6 +32,7 @@ context:
     - policyflow/assets/github/workflows/policyflow-governance.yml
     - .github/workflows/policyflow-governance.yml
     - docs/getting-started.md
+    - docs/roadmap-agentic-governance.md
     - policyflow/assets/docs/getting-started.md
     - tests/test_github_approval.py
     - tests/test_consumer_github_workflow.py
@@ -98,7 +101,7 @@ evidence:
     reference: PR approval required before merge
     scope_confirmed: true
   implementation:
-    summary: Added pending approval mode while preserving strict approval validation and public API strict return behavior by default.
+    summary: Added pending approval mode while preserving strict approval validation and public API strict return behavior by default, and documented automerge execution as outside v2 core scope.
     changed_files:
       - policyflow/github_approval.py
       - policyflow/cli.py
@@ -107,18 +110,20 @@ evidence:
       - policyflow/assets/github/workflows/policyflow-governance.yml
       - .github/workflows/policyflow-governance.yml
       - docs/getting-started.md
+      - docs/roadmap-agentic-governance.md
       - policyflow/assets/docs/getting-started.md
       - tests/test_github_approval.py
       - tests/test_consumer_github_workflow.py
       - tests/test_repository_docs.py
       - workflows/features/pending-approval-governance.yml
-    test_summary: Targeted GitHub approval, public API, workflow asset, and docs tests passed, and the active workflow validates.
+    test_summary: Targeted GitHub approval, public API, workflow asset, roadmap, and docs tests passed, and the active workflow validates.
     docs_updates:
       - docs/getting-started.md
+      - docs/roadmap-agentic-governance.md
       - policyflow/assets/docs/getting-started.md
     known_limitations:
       - Generated workflows require GitHub required approving review rules to block merge while approval is pending.
-      - This change does not approve, merge, or rerun PRs.
+      - This change does not approve, merge, enable automerge, or rerun PRs.
       - GitHub PR approval by MarcelDankert is required before this HIGH-risk PR can be merge-ready.
     unresolved_questions:
       - none
@@ -177,7 +182,7 @@ contracts:
       - keep generated workflow provider-neutral
   implementation:
     owner_agent: senior-dev-agent
-    implementation_summary: Added `--allow-pending` approval validation mode, preserved strict public API behavior, updated generated governance workflows to use pending mode, and documented the split between PolicyFlow governance validity and GitHub review lifecycle.
+    implementation_summary: Added `--allow-pending` approval validation mode, preserved strict public API behavior, updated generated governance workflows to use pending mode, documented the split between PolicyFlow governance validity and GitHub review lifecycle, and clarified automerge as a possible future governance policy but not a v2 execution responsibility.
     changed_files:
       - policyflow/github_approval.py
       - policyflow/cli.py
@@ -186,14 +191,16 @@ contracts:
       - policyflow/assets/github/workflows/policyflow-governance.yml
       - .github/workflows/policyflow-governance.yml
       - docs/getting-started.md
+      - docs/roadmap-agentic-governance.md
       - policyflow/assets/docs/getting-started.md
       - tests/test_github_approval.py
       - tests/test_consumer_github_workflow.py
       - tests/test_repository_docs.py
       - workflows/features/pending-approval-governance.yml
-    test_summary: Tests cover strict failure, pending success, CLI output, public API compatibility, generated workflow opt-in, repository workflow opt-in, docs guidance, and packaged asset parity.
+    test_summary: Tests cover strict failure, pending success, CLI output, public API compatibility, generated workflow opt-in, repository workflow opt-in, docs guidance, automerge roadmap boundary, and packaged asset parity.
     docs_updates:
       - docs/getting-started.md
+      - docs/roadmap-agentic-governance.md
       - policyflow/assets/docs/getting-started.md
     known_limitations:
       - Missing approval is pending only when `--allow-pending` is explicitly requested.
