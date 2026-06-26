@@ -1,0 +1,159 @@
+workflow:
+  id: audit-governance-summaries
+  name: Audit Governance Summaries
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Include loop and evaluation governance summaries in policyflow audit output.
+
+context:
+  workflow_file: workflows/features/audit-governance-summaries.yml
+  issue_key: "#85"
+  goal: Include loop and evaluation governance summaries in audit output.
+  scope:
+    - additive audit JSON fields for loop governance
+    - additive audit JSON fields for evaluation governance
+    - human-readable audit line summaries for loop and evaluation state
+    - tests proving existing workflow audit fields remain present
+  non_goals:
+    - no schema changes
+    - no validator semantic changes
+    - no runtime execution, scheduler, memory, or orchestration behavior
+    - no provider-specific metric or loop execution
+  affected_modules:
+    - policyflow/reporting.py
+    - tests/test_runtime_cli.py
+    - workflows/features/audit-governance-summaries.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #85 extends an existing consumer-facing audit payload, so compatibility is explicitly in scope.
+    implementation: Changes should be additive and read-only over existing validated workflow data and validation errors.
+    tests: CLI audit JSON and human-readable tests can prove new summaries while preserving existing fields.
+    residual_uncertainty: Later v1.4 issues may stabilize additional audit JSON contracts and documentation.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #85 scope, non-goals, MEDIUM risk, and compatibility requirement were locked before implementation.
+    scope_locked:
+      - additive loop governance audit summaries
+      - additive evaluation governance audit summaries
+      - backward-compatible existing workflow audit fields
+    non_goals_locked:
+      - no schema or validator semantic changes
+      - no runtime or provider execution behavior
+      - no scheduler, memory, or orchestration ownership
+    risk_rationale: MEDIUM risk because audit JSON is consumer-facing even though the implementation is read-only reporting.
+  architecture-check:
+    decision: Extend audit reporting additively from existing validated workflow data and validation errors.
+    constraints:
+      - preserve existing audit keys
+      - keep reporting read-only
+      - do not introduce new validation semantics
+      - represent missing governance as not_declared rather than an error
+    approval_path: architecture-agent review
+  implementation:
+    summary: Added additive audit summaries for loop governance and evaluation governance in JSON and human-readable audit output.
+    changed_files:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - workflows/features/audit-governance-summaries.yml
+    test_summary: Targeted audit CLI tests, runtime CLI tests, public API tests, and workflow validation passed.
+    docs_updates:
+      - none
+    known_limitations:
+      - later v1.4 issues will stabilize broader audit JSON contracts and documentation.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Extend policyflow audit output with loop and evaluation governance summaries.
+    acceptance_criteria:
+      - existing workflow audit output remains backward compatible
+      - audit output summarizes missing or failing loop and evaluation governance
+      - JSON output includes machine-readable compliance fields
+    approved_scope:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - workflows/features/audit-governance-summaries.yml
+    non_goals:
+      - no schema changes
+      - no validator semantic changes
+      - no runtime or provider execution
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Additive fields and focused CLI tests can preserve audit compatibility while exposing broader governance summaries.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Audit summaries should remain a reporting layer over validated workflow data, not a second governance engine.
+    approved_scope:
+      - additive audit JSON fields
+      - human-readable audit summaries
+      - CLI tests
+    module_boundaries:
+      - policyflow/reporting.py owns audit payload shaping
+      - policyflow/cli.py should continue to delegate JSON rendering
+      - validator semantics remain unchanged
+    contract_impact: Existing audit fields must remain present; new loop and evaluation fields are additive.
+    risk_review_decision: MEDIUM risk path approved.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - keep existing audit payload keys
+      - no external artifact reads
+      - no runtime execution behavior
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Extended audit reporting with additive loop_governance and evaluation summaries while preserving existing workflow audit fields.
+    changed_files:
+      - policyflow/reporting.py
+      - tests/test_runtime_cli.py
+      - workflows/features/audit-governance-summaries.yml
+    test_summary: Added CLI tests for valid, missing, and invalid loop/evaluation governance audit summaries.
+    docs_updates:
+      - none
+    known_limitations:
+      - audit summaries remain read-only and do not fetch or calculate external artifacts
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

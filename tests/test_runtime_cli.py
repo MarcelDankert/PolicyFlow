@@ -424,6 +424,141 @@ def test_audit_json_reports_invalid_workflow_entry(tmp_path: Path) -> None:
     assert "risk_level must be one of: LOW, MEDIUM, HIGH" in invalid_entry["errors"]
 
 
+def test_audit_json_reports_loop_and_evaluation_governance(tmp_path: Path) -> None:
+    evaluation_path = tmp_path / "evaluation-governance-workflow.yml"
+    evaluation_path.write_text(
+        Path("workflows/examples/evaluation-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    loop_path = tmp_path / "loop-governance-workflow.yml"
+    loop_path.write_text(
+        Path("workflows/examples/loop-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    plain_path = tmp_path / "runtime-startable-medium.yml"
+    plain_path.write_text(
+        fixture_path("runtime-startable-medium.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["audit", str(tmp_path), "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    evaluation_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["workflow_id"] == "evaluation-governance-workflow"
+    )
+    loop_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["workflow_id"] == "loop-governance-workflow"
+    )
+    plain_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["workflow_id"] == "runtime-startable-medium"
+    )
+
+    assert evaluation_entry["valid"] is True
+    assert evaluation_entry["merge_ready"] is True
+    assert evaluation_entry["evaluation"]["declared"] is True
+    assert evaluation_entry["evaluation"]["compliance_status"] == "passed"
+    assert evaluation_entry["evaluation"]["categories"] == 6
+    assert evaluation_entry["evaluation"]["required_metrics"] == 3
+    assert evaluation_entry["evaluation"]["blocking_metrics"] == 3
+    assert evaluation_entry["evaluation"]["failed_metrics"] == 0
+    assert evaluation_entry["evaluation"]["blocking_failed_metrics"] == 0
+    assert evaluation_entry["evaluation"]["errors"] == []
+
+    assert loop_entry["loop_governance"]["declared"] is True
+    assert loop_entry["loop_governance"]["compliance_status"] == "passed"
+    assert loop_entry["loop_governance"]["total_loops"] == 5
+    assert loop_entry["loop_governance"]["status_counts"] == {
+        "active": 2,
+        "completed": 1,
+        "escalated": 1,
+        "terminated": 1,
+    }
+    assert loop_entry["loop_governance"]["errors"] == []
+
+    assert plain_entry["loop_governance"] == {
+        "declared": False,
+        "compliance_status": "not_declared",
+        "total_loops": 0,
+        "status_counts": {},
+        "errors": [],
+    }
+    assert plain_entry["evaluation"] == {
+        "declared": False,
+        "compliance_status": "not_declared",
+        "categories": 0,
+        "required_metrics": 0,
+        "blocking_metrics": 0,
+        "failed_metrics": 0,
+        "blocking_failed_metrics": 0,
+        "errors": [],
+    }
+
+
+def test_audit_summarizes_invalid_loop_and_evaluation_governance(
+    tmp_path: Path,
+) -> None:
+    invalid_loop_path = tmp_path / "loop-governance-invalid-max.yml"
+    invalid_loop_path.write_text(
+        fixture_path("loop-governance-invalid-max.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    invalid_evaluation_path = tmp_path / "evaluation-threshold-mismatch.yml"
+    invalid_evaluation_path.write_text(
+        fixture_path("evaluation-threshold-mismatch.yml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    json_result = runner.invoke(app, ["audit", str(tmp_path), "--json"])
+    text_result = runner.invoke(app, ["audit", str(tmp_path)])
+
+    assert json_result.exit_code == 0
+    payload = json.loads(json_result.stdout)
+    invalid_loop_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("loop-governance-invalid-max.yml")
+    )
+    invalid_evaluation_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("evaluation-threshold-mismatch.yml")
+    )
+
+    assert invalid_loop_entry["valid"] is False
+    assert invalid_loop_entry["loop_governance"]["declared"] is True
+    assert invalid_loop_entry["loop_governance"]["compliance_status"] == "failed"
+    assert invalid_loop_entry["loop_governance"]["total_loops"] == 1
+    assert invalid_loop_entry["loop_governance"]["errors"] == [
+        "loop_governance loop 'review-feedback' declaration error: max_iterations must be a positive integer."
+    ]
+
+    assert invalid_evaluation_entry["valid"] is False
+    assert invalid_evaluation_entry["evaluation"]["declared"] is True
+    assert invalid_evaluation_entry["evaluation"]["compliance_status"] == "failed"
+    assert invalid_evaluation_entry["evaluation"]["categories"] == 2
+    assert invalid_evaluation_entry["evaluation"]["failed_metrics"] == 2
+    assert invalid_evaluation_entry["evaluation"]["errors"] == [
+        "evaluation metric 'tests.tests-passed' references missing workflow evidence 'evidence.qa'.",
+        "evaluation metric 'coverage.coverage-percent' actual_value 72 does not satisfy threshold greater_than_or_equal 80.",
+    ]
+
+    assert text_result.exit_code == 0
+    assert "loop=failed" in text_result.stdout
+    assert "evaluation=failed" in text_result.stdout
+
+
 def test_run_phase_executes_runner_and_records_handoff(tmp_path: Path) -> None:
     workflow_path = tmp_path / "runtime-startable-medium.yml"
     workflow_path.write_text(
