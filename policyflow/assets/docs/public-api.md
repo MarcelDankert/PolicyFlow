@@ -52,6 +52,37 @@ audit = audit_workflows("ai/workflows")
 status --json`. `audit_workflows` returns the same audit payload used by
 `policyflow audit --json`.
 
+### Audit JSON Contract
+
+`audit_workflows` and `policyflow audit --json` return the machine-readable
+audit contract `policyflow.audit.v1` with `report_type: workflow_audit`.
+
+The top-level payload includes:
+
+- `schema_version`: currently `policyflow.audit.v1`
+- `report_type`: currently `workflow_audit`
+- `compatibility`: compatibility notes for downstream consumers
+- `summary`: aggregate `workflow_governance`, `loop_governance`,
+  `evaluation_governance`, and `human_governance` status counts
+- `workflows`: per-workflow audit entries
+
+The existing workflow audit fields remain present in each `workflows[]` entry,
+including `path`, `workflow_id`, `risk_level`, `current_phase`,
+`runtime_status`, `valid`, `merge_ready`, `loop_governance`, and `evaluation`.
+Downstream consumers should treat new top-level keys as additive and continue
+reading existing workflow-level fields during the `0.x` compatibility window.
+
+New machine-readable per-workflow status groups are additive:
+
+- `workflow_governance`: validation, merge-readiness, blocked state, and
+  workflow-level errors
+- `loop_governance`: declared loop count, loop status counts, and loop
+  compliance errors
+- `evaluation`: declared evaluation categories, metric counts, failed metrics,
+  and evaluation errors
+- `human_governance`: human approval requirement, approval evidence presence,
+  missing approval evidence, and approval-related errors
+
 ## Runtime Mutation API
 
 ```python

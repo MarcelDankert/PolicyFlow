@@ -559,6 +559,103 @@ def test_audit_summarizes_invalid_loop_and_evaluation_governance(
     assert "evaluation=failed" in text_result.stdout
 
 
+def test_audit_json_exposes_stable_machine_readable_governance_shape(
+    tmp_path: Path,
+) -> None:
+    for name in (
+        "runtime-startable-medium.yml",
+        "valid-high.yml",
+        "high-missing-evidence-approval.yml",
+    ):
+        (tmp_path / name).write_text(
+            fixture_path(name).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+    (tmp_path / "loop-governance-workflow.yml").write_text(
+        Path("workflows/examples/loop-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "evaluation-governance-workflow.yml").write_text(
+        Path("workflows/examples/evaluation-governance-workflow.yml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["audit", str(tmp_path), "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["schema_version"] == "policyflow.audit.v1"
+    assert payload["report_type"] == "workflow_audit"
+    assert payload["compatibility"]["existing_workflow_fields_preserved"] is True
+    assert payload["summary"]["workflow_governance"]["total"] == 5
+    assert payload["summary"]["workflow_governance"]["valid"] == 4
+    assert payload["summary"]["workflow_governance"]["invalid"] == 1
+    assert payload["summary"]["loop_governance"]["declared"] == 1
+    assert payload["summary"]["loop_governance"]["missing"] == 4
+    assert payload["summary"]["evaluation_governance"]["declared"] == 1
+    assert payload["summary"]["evaluation_governance"]["missing"] == 4
+    assert payload["summary"]["human_governance"] == {
+        "approval_required": 2,
+        "approval_evidence_present": 1,
+        "missing_approval_evidence": 1,
+        "status_counts": {
+            "failed": 1,
+            "not_required": 3,
+            "passed": 1,
+        },
+    }
+
+    high_entry = next(
+        entry for entry in payload["workflows"] if entry["workflow_id"] == "valid-high"
+    )
+    invalid_high_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["path"].endswith("high-missing-evidence-approval.yml")
+    )
+    medium_entry = next(
+        entry
+        for entry in payload["workflows"]
+        if entry["workflow_id"] == "runtime-startable-medium"
+    )
+
+    for entry in (high_entry, invalid_high_entry, medium_entry):
+        for existing_key in (
+            "path",
+            "workflow_id",
+            "risk_level",
+            "current_phase",
+            "runtime_status",
+            "valid",
+            "merge_ready",
+            "loop_governance",
+            "evaluation",
+        ):
+            assert existing_key in entry
+        assert set(entry["workflow_governance"]) == {
+            "status",
+            "valid",
+            "merge_ready",
+            "blocked",
+            "errors",
+        }
+        assert set(entry["human_governance"]) == {
+            "status",
+            "approval_required",
+            "approval_evidence_present",
+            "missing_approval_evidence",
+            "errors",
+        }
+
+    assert high_entry["human_governance"]["status"] == "passed"
+    assert invalid_high_entry["human_governance"]["status"] == "failed"
+    assert medium_entry["human_governance"]["status"] == "not_required"
+
+
 def test_evaluation_report_json_summarizes_compliant_directory(tmp_path: Path) -> None:
     evaluation_path = tmp_path / "evaluation-governance-workflow.yml"
     evaluation_path.write_text(

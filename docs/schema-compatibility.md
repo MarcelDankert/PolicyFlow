@@ -189,6 +189,57 @@ later validation and reporting can reason about evaluation governance.
 validation, status, audit, sync, and the future `policyflow.api` compatibility
 boundary all treat this canonical shape as the stable integration target.
 
+## Audit JSON Contract
+
+`policyflow audit --json` and `audit_workflows` expose the machine-readable
+audit payload `policyflow.audit.v1` with `report_type: workflow_audit`.
+
+The JSON shape is additive over the original workflow audit output:
+
+```json
+{
+  "schema_version": "policyflow.audit.v1",
+  "report_type": "workflow_audit",
+  "compatibility": {
+    "existing_workflow_fields_preserved": true
+  },
+  "summary": {
+    "workflow_governance": {},
+    "loop_governance": {},
+    "evaluation_governance": {},
+    "human_governance": {}
+  },
+  "workflows": []
+}
+```
+
+`summary.workflow_governance` reports total, valid, invalid, merge-ready, and
+blocked workflow counts. `summary.loop_governance` reports declared, missing,
+passed, and failed loop governance counts. `summary.evaluation_governance`
+reports declared, missing, passed, and failed evaluation governance counts.
+`summary.human_governance` reports required human approvals, present approval
+evidence, missing approval evidence, and human governance status counts.
+
+The existing workflow audit fields remain present in each `workflows[]` entry.
+Downstream consumers should treat new top-level keys as additive and should not
+break when additional summary fields appear. Consumers that already read
+workflow-level keys such as `workflow_id`, `risk_level`, `valid`,
+`merge_ready`, `loop_governance`, or `evaluation` can continue reading those
+fields during the `0.x` compatibility window.
+
+New per-workflow machine-readable status groups are additive:
+
+- `workflow_governance`: workflow validation, merge-readiness, blocked state,
+  and workflow-level errors
+- `loop_governance`: loop declaration and loop compliance summary
+- `evaluation`: evaluation declaration and metric compliance summary
+- `human_governance`: approval requirement, approval evidence presence, missing
+  approval evidence, and approval-related errors
+
+Audit JSON remains a reporting contract. It does not execute workflows, run
+loops, calculate evaluation metrics, approve pull requests, fetch artifacts,
+manage provider credentials, or replace CI and review systems.
+
 ## Legacy Root-Level Fallbacks
 
 The validator currently accepts these root-level fallback fields when the

@@ -204,6 +204,33 @@ def test_schema_docs_define_loop_governance_shape() -> None:
     assert "Loop Governance defines feedback-loop rules declaratively" in roadmap
 
 
+def test_audit_json_docs_define_machine_readable_contract() -> None:
+    public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
+    schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
+    packaged_public_api = (ROOT / "policyflow/assets/docs/public-api.md").read_text(
+        encoding="utf-8"
+    )
+    packaged_schema = (
+        ROOT / "policyflow/assets/docs/schema-compatibility.md"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "policyflow.audit.v1",
+        "workflow_audit",
+        "workflow_governance",
+        "loop_governance",
+        "evaluation_governance",
+        "human_governance",
+        "existing workflow audit fields remain present",
+        "Downstream consumers should treat new top-level keys as additive",
+    ):
+        assert expected in public_api
+        assert expected in schema
+
+    assert packaged_public_api == public_api
+    assert packaged_schema == schema
+
+
 def test_evaluation_governance_docs_define_consumer_usage() -> None:
     evaluation_doc = (ROOT / "docs/evaluation-governance.md").read_text(
         encoding="utf-8"

@@ -63,6 +63,8 @@ def workflow_status(path: Path) -> dict[str, Any]:
         "merge_ready": merge_ready,
         "loop_governance": _loop_governance_summary(raw, []),
         "evaluation": _evaluation_summary(raw, []),
+        "workflow_governance": _workflow_governance_summary(True, merge_ready, blockers, []),
+        "human_governance": _human_governance_summary(raw, []),
     }
 
 
@@ -93,10 +95,31 @@ def audit_directory(directory: Path) -> dict[str, Any]:
                     "merge_ready": False,
                     "loop_governance": _loop_governance_summary(raw, exc.errors),
                     "evaluation": _evaluation_summary(raw, exc.errors),
+                    "workflow_governance": _workflow_governance_summary(
+                        False, False, [], exc.errors
+                    ),
+                    "human_governance": _human_governance_summary(raw, exc.errors),
                 }
             )
 
-    return {"directory": str(directory), "workflows": workflows}
+    return {
+        "schema_version": "policyflow.audit.v1",
+        "report_type": "workflow_audit",
+        "compatibility": {
+            "existing_workflow_fields_preserved": True,
+            "additive_fields": [
+                "schema_version",
+                "report_type",
+                "compatibility",
+                "summary",
+                "workflow_governance",
+                "human_governance",
+            ],
+        },
+        "directory": str(directory),
+        "summary": _audit_summary(workflows),
+        "workflows": workflows,
+    }
 
 
 def evaluation_report_directory(directory: Path) -> dict[str, Any]:
@@ -278,6 +301,127 @@ def audit_lines(audit: dict[str, Any]) -> list[str]:
         )
 
     return lines
+
+
+def _audit_summary(workflows: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "workflow_governance": {
+            "total": len(workflows),
+            "valid": sum(1 for workflow in workflows if workflow["valid"]),
+            "invalid": sum(1 for workflow in workflows if not workflow["valid"]),
+            "merge_ready": sum(1 for workflow in workflows if workflow["merge_ready"]),
+            "blocked": sum(1 for workflow in workflows if workflow["blocked"]),
+        },
+        "loop_governance": {
+            "declared": sum(
+                1 for workflow in workflows if workflow["loop_governance"]["declared"]
+            ),
+            "missing": sum(
+                1 for workflow in workflows if not workflow["loop_governance"]["declared"]
+            ),
+            "passed": sum(
+                1
+                for workflow in workflows
+                if workflow["loop_governance"]["compliance_status"] == "passed"
+            ),
+            "failed": sum(
+                1
+                for workflow in workflows
+                if workflow["loop_governance"]["compliance_status"] == "failed"
+            ),
+        },
+        "evaluation_governance": {
+            "declared": sum(
+                1 for workflow in workflows if workflow["evaluation"]["declared"]
+            ),
+            "missing": sum(
+                1 for workflow in workflows if not workflow["evaluation"]["declared"]
+            ),
+            "passed": sum(
+                1
+                for workflow in workflows
+                if workflow["evaluation"]["compliance_status"] == "passed"
+            ),
+            "failed": sum(
+                1
+                for workflow in workflows
+                if workflow["evaluation"]["compliance_status"] == "failed"
+            ),
+        },
+        "human_governance": {
+            "approval_required": sum(
+                1
+                for workflow in workflows
+                if workflow["human_governance"]["approval_required"]
+            ),
+            "approval_evidence_present": sum(
+                1
+                for workflow in workflows
+                if workflow["human_governance"]["approval_evidence_present"]
+            ),
+            "missing_approval_evidence": sum(
+                1
+                for workflow in workflows
+                if workflow["human_governance"]["missing_approval_evidence"]
+            ),
+            "status_counts": _status_counts(
+                workflow["human_governance"]["status"] for workflow in workflows
+            ),
+        },
+    }
+
+
+def _workflow_governance_summary(
+    valid: bool, merge_ready: bool, blockers: list[str], errors: list[str]
+) -> dict[str, Any]:
+    return {
+        "status": "passed" if valid else "failed",
+        "valid": valid,
+        "merge_ready": merge_ready,
+        "blocked": bool(blockers),
+        "errors": errors,
+    }
+
+
+def _human_governance_summary(
+    raw: dict[str, Any], validation_errors: list[str]
+) -> dict[str, Any]:
+    governance = raw.get("governance") if isinstance(raw.get("governance"), dict) else {}
+    evidence = raw.get("evidence") if isinstance(raw.get("evidence"), dict) else {}
+    approval = evidence.get("approval") if isinstance(evidence.get("approval"), dict) else {}
+    approval_required = governance.get("human_approval_required") is True
+    approval_evidence_present = all(
+        approval.get(field) not in (None, "", False)
+        for field in ("approved_by", "reference", "scope_confirmed")
+    )
+    errors = [
+        error
+        for error in validation_errors
+        if "approval" in error.lower() or "human" in error.lower()
+    ]
+    missing_approval_evidence = approval_required and not approval_evidence_present
+
+    if not approval_required:
+        status = "not_required"
+    elif errors or missing_approval_evidence:
+        status = "failed"
+    else:
+        status = "passed"
+
+    return {
+        "status": status,
+        "approval_required": approval_required,
+        "approval_evidence_present": approval_evidence_present,
+        "missing_approval_evidence": missing_approval_evidence,
+        "errors": errors,
+    }
+
+
+def _status_counts(statuses) -> dict[str, int]:
+    counts = {"failed": 0, "not_required": 0, "passed": 0}
+    for status in statuses:
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 def _loop_report_workflow(workflow: dict[str, Any]) -> dict[str, Any]:
