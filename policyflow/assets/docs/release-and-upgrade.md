@@ -138,6 +138,10 @@ credential handling, and scheduling remain outside PolicyFlow.
    again with the packaged asset version.
 9. Revalidate active workflow files and PR bodies after the upgrade.
 
+For v2 governance adoption, follow the dedicated migration guide at
+[v2-migration-guide.md](v2-migration-guide.md). Source path:
+`docs/v2-migration-guide.md`.
+
 Recommended validation after changing the version pin:
 
 ```bash

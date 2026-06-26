@@ -467,6 +467,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "public-api.md",
         "release-and-upgrade.md",
         "schema-compatibility.md",
+        "v2-migration-guide.md",
     ):
         source = (ROOT / "docs" / relative_path).read_text(encoding="utf-8")
         packaged = (ROOT / "policyflow/assets/docs" / relative_path).read_text(
@@ -581,6 +582,55 @@ def test_schema_compatibility_docs_define_v2_stable_governance_boundaries() -> N
 
     assert packaged_schema == schema
     assert packaged_public_api == public_api
+
+
+def test_v2_migration_guide_covers_contract_changes_and_examples() -> None:
+    guide = (ROOT / "docs/v2-migration-guide.md").read_text(encoding="utf-8")
+    packaged_guide = (ROOT / "policyflow/assets/docs/v2-migration-guide.md").read_text(
+        encoding="utf-8"
+    )
+    release = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
+
+    for expected in (
+        "# PolicyFlow v2 Migration Guide",
+        "## Migration Scope",
+        "## Deprecated 0.x Fallbacks",
+        "## Workflow Governance Migration",
+        "Before",
+        "After",
+        "workflow_file:",
+        "context:",
+        "governance:",
+        "## Loop Governance Migration",
+        "loop_governance:",
+        "stop_conditions:",
+        "escalation_conditions:",
+        "## Evaluation And Metric Migration",
+        "evaluation:",
+        "required_metrics:",
+        "evidence_refs:",
+        "## Human Governance Migration",
+        "evidence.approval",
+        "governance.approval_evidence is not sufficient",
+        "## Audit Integration Migration",
+        "policyflow.audit.v1",
+        "schema_version",
+        "workflow_governance",
+        "loop_governance",
+        "evaluation_governance",
+        "human_governance",
+        "## Validation Checklist",
+        "policyflow validate",
+        "policyflow validate-pr",
+        "policyflow audit",
+        "policyflow evaluation-report",
+        "policyflow loop-report",
+        "PolicyFlow does not execute workflows",
+    ):
+        assert expected in guide
+
+    assert packaged_guide == guide
+    assert "docs/v2-migration-guide.md" in release
 
 
 def test_schema_todo_was_replaced_with_migration_path() -> None:
