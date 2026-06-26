@@ -240,6 +240,105 @@ Audit JSON remains a reporting contract. It does not execute workflows, run
 loops, calculate evaluation metrics, approve pull requests, fetch artifacts,
 manage provider credentials, or replace CI and review systems.
 
+## v2 Stable Governance Boundary
+
+PolicyFlow v2 stabilizes the governance contract that emerged across the 0.x
+releases. The stable boundary is declarative governance plus validation and
+reporting. It is not agent execution, runtime hosting, scheduling, message
+routing, memory, provider credential management, or a workflow engine.
+
+Workflow Governance is the core workflow contract. New v2 workflow instances
+use `workflow`, canonical `context` and `governance` fields, `execution`,
+phase `evidence`, phase `contracts`, typed `overrides`, `runtime`, and
+`handoffs`. PolicyFlow validates risk, required reviews, phase ordering,
+approval requirements, protected-area escalation, PR claims, GitHub approval
+claims, and merge-readiness signals.
+
+Loop Governance is the optional `loop_governance` contract for declared
+feedback loops. Stable v2 loop declarations include loop identity, source and
+target phases, allowed feedback sources, `max_iterations`,
+`current_iteration`, status, `stop_conditions`, `escalation_conditions`, and
+`evidence_refs`. PolicyFlow validates and reports loop governance; it does not
+execute, schedule, route, retry, or remember loop work.
+
+Evaluation Governance is the optional `evaluation` contract for declared
+quality criteria. Stable v2 evaluation declarations include
+`compliance_status`, categories, required metrics, thresholds, observed values
+or statuses, evidence references, and merge-blocking intent. PolicyFlow
+validates and reports declared evaluation governance; it does not run tests,
+scanners, benchmarks, agent evaluations, or provider SDKs.
+
+Metric Governance is the metric-level contract inside Evaluation Governance.
+Metrics declare `id`, `name`, optional metric `category`, source, required
+state, thresholds, `actual_value`, status, `evidence_refs`, and
+`blocks_merge`. Consumer-Repos own metric collection and evidence production.
+PolicyFlow validates metric declarations and evidence references, but it does
+not calculate all metrics.
+
+Human Governance covers approval, escalation, arbitration, and override
+evidence. Stable v2 HIGH-risk workflows must carry `evidence.approval` with
+`approved_by`, `reference`, and `scope_confirmed` when human approval is
+required. Approval evidence does not replace a real GitHub review or
+organizational approval; PolicyFlow validates the declared evidence and PR
+claims.
+
+Audit Governance is the read-only reporting contract. `policyflow audit --json`
+and `audit_workflows` expose `policyflow.audit.v1` with workflow, loop,
+evaluation, and human governance summaries. Audit JSON consumers must read
+`schema_version` and treat additional top-level or per-workflow fields as
+additive unless a future release note declares a breaking version.
+
+## v2 Breaking Changes From 0.x
+
+The current 0.x line still accepts selected legacy shapes for compatibility.
+The v2 target boundary makes these compatibility expectations explicit:
+
+- root-level fallback fields are deprecated for new workflow instances.
+- new v2 workflow instances must use canonical `context` and `governance` fields
+  instead of root-level `workflow_file`, `risk_level`, `confidence`,
+  `required_reviews`, `human_approval_required`, `escalation_required`,
+  `protected_areas_touched`, or `approval_evidence`.
+- HIGH-risk workflows must carry `evidence.approval`; `governance.approval_evidence`
+  alone is not sufficient for PR approval validation.
+- workflows that declare `evaluation` must satisfy the risk-based category and
+  required-metric expectations documented in this file and the risk matrix.
+- workflows that declare `loop_governance` must provide stop conditions,
+  escalation conditions, bounded iteration state, and evidence references for
+  completed, terminated, blocked, or escalated loop states.
+- audit JSON consumers must read `schema_version` and should not assume that
+  undocumented internal report fields are stable.
+
+This PR documents the v2 boundary. It does not remove 0.x fallback support.
+Removing fallback support still requires a dedicated release note, migration
+checklist, tests, and an explicit release decision.
+
+## v2 Migration Steps
+
+For each Consumer-Repo before adopting v2 governance:
+
+1. Run `policyflow validate <workflow.yml>` against the current workflow files.
+2. Move root-level fallback fields into `context` and `governance`.
+3. Keep `execution`, `evidence`, `contracts`, `overrides`, `runtime`,
+   `handoffs`, `evaluation`, and `loop_governance` at their canonical top-level
+   locations.
+4. Add missing `evaluation` categories and required metrics for workflows that
+   declare Evaluation Governance.
+5. Add missing `loop_governance` stop and escalation evidence for workflows that
+   declare Loop Governance.
+6. Add or complete `evidence.approval` for HIGH-risk workflows that require
+   human approval.
+7. Verify audit integrations against `policyflow.audit.v1` and confirm they
+   read `schema_version`.
+8. Run `policyflow validate-pr <workflow.yml> pr-body.md` for active PRs.
+9. Run `policyflow audit <workflow-directory> --json`,
+   `policyflow evaluation-report <workflow-directory> --json`, and
+   `policyflow loop-report <workflow-directory> --json` where downstream
+   reporting depends on governance state.
+10. Preview managed asset updates with `policyflow sync .` before applying
+    packaged v2 defaults.
+
+Migration checklist keywords for downstream docs and tests: move root-level fallback fields into `context` and `governance`; add missing `evaluation` categories and required metrics; add missing `loop_governance` stop and escalation evidence; verify audit integrations against `policyflow.audit.v1`.
+
 ## Legacy Root-Level Fallbacks
 
 The validator currently accepts these root-level fallback fields when the

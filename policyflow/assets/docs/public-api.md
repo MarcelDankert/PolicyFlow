@@ -116,3 +116,25 @@ The public API follows the canonical workflow schema described in
 using the same service behavior as these public wrappers. Internal modules can
 remain importable for tests and local development, but Consumer-Repos should not
 treat internal module paths as the compatibility contract.
+
+## v2 Public API Expectations
+
+PolicyFlow 2.x consumers should continue to use `policyflow` and `policyflow.api`
+for supported integration code. Internal modules remain outside the compatibility boundary. They may change when implementation details move.
+
+`WorkflowDocument` remains the normalized governance document returned by
+validation helpers. It represents the canonical workflow, context, governance,
+execution, evidence, contracts, overrides, runtime, handoff, loop governance,
+and evaluation governance shape after compatibility normalization.
+
+`validate_workflow`, `inspect_workflow`, and `validate_workflow_data` remain the
+public validation entry points. `validate_pr_body` and
+`validate_github_approvals` remain the public PR governance entry points.
+
+`audit_workflows` remains the reporting entry point for `policyflow.audit.v1`.
+Consumers that parse audit JSON should read `schema_version`, use documented
+workflow, loop, evaluation, and human governance fields, and tolerate additive
+fields unless a future release note declares a new schema version.
+
+Runtime mutation helpers remain lightweight workflow-state helpers for
+PolicyFlow-owned YAML fields. PolicyFlow validates and reports governance; it does not execute external systems, host runtimes, schedule agents, route messages, manage memory, manage provider credentials, approve pull requests, or replace Consumer-Repo CI and review systems.

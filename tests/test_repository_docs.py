@@ -502,6 +502,51 @@ def test_schema_compatibility_docs_define_canonical_and_legacy_policy() -> None:
     assert "schema compatibility" in release
 
 
+def test_schema_compatibility_docs_define_v2_stable_governance_boundaries() -> None:
+    schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
+    public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
+    packaged_schema = (
+        ROOT / "policyflow/assets/docs/schema-compatibility.md"
+    ).read_text(encoding="utf-8")
+    packaged_public_api = (ROOT / "policyflow/assets/docs/public-api.md").read_text(
+        encoding="utf-8"
+    )
+
+    for expected in (
+        "## v2 Stable Governance Boundary",
+        "Workflow Governance",
+        "Loop Governance",
+        "Evaluation Governance",
+        "Metric Governance",
+        "Human Governance",
+        "Audit Governance",
+        "## v2 Breaking Changes From 0.x",
+        "root-level fallback fields are deprecated",
+        "new v2 workflow instances must use canonical `context` and `governance` fields",
+        "HIGH-risk workflows must carry `evidence.approval`",
+        "audit JSON consumers must read `schema_version`",
+        "## v2 Migration Steps",
+        "move root-level fallback fields into `context` and `governance`",
+        "add missing `evaluation` categories and required metrics",
+        "add missing `loop_governance` stop and escalation evidence",
+        "verify audit integrations against `policyflow.audit.v1`",
+    ):
+        assert expected in schema
+
+    for expected in (
+        "## v2 Public API Expectations",
+        "PolicyFlow 2.x consumers should continue to use `policyflow` and `policyflow.api`",
+        "Internal modules remain outside the compatibility boundary",
+        "`WorkflowDocument` remains the normalized governance document",
+        "`audit_workflows` remains the reporting entry point for `policyflow.audit.v1`",
+        "PolicyFlow validates and reports governance; it does not execute external systems",
+    ):
+        assert expected in public_api
+
+    assert packaged_schema == schema
+    assert packaged_public_api == public_api
+
+
 def test_schema_todo_was_replaced_with_migration_path() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     schemas = (ROOT / "policyflow/schemas.py").read_text(encoding="utf-8")

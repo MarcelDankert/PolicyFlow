@@ -1,0 +1,194 @@
+workflow:
+  id: stabilize-v2-schemas
+  name: Stabilize V2 Schemas
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Declare stable governance schema boundaries for v2.
+
+context:
+  workflow_file: workflows/features/stabilize-v2-schemas.yml
+  issue_key: "#90"
+  goal: Declare stable governance schema boundaries for v2.
+  scope:
+    - document v2 workflow, loop, evaluation, metric, human, and audit governance boundaries
+    - document breaking changes from 0.x and migration steps
+    - update public API expectations for v2 consumers
+    - package matching docs assets
+    - repository docs tests for the stable boundary
+  non_goals:
+    - no runtime execution ownership
+    - no hosted scheduler, message bus, memory, provider credential, or provider SDK behavior
+    - no removal of 0.x fallback support in this PR
+    - no new workflow engine behavior
+  affected_modules:
+    - docs/schema-compatibility.md
+    - docs/public-api.md
+    - policyflow/assets/docs/schema-compatibility.md
+    - policyflow/assets/docs/public-api.md
+    - tests/test_repository_docs.py
+    - workflows/features/stabilize-v2-schemas.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #90 defines the v2 compatibility boundary and therefore follows the HIGH-risk governance path.
+    implementation: Existing schema, audit, loop, evaluation, metric, and public API docs provide the factual source for the stable boundary.
+    tests: Repository docs tests can prove the v2 boundary, breaking-change list, migration steps, public API expectations, and packaged docs parity.
+    residual_uncertainty: Later v2 issues will expand migration and integration guidance without changing the boundary locked here.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - schema compatibility
+    - public API expectations
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #90 scope, non-goals, and HIGH risk were fixed before implementation.
+    scope_locked:
+      - v2 governance schema boundary docs
+      - 0.x breaking-change and migration-step docs
+      - public API expectation docs
+      - packaged docs parity
+    non_goals_locked:
+      - no runtime execution ownership
+      - no removal of fallback support in this PR
+      - no provider SDK coupling
+      - no workflow engine behavior
+    risk_rationale: HIGH risk because v2 schema and public API boundaries affect future consumer compatibility expectations.
+  architecture-check:
+    decision: Stabilize v2 as a documented governance contract while preserving 0.x fallback behavior until an explicit migration release removes it.
+    constraints:
+      - keep PolicyFlow provider-neutral and runtime-neutral
+      - do not remove fallback support in this PR
+      - document breaking changes as v2 expectations, not immediate 0.4.x behavior
+      - keep public imports anchored on policyflow and policyflow.api
+    approval_path: architecture-agent review plus human approval
+  approval:
+    approved_by: MarcelDankert
+    reference: PR approval required before merge
+    scope_confirmed: true
+  implementation:
+    summary: Documented the v2 stable governance boundary, 0.x breaking-change expectations, migration steps, public API expectations, and packaged docs parity.
+    changed_files:
+      - docs/schema-compatibility.md
+      - docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - tests/test_repository_docs.py
+      - workflows/features/stabilize-v2-schemas.yml
+    test_summary: Repository docs tests cover v2 boundary docs, breaking changes, migration steps, public API expectations, and packaged docs parity.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+    known_limitations:
+      - This PR documents the v2 boundary but does not remove 0.x fallback support.
+      - GitHub PR approval by MarcelDankert is required before this HIGH-risk PR can be merge-ready.
+    unresolved_questions:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Stabilize workflow, loop, and evaluation schema boundaries for v2.
+    acceptance_criteria:
+      - workflow, loop, evaluation, and human governance schemas are documented
+      - breaking changes from 0.x are listed with migration steps
+      - public API expectations are updated
+    approved_scope:
+      - schema compatibility docs
+      - public API docs
+      - packaged docs
+      - docs tests
+    non_goals:
+      - no runtime execution ownership
+      - no provider SDK coupling
+      - no fallback removal in this PR
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - schema compatibility
+      - public API expectations
+    confidence_summary: Existing v1.1-v1.4 governance work provides the basis for a stable v2 contract.
+    escalation_flags:
+      - human approval required
+      - schema compatibility boundary
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: v2 stabilization should document a governance contract, not introduce runtime or orchestration ownership.
+    approved_scope:
+      - v2 schema boundary
+      - 0.x migration expectations
+      - public API boundary
+    module_boundaries:
+      - docs/schema-compatibility.md owns schema compatibility and migration policy
+      - docs/public-api.md owns stable public import and report expectations
+      - policyflow models and validators keep current behavior unless a later issue changes semantics
+    contract_impact: Consumer-Repos get a stable target for v2 migration while 0.x compatibility remains intact in this PR.
+    risk_review_decision: HIGH risk path accepted because compatibility expectations are consumer-facing.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - document before semantic enforcement
+      - no provider-specific runtime contract
+      - preserve existing public API names
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Stabilized v2 schema compatibility documentation across workflow, loop, evaluation, metric, human, and audit governance, including migration expectations and public API boundaries.
+    changed_files:
+      - docs/schema-compatibility.md
+      - docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+      - tests/test_repository_docs.py
+      - workflows/features/stabilize-v2-schemas.yml
+    test_summary: Added and passed repository docs tests for the v2 stable governance boundary and packaged docs parity.
+    docs_updates:
+      - docs/schema-compatibility.md
+      - docs/public-api.md
+      - policyflow/assets/docs/schema-compatibility.md
+      - policyflow/assets/docs/public-api.md
+    known_limitations:
+      - no validator semantics changed
+      - no public API names changed
+      - fallback removal is deferred to an explicit later migration release decision
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []
