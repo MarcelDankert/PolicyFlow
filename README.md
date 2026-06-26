@@ -125,6 +125,9 @@ planning or preview artifacts until promoted, and stacked PRs remain
 dependency-bound until their upstream dependencies are satisfied. If a PR body
 edit fixes PolicyFlow metadata, rerun the failed PolicyFlow job or push a new
 commit because GitHub may not start a new Actions run for the body edit alone.
+When GitHub approval state changes, the governance workflow reruns on
+`pull_request_review` submitted and dismissed events instead of waiting inside a
+long-running CI job.
 
 ## Workflow-First Delivery Standard
 

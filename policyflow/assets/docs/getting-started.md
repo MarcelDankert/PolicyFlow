@@ -155,7 +155,9 @@ policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-
 ```
 
 The installed GitHub Actions workflow performs the PR body and GitHub approval
-checks automatically on pull requests.
+checks automatically on pull requests. It also reruns on `pull_request_review`
+submitted and dismissed events, so approval changes retrigger governance checks
+without keeping a CI job waiting.
 
 If a PolicyFlow PR check fails because the PR body is incomplete, update the PR
 body and then rerun the failed PolicyFlow job or push a new commit. In GitHub,

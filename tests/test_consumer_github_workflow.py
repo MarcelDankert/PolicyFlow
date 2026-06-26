@@ -15,22 +15,46 @@ def test_consumer_github_actions_template_has_governance_steps() -> None:
     workflow_path = ROOT / "github" / "workflows" / "policyflow-governance.yml"
 
     data = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    text = workflow_path.read_text(encoding="utf-8")
 
     assert data["name"] == "PolicyFlow Governance"
     assert data["permissions"]["contents"] == "read"
     assert data["permissions"]["pull-requests"] == "read"
+    assert "pull_request_review:" in text
+    assert "types: [submitted, dismissed]" in text
     steps = data["jobs"]["validate-policyflow"]["steps"]
     step_names = {step["name"] for step in steps}
     assert "Install PolicyFlow" in step_names
+    assert "Resolve PR number" in step_names
     assert "Fetch live PR body" in step_names
     assert "Fetch PR reviews" in step_names
     assert "Validate PR body governance" in step_names
+    resolve_step = next(step for step in steps if step["name"] == "Resolve PR number")
+    assert "github.event.review.pull_request_url" in resolve_step["env"]["REVIEW_PULL_REQUEST_URL"]
+    assert "REVIEW_PULL_REQUEST_URL##*/" in resolve_step["run"]
     validate_step = next(step for step in steps if step["name"] == "Validate PR body governance")
     assert "policyflow validate-pr" in validate_step["run"]
     assert "policyflow validate-github-approvals" in validate_step["run"]
     install_step = next(step for step in steps if step["name"] == "Install PolicyFlow")
     assert "python -m pip install \"policyflow==${POLICYFLOW_VERSION}\"" in install_step["run"]
     assert "pip install policyflow\n" not in install_step["run"]
+
+
+def test_repository_github_actions_workflow_reruns_on_review_events() -> None:
+    workflow_path = ROOT / ".github" / "workflows" / "policyflow-governance.yml"
+
+    text = workflow_path.read_text(encoding="utf-8")
+    data = yaml.safe_load(text)
+
+    assert data["permissions"]["pull-requests"] == "read"
+    assert "pull_request_review:" in text
+    assert "types: [submitted, dismissed]" in text
+    steps = data["jobs"]["validate-governance"]["steps"]
+    step_names = {step["name"] for step in steps}
+    assert "Resolve PR number" in step_names
+    resolve_step = next(step for step in steps if step["name"] == "Resolve PR number")
+    assert "github.event.review.pull_request_url" in resolve_step["env"]["REVIEW_PULL_REQUEST_URL"]
+    assert "REVIEW_PULL_REQUEST_URL##*/" in resolve_step["run"]
 
 
 def test_packaged_consumer_github_actions_template_matches_source() -> None:

@@ -7,6 +7,8 @@ permissions:
 on:
   workflow_dispatch:
   pull_request:
+  pull_request_review:
+    types: [submitted, dismissed]
   push:
     branches:
       - main
@@ -59,26 +61,37 @@ jobs:
             policyflow validate "${file}"
           done
 
+      - name: Resolve PR number
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        shell: bash
+        env:
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_PULL_REQUEST_URL: ${{ github.event.review.pull_request_url }}
+        run: |
+          if [ -n "${PULL_REQUEST_NUMBER}" ]; then
+            echo "PR_NUMBER=${PULL_REQUEST_NUMBER}" >> "$GITHUB_ENV"
+          else
+            echo "PR_NUMBER=${REVIEW_PULL_REQUEST_URL##*/}" >> "$GITHUB_ENV"
+          fi
+
       - name: Fetch live PR body
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .body > pr-body.md
 
       - name: Fetch PR reviews
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" > pr-reviews.json
 
       - name: Validate PR body governance
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         shell: bash
         run: |
           python - <<'PY' > workflow-path.txt
