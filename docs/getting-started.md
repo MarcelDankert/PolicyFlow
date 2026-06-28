@@ -315,6 +315,11 @@ bootstrapping a temporary repo, running doctor, generating and validating a
 workflow, executing one implementation phase through a local fake runner, and
 validating a starter PR body without real provider or GitHub network calls.
 
+For a maintained static reference project, see `examples/reference-consumer`.
+It demonstrates bootstrap layout expectations, `policyflow doctor`, workflow
+validation, Loop Governance, Evaluation Governance, and audit reporting without
+a hosted runtime, provider SDK, or provider credentials.
+
 ## Advanced Manual Adoption
 
 Prefer `policyflow init` for normal adoption. Manual copying is only for unusual

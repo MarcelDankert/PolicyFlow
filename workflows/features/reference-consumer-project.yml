@@ -1,0 +1,210 @@
+workflow:
+  id: reference-consumer-project
+  name: Reference Consumer Project
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Add a maintained reference Consumer-Repo path for v2 governance.
+
+context:
+  workflow_file: workflows/features/reference-consumer-project.yml
+  issue_key: "#93"
+  goal: Provide a maintained reference Consumer-Repo path that demonstrates v2 governance without hosted runtime or provider credentials.
+  scope:
+    - reference Consumer-Repo example under examples
+    - bootstrap, doctor, workflow validation, loop governance, evaluation governance, and audit reporting documentation
+    - golden smoke coverage for the reference path
+    - getting-started cross-link
+    - packaged docs asset updates if getting-started changes
+  non_goals:
+    - no hosted runtime
+    - no provider credentials
+    - no provider SDK coupling
+    - no workflow engine, scheduler, message bus, memory, or merge bot behavior
+    - no validator semantic changes
+    - no release publication
+  affected_modules:
+    - examples/reference-consumer/
+    - tests/test_golden_consumer_smoke.py
+    - docs/getting-started.md
+    - policyflow/assets/docs/getting-started.md
+    - workflows/features/reference-consumer-project.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #93 scope is bounded to examples, docs, and golden smoke tests.
+    implementation: Existing bootstrap, doctor, audit, loop, evaluation, and provider-neutral integration docs define the reference path.
+    tests: Golden smoke tests can exercise the reference files without external credentials or hosted runtime dependencies.
+    residual_uncertainty: Future pilots may add provider-specific overlays, but this reference must remain provider-neutral.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #93 scope, non-goals, MEDIUM risk, and reference Consumer-Repo boundary were fixed before implementation.
+    scope_locked:
+      - reference Consumer-Repo example
+      - golden smoke coverage
+      - getting-started link
+      - packaged docs parity
+    non_goals_locked:
+      - no hosted runtime
+      - no provider credentials
+      - no provider SDK coupling
+      - no validator semantic changes
+    risk_rationale: MEDIUM risk because the reference path affects Consumer-Repo adoption expectations without changing runtime or validation semantics.
+  architecture-check:
+    decision: Add the reference as static Consumer-Repo assets and tests, not as a hosted runtime or provider integration.
+    constraints:
+      - demonstrate bootstrap, doctor, validation, loop, evaluation, and audit reporting
+      - keep external execution out of PolicyFlow
+      - keep provider credentials out of the example
+      - avoid changing validator behavior
+    approval_path: architecture-agent, review-agent, and qa-agent review
+  implementation:
+    summary: Added a static reference Consumer-Repo, golden smoke coverage, and getting-started discoverability.
+    changed_files:
+      - examples/reference-consumer/README.md
+      - examples/reference-consumer/policyflow.yml
+      - examples/reference-consumer/policyflow.runners.yml
+      - examples/reference-consumer/.policyflow/bootstrap.json
+      - examples/reference-consumer/ai/project-context.yml
+      - examples/reference-consumer/ai/agents/reference-agent.md
+      - examples/reference-consumer/ai/prompts/reference-agent.prompt.md
+      - examples/reference-consumer/ai/rules/reference-governance.md
+      - examples/reference-consumer/ai/workflows/features/v2-reference-governance.yml
+      - tests/test_golden_consumer_smoke.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/reference-consumer-project.yml
+    docs_updates:
+      - getting-started reference consumer link
+      - reference consumer README
+    test_summary:
+      - pytest -q tests/test_golden_consumer_smoke.py -k reference_consumer_project
+      - pytest -q tests/test_golden_consumer_smoke.py
+      - pytest -q tests/test_repository_docs.py
+      - policyflow validate examples/reference-consumer/ai/workflows/features/v2-reference-governance.yml
+    limitations:
+      - no hosted runtime is included
+      - no provider credentials are required
+      - provider-specific overlays remain outside this reference
+  qa:
+    outcome: passed
+    evidence_summary: Golden smoke and docs tests verify the reference Consumer-Repo path and documentation parity.
+    checks_run:
+      - pytest -q tests/test_golden_consumer_smoke.py -k reference_consumer_project
+      - pytest -q tests/test_golden_consumer_smoke.py
+      - pytest -q tests/test_repository_docs.py
+      - policyflow validate examples/reference-consumer/ai/workflows/features/v2-reference-governance.yml
+    unresolved_risks:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Add a maintained reference Consumer-Repo path for v2 governance.
+    acceptance_criteria:
+      - reference path demonstrates bootstrap, doctor, workflow validation, loop governance, evaluation governance, and audit reporting
+      - reference does not require a hosted runtime or provider credentials
+      - golden smoke tests cover the reference path
+    approved_scope:
+      - examples/reference-consumer
+      - tests/test_golden_consumer_smoke.py
+      - docs/getting-started.md
+      - packaged docs assets
+    non_goals:
+      - no provider SDK requirements
+      - no runtime ownership
+      - no validator semantic changes
+      - no release publication
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Existing v2 docs and golden smoke helpers provide a stable basis for a provider-neutral reference path.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The reference Consumer-Repo should be a provider-neutral adoption fixture that demonstrates governance commands and workflow shape without external credentials.
+    approved_scope:
+      - reference example files
+      - golden smoke tests
+      - getting-started documentation link
+    module_boundaries:
+      - examples/reference-consumer owns the maintained reference path
+      - tests/test_golden_consumer_smoke.py owns end-to-end fixture verification
+      - docs/getting-started.md owns discoverability
+      - validator and runner behavior remain unchanged
+    contract_impact: Consumer-Repos get a maintained v2 governance reference without changing PolicyFlow runtime or validation contracts.
+    risk_review_decision: MEDIUM risk accepted because the change affects adoption examples and tests only.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no hosted runtime
+      - no provider credentials
+      - no provider SDK coupling
+      - no execution ownership
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added a static reference Consumer-Repo, golden smoke coverage, and getting-started discoverability.
+    changed_files:
+      - examples/reference-consumer/README.md
+      - examples/reference-consumer/policyflow.yml
+      - examples/reference-consumer/policyflow.runners.yml
+      - examples/reference-consumer/.policyflow/bootstrap.json
+      - examples/reference-consumer/ai/project-context.yml
+      - examples/reference-consumer/ai/agents/reference-agent.md
+      - examples/reference-consumer/ai/prompts/reference-agent.prompt.md
+      - examples/reference-consumer/ai/rules/reference-governance.md
+      - examples/reference-consumer/ai/workflows/features/v2-reference-governance.yml
+      - tests/test_golden_consumer_smoke.py
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/reference-consumer-project.yml
+    test_summary: "Passed: pytest -q tests/test_golden_consumer_smoke.py -k reference_consumer_project; pytest -q tests/test_golden_consumer_smoke.py; pytest -q tests/test_repository_docs.py; policyflow validate examples/reference-consumer/ai/workflows/features/v2-reference-governance.yml."
+    docs_updates:
+      - getting-started reference consumer link
+      - reference consumer README
+    known_limitations:
+      - no hosted runtime is included
+      - no provider credentials are required
+      - provider-specific overlays remain outside this reference
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

@@ -1,0 +1,14 @@
+default_runner: command
+
+runners:
+  command:
+    type: command
+    command:
+      - "{python_executable}"
+      - "-m"
+      - "policyflow.codex_runner"
+      - "--input"
+      - "{input_path}"
+      - "--output"
+      - "{output_path}"
+

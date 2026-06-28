@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import shutil
 import sys
 
 from typer.testing import CliRunner
@@ -108,6 +109,65 @@ def test_golden_consumer_repo_path_runs_end_to_end(tmp_path: Path) -> None:
         ["validate-pr", str(workflow_path), str(pr_body_path)],
     )
     assert validate_pr_result.exit_code == 0
+
+
+def test_reference_consumer_project_demonstrates_v2_governance(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[1] / "examples/reference-consumer"
+    target = tmp_path / "reference-consumer"
+    shutil.copytree(source, target)
+
+    readme = (target / "README.md").read_text(encoding="utf-8")
+    for expected in (
+        "bootstrap",
+        "doctor",
+        "workflow validation",
+        "loop governance",
+        "evaluation governance",
+        "audit reporting",
+        "No hosted runtime",
+        "No provider credentials",
+    ):
+        assert expected in readme
+
+    config_result = runner.invoke(app, ["config-check", str(target / "policyflow.yml")])
+    assert config_result.exit_code == 0
+
+    doctor_result = runner.invoke(app, ["doctor", str(target), "--json"])
+    assert doctor_result.exit_code == 0
+    doctor_payload = json.loads(doctor_result.stdout)
+    assert doctor_payload["ready"] is True
+
+    workflow_path = target / "ai/workflows/features/v2-reference-governance.yml"
+    validate_result = runner.invoke(app, ["validate", str(workflow_path)])
+    assert validate_result.exit_code == 0
+
+    audit_result = runner.invoke(app, ["audit", str(target / "ai/workflows"), "--json"])
+    assert audit_result.exit_code == 0
+    audit_payload = json.loads(audit_result.stdout)
+    assert audit_payload["schema_version"] == "policyflow.audit.v1"
+    assert audit_payload["summary"]["loop_governance"]["declared"] == 1
+    assert audit_payload["summary"]["evaluation_governance"]["declared"] == 1
+
+    evaluation_result = runner.invoke(
+        app,
+        ["evaluation-report", str(target / "ai/workflows"), "--json"],
+    )
+    assert evaluation_result.exit_code == 0
+    evaluation_payload = json.loads(evaluation_result.stdout)
+    assert evaluation_payload["summary"]["evaluations_declared"] == 1
+
+    loop_result = runner.invoke(
+        app,
+        ["loop-report", str(target / "ai/workflows"), "--json"],
+    )
+    assert loop_result.exit_code == 0
+    loop_payload = json.loads(loop_result.stdout)
+    assert loop_payload["summary"]["loops_declared"] == 1
+
+    getting_started = (
+        Path(__file__).resolve().parents[1] / "docs/getting-started.md"
+    ).read_text(encoding="utf-8")
+    assert "examples/reference-consumer" in getting_started
 
 
 def _write_fake_runner(path: Path) -> Path:

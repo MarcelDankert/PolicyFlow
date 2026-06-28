@@ -1,0 +1,16 @@
+{
+  "policyflow_version": "0.4.0",
+  "managed_assets": [
+    ".policyflow/bootstrap.json",
+    "ai/agents/reference-agent.md",
+    "ai/project-context.yml",
+    "ai/prompts/reference-agent.prompt.md",
+    "ai/rules/reference-governance.md",
+    "ai/workflows/features/v2-reference-governance.yml",
+    "policyflow.runners.yml",
+    "policyflow.yml"
+  ],
+  "asset_hashes": {},
+  "force": false
+}
+

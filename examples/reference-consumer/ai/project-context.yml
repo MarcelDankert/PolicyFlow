@@ -1,0 +1,15 @@
+project:
+  name: PolicyFlow Reference Consumer
+  type: reference-consumer
+  lifecycle: example
+
+governance:
+  policyflow_version: "0.4.0"
+  default_risk: MEDIUM
+  runtime_boundary: External systems produce evidence; PolicyFlow validates and reports it.
+
+integrations:
+  provider_credentials_required: false
+  hosted_runtime_required: false
+  provider_sdk_required: false
+
