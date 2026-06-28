@@ -1,0 +1,204 @@
+workflow:
+  id: provider-neutral-integration-contract
+  name: Provider Neutral Integration Contract
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Document how external runtimes, CI systems, and agent frameworks provide governance evidence to PolicyFlow.
+
+context:
+  workflow_file: workflows/features/provider-neutral-integration-contract.yml
+  issue_key: "#92"
+  goal: Define the provider-neutral integration contract for external systems that supply PolicyFlow governance evidence.
+  scope:
+    - provider-neutral integration contract documentation
+    - workflow, loop, evaluation, and human governance evidence examples
+    - public API and runner contract cross-links
+    - packaged docs asset updates
+    - repository docs coverage
+  non_goals:
+    - no provider SDK requirements
+    - no hosted runtime, scheduler, message bus, memory, or workflow engine behavior
+    - no validator semantic changes
+    - no runner execution behavior changes
+    - no release publication
+  affected_modules:
+    - docs/provider-neutral-integration-contract.md
+    - docs/runner-contract.md
+    - docs/public-api.md
+    - policyflow/assets/docs/provider-neutral-integration-contract.md
+    - policyflow/assets/docs/runner-contract.md
+    - policyflow/assets/docs/public-api.md
+    - tests/test_repository_docs.py
+    - workflows/features/provider-neutral-integration-contract.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: Issue #92 scope is bounded to docs and packaged docs assets.
+    implementation: Existing runner, public API, schema compatibility, audit, loop, and evaluation docs provide the source contract.
+    tests: Repository docs tests can verify required contract sections, boundaries, examples, links, and packaged docs parity.
+    residual_uncertainty: Future provider integrations may add examples, but this PR should not introduce provider-specific APIs.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #92 scope, non-goals, MEDIUM risk, and provider-neutral boundaries were fixed before implementation.
+    scope_locked:
+      - provider-neutral integration contract docs
+      - workflow, loop, evaluation, and human evidence examples
+      - runner and public API cross-links
+      - packaged docs parity
+    non_goals_locked:
+      - no provider SDK requirements
+      - no runtime, scheduler, message bus, memory, or workflow engine behavior
+      - no validator semantic changes
+      - no runner execution changes
+    risk_rationale: MEDIUM risk because the docs define consumer-facing integration expectations without changing executable behavior.
+  architecture-check:
+    decision: Document the integration boundary as evidence input and reporting output, not execution ownership.
+    constraints:
+      - keep PolicyFlow provider-neutral
+      - describe external systems as evidence producers
+      - keep runtime and provider credentials outside PolicyFlow
+      - keep validator and runner behavior unchanged
+    approval_path: architecture-agent, review-agent, and qa-agent review
+  implementation:
+    summary: Added provider-neutral integration contract documentation, runner and public API cross-links, packaged docs assets, and repository docs coverage.
+    changed_files:
+      - docs/provider-neutral-integration-contract.md
+      - docs/runner-contract.md
+      - docs/public-api.md
+      - policyflow/assets/docs/provider-neutral-integration-contract.md
+      - policyflow/assets/docs/runner-contract.md
+      - policyflow/assets/docs/public-api.md
+      - tests/test_repository_docs.py
+      - workflows/features/provider-neutral-integration-contract.yml
+    docs_updates:
+      - provider-neutral evidence producer responsibilities
+      - workflow evidence example
+      - loop evidence example
+      - evaluation evidence example
+      - human governance evidence example
+      - audit and reporting boundary
+      - runner and public API source-path links
+    test_summary:
+      - pytest -q tests/test_repository_docs.py -k provider_neutral_integration_contract
+      - pytest -q tests/test_repository_docs.py
+    limitations:
+      - validator semantics remain unchanged
+      - runner execution behavior remains unchanged
+      - provider-specific integrations remain outside this PR
+  qa:
+    outcome: passed
+    evidence_summary: Repository documentation tests verify the provider-neutral integration contract and packaged docs parity.
+    checks_run:
+      - pytest -q tests/test_repository_docs.py -k provider_neutral_integration_contract
+      - pytest -q tests/test_repository_docs.py
+    unresolved_risks:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document the provider-neutral integration contract for external evidence producers.
+    acceptance_criteria:
+      - contract covers workflow evidence, loop evidence, evaluation evidence, and human governance evidence
+      - contract avoids provider SDK requirements
+      - contract clarifies that PolicyFlow validates and reports but does not execute external systems
+    approved_scope:
+      - docs/provider-neutral-integration-contract.md
+      - docs/runner-contract.md
+      - docs/public-api.md
+      - packaged docs assets
+      - repository docs tests
+    non_goals:
+      - no provider SDK requirements
+      - no runtime ownership
+      - no validator semantic changes
+      - no runner execution behavior changes
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Existing v2 schema and runner documentation provide stable inputs for a docs-only integration contract.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The contract should describe evidence producer responsibilities and PolicyFlow validation/reporting responsibilities without coupling to any provider SDK.
+    approved_scope:
+      - provider-neutral docs
+      - public API and runner cross-links
+      - docs tests
+    module_boundaries:
+      - docs/provider-neutral-integration-contract.md owns integration responsibilities and examples
+      - docs/runner-contract.md owns runner invocation boundaries
+      - docs/public-api.md owns supported Python integration imports
+      - validator and runner behavior remain unchanged
+    contract_impact: Consumer-Repos and external tools receive a stable documentation target for supplying governance evidence.
+    risk_review_decision: MEDIUM risk accepted because this is consumer-facing documentation without executable contract changes.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - avoid provider SDK dependencies
+      - no execution ownership
+      - keep examples provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added provider-neutral integration contract documentation, runner and public API cross-links, packaged docs assets, and repository docs coverage.
+    changed_files:
+      - docs/provider-neutral-integration-contract.md
+      - docs/runner-contract.md
+      - docs/public-api.md
+      - policyflow/assets/docs/provider-neutral-integration-contract.md
+      - policyflow/assets/docs/runner-contract.md
+      - policyflow/assets/docs/public-api.md
+      - tests/test_repository_docs.py
+      - workflows/features/provider-neutral-integration-contract.yml
+    test_summary: "Passed: pytest -q tests/test_repository_docs.py -k provider_neutral_integration_contract; pytest -q tests/test_repository_docs.py."
+    docs_updates:
+      - provider-neutral integration contract
+      - runner contract cross-link
+      - public API cross-link
+    known_limitations:
+      - validator semantics remain unchanged
+      - runner execution behavior remains unchanged
+      - provider-specific integrations remain outside this PR
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

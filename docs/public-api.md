@@ -4,6 +4,11 @@ Consumer-Repos and integrations should import PolicyFlow through `policyflow`
 or `policyflow.api`. Modules such as `policyflow.validator`,
 `policyflow.runtime`, and `policyflow.reporting` remain internal implementation details and may change as long as the public API keeps its documented behavior.
 
+For the provider-neutral evidence boundary used by external runtimes, CI
+systems, and agent frameworks, see
+[provider-neutral-integration-contract.md](provider-neutral-integration-contract.md).
+Source path: `docs/provider-neutral-integration-contract.md`.
+
 ## Stable Imports
 
 Package root imports are supported:
