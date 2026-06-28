@@ -1,0 +1,337 @@
+workflow:
+  id: querypilot-pilot-workflow
+  type: feature
+
+context:
+  workflow_file: workflows/examples/querypilot-pilot-workflow.yml
+  goal: Demonstrate Querypilot Loop and Evaluation Governance without SQL execution in PolicyFlow.
+  scope:
+    - Querypilot SQL governance metrics
+    - Querypilot feedback-loop declarations
+    - provider-neutral evidence references
+  non_goals:
+    - no SQL execution
+    - no database connectivity
+    - no provider SDK coupling
+    - no hosted runtime
+  affected_modules:
+    - examples
+  risk_level: MEDIUM
+  confidence:
+    planning: Querypilot pilot metrics and loops are declared before implementation.
+    implementation: The example remains bounded to provider-neutral governance metadata.
+    tests: Workflow validation checks the declared governance shape.
+    residual_uncertainty: Querypilot must map artifact refs to its own CI, SQL sandbox, and review systems.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Querypilot pilot scope and non-goals were locked before implementation.
+    scope_locked:
+      - SQL guardrail metrics
+      - SELECT-only metric
+      - executable SQL metric
+      - tests, coverage, latency, review, and security metrics
+      - SQL safety feedback loop
+    non_goals_locked:
+      - no SQL execution in PolicyFlow
+      - no provider credentials
+      - no hosted runtime
+    risk_rationale: MEDIUM risk because SQL governance can affect Consumer-Repo merge readiness.
+  architecture-check:
+    decision: Keep Querypilot as the evidence producer and PolicyFlow as validator and reporter.
+    constraints:
+      - SQL execution remains in Querypilot or its CI/runtime
+      - evidence refs remain provider-neutral
+      - PolicyFlow does not manage database credentials
+    approval_path: architecture-agent review
+  review:
+    outcome: approved
+    findings_summary: Review score evidence confirms generated SQL intent and safety were reviewed.
+    residual_risk: Querypilot must supply its own review artifact storage.
+  qa:
+    outcome: passed
+    evidence_summary: QA evidence covers executable SQL, tests, coverage, and latency.
+    unresolved_risks:
+      - Querypilot must supply its own SQL sandbox and benchmark artifacts.
+  security:
+    summary: Security evidence covers SQL guardrail and security findings results.
+    sql_guardrail: passed
+    security_findings: "0"
+
+evaluation:
+  compliance_status: passed
+  categories:
+    - id: tests
+      required_metrics:
+        - id: test-pass-rate
+          name: Test pass rate
+          category: tests
+          source: querypilot-ci
+          required: true
+          thresholds:
+            operator: greater_than_or_equal
+            value: "95"
+          actual_value: "98"
+          status: passed
+          evidence_refs:
+            - evidence.qa
+            - artifact://querypilot-test-report
+          blocks_merge: true
+    - id: sql-safety
+      required_metrics:
+        - id: querypilot-sql-guardrail
+          name: SQL guardrail status
+          category: sql-safety
+          source: querypilot-sql-guardrail
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.security
+            - artifact://querypilot-sql-guardrail-report
+          blocks_merge: true
+        - id: select-only
+          name: SELECT-only status
+          category: sql-safety
+          source: querypilot-sql-guardrail
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - artifact://querypilot-sql-guardrail-report
+          blocks_merge: true
+        - id: executable-sql
+          name: Executable SQL status
+          category: sql-safety
+          source: querypilot-sql-sandbox
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          actual_value: passed
+          status: passed
+          evidence_refs:
+            - evidence.qa
+            - artifact://querypilot-executable-sql-report
+          blocks_merge: true
+    - id: coverage
+      required_metrics:
+        - id: coverage-percent
+          name: Coverage percentage
+          category: coverage
+          source: querypilot-ci
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "80"
+          actual_value: "86"
+          status: passed
+          evidence_refs:
+            - artifact://querypilot-coverage-report
+          blocks_merge: false
+    - id: performance
+      required_metrics:
+        - id: p95-latency-ms
+          name: P95 response latency in milliseconds
+          category: performance
+          source: querypilot-benchmark
+          required: false
+          thresholds:
+            operator: less_than_or_equal
+            value: "250"
+          actual_value: "190"
+          status: passed
+          evidence_refs:
+            - artifact://querypilot-latency-report
+          blocks_merge: false
+    - id: review
+      required_metrics:
+        - id: review-score
+          name: Human review score
+          category: review
+          source: human-review
+          required: false
+          thresholds:
+            operator: greater_than_or_equal
+            value: "4"
+          actual_value: "4"
+          status: passed
+          evidence_refs:
+            - evidence.review
+          blocks_merge: false
+    - id: security
+      required_metrics:
+        - id: security-findings
+          name: Critical security findings
+          category: security
+          source: querypilot-security-scan
+          required: true
+          thresholds:
+            operator: equals
+            value: "0"
+          actual_value: "0"
+          status: passed
+          evidence_refs:
+            - evidence.security
+            - artifact://querypilot-security-report
+          blocks_merge: true
+
+loop_governance:
+  loops:
+    - id: sql-safety-loop
+      source_phase: qa
+      target_phase: implementation
+      allowed_feedback_sources:
+        - sql-safety-check
+        - query-plan-review
+        - human-arbitration
+      max_iterations: 3
+      current_iteration: 1
+      status: active
+      stop_conditions:
+        - id: sql-guardrails-passed
+          description: SQL guardrails, SELECT-only check, and executable SQL check pass.
+      escalation_conditions:
+        - id: unsafe-query-plan
+          trigger: unsafe_query_plan_or_protected_table_access
+          escalate_to: data-owner
+      evidence_refs:
+        - evidence.qa
+        - evidence.security
+        - artifact://querypilot-sql-guardrail-report
+    - id: review-score-loop
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+        - human-arbitration
+      max_iterations: 2
+      current_iteration: 1
+      status: completed
+      stop_conditions:
+        - id: review-score-accepted
+          description: Review score meets the declared threshold.
+      escalation_conditions:
+        - id: unresolved-query-intent
+          trigger: ambiguous_data_access_intent
+          escalate_to: human-owner
+      evidence_refs:
+        - evidence.review
+        - stop_conditions.review-score-accepted
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Demonstrate Querypilot governance as a provider-neutral pilot.
+    acceptance_criteria:
+      - SQL safety metrics are declared
+      - loop governance models SQL safety and review feedback
+      - evidence remains external and provider-neutral
+    approved_scope:
+      - querypilot pilot workflow example
+    non_goals:
+      - no SQL execution in PolicyFlow
+      - no provider SDK coupling
+    initial_risk_level: MEDIUM
+    protected_areas_touched:
+      - none
+    confidence_summary: Querypilot pilot expectations are clear for architecture review.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Querypilot remains the SQL evidence producer; PolicyFlow validates declarations and reports compliance.
+    approved_scope:
+      - querypilot metrics
+      - querypilot loops
+      - provider-neutral evidence references
+    module_boundaries:
+      - Querypilot owns SQL execution and evidence production
+      - PolicyFlow owns validation and reporting
+    contract_impact: No provider or runtime contract is introduced.
+    risk_review_decision: MEDIUM risk remains appropriate for SQL governance examples.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no SQL execution in PolicyFlow
+      - keep artifact refs provider-neutral
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Querypilot pilot governance declarations.
+    changed_files:
+      - workflows/examples/querypilot-pilot-workflow.yml
+    test_summary: Workflow validation verifies the example shape.
+    docs_updates:
+      - docs/querypilot-pilot.md
+    known_limitations:
+      - Querypilot must produce the referenced artifacts.
+    unresolved_questions:
+      - Consumer-Repos must choose their artifact URI conventions.
+  review:
+    owner_agent: review-agent
+    review_findings:
+      - Querypilot responsibility split is clear.
+    required_fixes:
+      - none
+    severity: none
+    approval_status: approved
+    review_approval: Review approved.
+    residual_risk: Querypilot implementation remains external.
+    qa_focus_areas:
+      - workflow validation
+      - evidence reference clarity
+    test_expectations:
+      - example workflow remains valid
+  qa:
+    owner_agent: qa-agent
+    qa_report: Workflow validation confirms the example is structurally valid.
+    quality_gate_status: passed
+    unresolved_risks:
+      - Querypilot must produce referenced artifacts.
+    approval_required: false
+    merge_readiness: true
+
+overrides: []
+
+runtime:
+  status: idle
+  current_phase: qa
+  active_agent: qa-agent
+  last_transition: qa completed
+
+handoffs: []
+
