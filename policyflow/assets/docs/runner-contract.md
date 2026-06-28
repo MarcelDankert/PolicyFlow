@@ -6,6 +6,11 @@ internal tool that reads PolicyFlow input JSON and writes PolicyFlow result JSON
 PolicyFlow core does not import provider SDKs and does not manage provider
 credentials.
 
+The broader evidence boundary for external runtimes, CI systems, and agent
+frameworks is documented in
+[provider-neutral-integration-contract.md](provider-neutral-integration-contract.md).
+Source path: `docs/provider-neutral-integration-contract.md`.
+
 ## Runner Configuration
 
 Use `type: command` for the generic adapter path:

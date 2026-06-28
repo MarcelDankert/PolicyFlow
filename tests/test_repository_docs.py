@@ -464,6 +464,7 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "metric-governance.md",
         "overview.md",
         "governance-enforcement-roadmap.md",
+        "provider-neutral-integration-contract.md",
         "public-api.md",
         "release-and-upgrade.md",
         "schema-compatibility.md",
@@ -631,6 +632,51 @@ def test_v2_migration_guide_covers_contract_changes_and_examples() -> None:
 
     assert packaged_guide == guide
     assert "docs/v2-migration-guide.md" in release
+
+
+def test_provider_neutral_integration_contract_defines_evidence_boundary() -> None:
+    contract = (ROOT / "docs/provider-neutral-integration-contract.md").read_text(
+        encoding="utf-8"
+    )
+    packaged_contract = (
+        ROOT / "policyflow/assets/docs/provider-neutral-integration-contract.md"
+    ).read_text(encoding="utf-8")
+    runner = (ROOT / "docs/runner-contract.md").read_text(encoding="utf-8")
+    public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
+
+    for expected in (
+        "# Provider-Neutral Integration Contract",
+        "## Contract Purpose",
+        "## Integration Responsibilities",
+        "## Workflow Evidence",
+        "## Loop Evidence",
+        "## Evaluation Evidence",
+        "## Human Governance Evidence",
+        "## Audit And Reporting",
+        "## Non-Goals",
+        "external runtimes",
+        "CI systems",
+        "agent frameworks",
+        "evidence producers",
+        "PolicyFlow validates and reports",
+        "PolicyFlow does not execute external systems",
+        "provider SDK",
+        "provider credentials",
+        "workflow_file:",
+        "evidence:",
+        "loop_governance:",
+        "evaluation:",
+        "evidence.approval",
+        "policyflow.audit.v1",
+        "policyflow.api",
+        "policyflow validate",
+        "policyflow audit",
+    ):
+        assert expected in contract
+
+    assert "docs/provider-neutral-integration-contract.md" in runner
+    assert "docs/provider-neutral-integration-contract.md" in public_api
+    assert packaged_contract == contract
 
 
 def test_schema_todo_was_replaced_with_migration_path() -> None:
