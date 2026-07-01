@@ -6,6 +6,28 @@ asset compatibility changes.
 
 ## Unreleased
 
+## 1.0.0
+
+Released: 2026-07-01
+
+Agentic Governance Platform release.
+
+- Stabilized the Agentic Governance Platform baseline across workflow,
+  loop, evaluation, metric, human, audit, and reporting governance.
+- Added v2 migration guidance, schema compatibility boundaries,
+  provider-neutral integration expectations, and public API guidance for
+  Consumer-Repos adopting the stable governance contract.
+- Added maintained reference-consumer and Querypilot pilot documentation that
+  demonstrate PolicyFlow as a governance layer without making it a runtime,
+  scheduler, memory layer, provider SDK, or workflow engine.
+- Kept existing 0.x root-level workflow fallback compatibility while making
+  canonical `context` and `governance` fields the stable generated-workflow
+  path.
+- Updated README, release guidance, getting started docs, packaged docs, and
+  Consumer-Repo GitHub governance workflow pins for `policyflow==1.0.0`.
+- Validated the release through packaging checks, managed asset parity, example
+  workflow validation, and the full test suite.
+
 ## 0.4.0
 
 Released: 2026-06-26

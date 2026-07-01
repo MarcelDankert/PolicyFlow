@@ -60,7 +60,7 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     metadata = json.loads(
         (tmp_path / ".policyflow/bootstrap.json").read_text(encoding="utf-8")
     )
-    assert metadata["policyflow_version"] == "0.4.0"
+    assert metadata["policyflow_version"] == "1.0.0"
     assert "policyflow.yml" in metadata["managed_assets"]
     assert "ai/workflows/templates/feature-workflow.template.yml" in metadata["managed_assets"]
     assert "ai/workflows/features/starter-workflow.yml" in metadata["managed_assets"]
