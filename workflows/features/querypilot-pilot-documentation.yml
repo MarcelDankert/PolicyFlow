@@ -1,0 +1,195 @@
+workflow:
+  id: querypilot-pilot-documentation
+  name: Querypilot Pilot Documentation
+  version: 1
+  type: feature
+  status: active
+  template_reference: workflows/templates/feature-workflow.template.yml
+  description: Document Querypilot as the first Loop and Evaluation Governance pilot.
+
+context:
+  workflow_file: workflows/features/querypilot-pilot-documentation.yml
+  issue_key: "#94"
+  goal: Document Querypilot as the first pilot for Loop and Evaluation Governance.
+  scope:
+    - Querypilot pilot documentation
+    - Querypilot governance goals, metrics, loops, evidence, and non-goals
+    - SQL guardrail, SELECT-only, executable SQL, tests, coverage, latency, review score, and security findings examples
+    - PolicyFlow versus Querypilot responsibility split
+    - roadmap cross-link
+    - provider-neutral workflow example
+  non_goals:
+    - no Querypilot implementation
+    - no SQL execution in PolicyFlow
+    - no hosted runtime, scheduler, message bus, memory, provider credential, provider SDK, or merge bot behavior
+    - no validator semantic changes
+    - no release publication
+  affected_modules:
+    - docs/querypilot-pilot.md
+    - docs/roadmap-agentic-governance.md
+    - policyflow/assets/docs/querypilot-pilot.md
+    - policyflow/assets/docs/roadmap-agentic-governance.md
+    - workflows/examples/querypilot-pilot-workflow.yml
+    - tests/test_repository_docs.py
+    - workflows/features/querypilot-pilot-documentation.yml
+  risk_level: LOW
+  confidence:
+    planning: Issue #94 is documentation and example scoped after the reference Consumer-Repo path was added.
+    implementation: Existing Loop Governance, Evaluation Governance, Metric Governance, and reference consumer docs provide the source contract.
+    tests: Repository docs tests and workflow validation can verify the pilot documentation and example workflow.
+    residual_uncertainty: Querypilot itself owns implementation details and may refine pilot metrics later.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+  approval_evidence:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: in_progress
+    - phase: qa
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #94 scope, non-goals, LOW risk, and Querypilot responsibility boundary were fixed before implementation.
+    scope_locked:
+      - Querypilot pilot docs
+      - roadmap link
+      - provider-neutral example workflow
+      - packaged docs parity
+    non_goals_locked:
+      - no Querypilot implementation
+      - no SQL execution in PolicyFlow
+      - no runtime, provider, scheduler, memory, message bus, or merge bot behavior
+    risk_rationale: LOW risk because the change is documentation and examples only.
+  architecture-check:
+    decision: Document Querypilot as a pilot that produces governance evidence while PolicyFlow validates and reports it.
+    constraints:
+      - keep SQL execution in Querypilot or its CI/runtime
+      - keep PolicyFlow provider-neutral
+      - document responsibility split explicitly
+      - avoid validator behavior changes
+    approval_path: review-agent and qa-agent review
+  implementation:
+    summary: Added Querypilot pilot docs, packaged docs asset, roadmap links, example workflow, and repository docs coverage.
+    changed_files:
+      - docs/querypilot-pilot.md
+      - docs/roadmap-agentic-governance.md
+      - policyflow/assets/docs/querypilot-pilot.md
+      - policyflow/assets/docs/roadmap-agentic-governance.md
+      - workflows/examples/querypilot-pilot-workflow.yml
+      - tests/test_repository_docs.py
+      - workflows/features/querypilot-pilot-documentation.yml
+    docs_updates:
+      - Querypilot governance goals
+      - Querypilot metrics, loops, evidence, and non-goals
+      - Querypilot versus PolicyFlow responsibility split
+      - roadmap links to pilot docs and example workflow
+    test_summary:
+      - pytest -q tests/test_repository_docs.py -k querypilot_pilot
+      - policyflow validate workflows/examples/querypilot-pilot-workflow.yml
+    limitations:
+      - Querypilot implementation remains external
+      - SQL execution remains outside PolicyFlow
+      - provider-specific integrations remain outside this PR
+  qa:
+    outcome: passed
+    evidence_summary: Targeted repository docs test and example workflow validation passed.
+    checks_run:
+      - pytest -q tests/test_repository_docs.py -k querypilot_pilot
+      - policyflow validate workflows/examples/querypilot-pilot-workflow.yml
+    unresolved_risks:
+      - none
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Document Querypilot as the first Loop and Evaluation Governance pilot.
+    acceptance_criteria:
+      - documentation lists Querypilot governance goals, metrics, loops, evidence, and non-goals
+      - documentation includes SQL guardrail, SELECT-only, executable SQL, tests, coverage, latency, review score, and security findings examples
+      - documentation clarifies which parts belong in Querypilot versus PolicyFlow
+    approved_scope:
+      - docs/querypilot-pilot.md
+      - docs/roadmap-agentic-governance.md
+      - workflows/examples/querypilot-pilot-workflow.yml
+      - packaged docs assets
+      - repository docs tests
+    non_goals:
+      - no Querypilot implementation
+      - no SQL execution in PolicyFlow
+      - no provider SDK coupling
+      - no validator semantic changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: The reference consumer path and v2 governance docs provide a stable documentation target.
+    escalation_flags:
+      - none
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Querypilot should be framed as an evidence-producing pilot, not as PolicyFlow-owned SQL execution or provider orchestration.
+    approved_scope:
+      - pilot docs
+      - roadmap link
+      - provider-neutral example workflow
+    module_boundaries:
+      - docs/querypilot-pilot.md owns the pilot narrative
+      - workflows/examples/querypilot-pilot-workflow.yml owns the example workflow shape
+      - Querypilot owns SQL parsing, execution, benchmarks, and domain implementation
+      - PolicyFlow owns validation and reporting of declared governance
+    contract_impact: Consumer-facing examples clarify how Querypilot can supply loop and evaluation evidence without expanding PolicyFlow scope.
+    risk_review_decision: LOW risk accepted because this is docs and examples only.
+    required_reviews:
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - no SQL execution in PolicyFlow
+      - no provider credentials
+      - no validator behavior changes
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added Querypilot pilot docs, packaged docs asset, roadmap links, example workflow, and repository docs coverage.
+    changed_files:
+      - docs/querypilot-pilot.md
+      - docs/roadmap-agentic-governance.md
+      - policyflow/assets/docs/querypilot-pilot.md
+      - policyflow/assets/docs/roadmap-agentic-governance.md
+      - workflows/examples/querypilot-pilot-workflow.yml
+      - tests/test_repository_docs.py
+      - workflows/features/querypilot-pilot-documentation.yml
+    test_summary: "Passed: pytest -q tests/test_repository_docs.py -k querypilot_pilot; policyflow validate workflows/examples/querypilot-pilot-workflow.yml."
+    docs_updates:
+      - Querypilot pilot documentation
+      - Querypilot roadmap links
+      - Querypilot example workflow
+    known_limitations:
+      - Querypilot implementation remains external
+      - SQL execution remains outside PolicyFlow
+      - provider-specific integrations remain outside this PR
+    unresolved_questions:
+      - none
+
+overrides: []
+
+runtime:
+  status: in_progress
+  current_phase: review
+  active_agent: review-agent
+  last_transition: implementation completed
+
+handoffs: []

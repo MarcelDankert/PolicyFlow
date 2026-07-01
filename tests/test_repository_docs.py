@@ -466,7 +466,9 @@ def test_packaged_getting_started_matches_source_doc() -> None:
         "governance-enforcement-roadmap.md",
         "provider-neutral-integration-contract.md",
         "public-api.md",
+        "querypilot-pilot.md",
         "release-and-upgrade.md",
+        "roadmap-agentic-governance.md",
         "schema-compatibility.md",
         "v2-migration-guide.md",
     ):
@@ -677,6 +679,61 @@ def test_provider_neutral_integration_contract_defines_evidence_boundary() -> No
     assert "docs/provider-neutral-integration-contract.md" in runner
     assert "docs/provider-neutral-integration-contract.md" in public_api
     assert packaged_contract == contract
+
+
+def test_querypilot_pilot_docs_define_governance_boundaries() -> None:
+    pilot = (ROOT / "docs/querypilot-pilot.md").read_text(encoding="utf-8")
+    packaged_pilot = (ROOT / "policyflow/assets/docs/querypilot-pilot.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+    example = (
+        ROOT / "workflows/examples/querypilot-pilot-workflow.yml"
+    ).read_text(encoding="utf-8")
+
+    for expected in (
+        "# Querypilot Pilot",
+        "## Governance Goals",
+        "## Metrics",
+        "## Loops",
+        "## Evidence",
+        "## Non-Goals",
+        "## Responsibility Split",
+        "SQL guardrail",
+        "SELECT-only",
+        "executable SQL",
+        "tests",
+        "coverage",
+        "latency",
+        "review score",
+        "security findings",
+        "PolicyFlow validates and reports",
+        "Querypilot owns",
+        "PolicyFlow does not execute SQL",
+        "workflows/examples/querypilot-pilot-workflow.yml",
+    ):
+        assert expected in pilot
+
+    for expected in (
+        "querypilot-sql-guardrail",
+        "select-only",
+        "executable-sql",
+        "test-pass-rate",
+        "coverage-percent",
+        "p95-latency-ms",
+        "review-score",
+        "security-findings",
+        "sql-safety-loop",
+        "loop_governance:",
+        "evaluation:",
+    ):
+        assert expected in example
+
+    assert "docs/querypilot-pilot.md" in roadmap
+    assert "workflows/examples/querypilot-pilot-workflow.yml" in roadmap
+    assert packaged_pilot == pilot
 
 
 def test_schema_todo_was_replaced_with_migration_path() -> None:
