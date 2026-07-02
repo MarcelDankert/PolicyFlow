@@ -114,7 +114,7 @@ overrides: []
 #       - review findings must be resolved before QA completion
 #     approved_by: architecture-agent
 #     approval_reference: ARCH-OVERRIDE-1
-#     review_by: 2026-06-30
+#     review_by: 2099-12-31
 #     bypassed_phase: review
 #     compensating_controls:
 #       - review findings tracked in the PR before QA sign-off

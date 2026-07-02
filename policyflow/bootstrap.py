@@ -378,7 +378,7 @@ def policyflow_version() -> str:
     try:
         return version("policyflow")
     except PackageNotFoundError:
-        return "0.4.0"
+        return "1.0.0"
 
 
 def _as_posix(path: Path) -> str:

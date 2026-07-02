@@ -61,7 +61,7 @@ def test_getting_started_has_end_to_end_consumer_quickstart() -> None:
 
     assert "## Consumer Quickstart" in text
     for command in (
-        "python -m pip install policyflow==0.4.0",
+        "python -m pip install policyflow==1.0.0",
         "policyflow init .",
         "policyflow doctor .",
         "policyflow new-workflow feature --id first-feature --risk LOW",
@@ -515,7 +515,7 @@ def test_agentic_governance_roadmap_keeps_automerge_out_of_v2_core() -> None:
 def test_release_docs_define_pinned_release_channel_and_artifacts() -> None:
     text = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
 
-    assert "python -m pip install policyflow==0.4.0" in text
+    assert "python -m pip install policyflow==1.0.0" in text
     assert "PyPI" in text
     assert "GitHub Release" in text
     assert "policyflow sync ." in text
@@ -760,7 +760,7 @@ def test_public_repository_standard_files_are_present() -> None:
     expected_files = {
         "CONTRIBUTING.md": ("workflow-first", "pull request"),
         "SECURITY.md": ("security", "vulnerability"),
-        "CHANGELOG.md": ("0.4.0", "Audit"),
+        "CHANGELOG.md": ("1.0.0", "Agentic Governance Platform"),
     }
 
     for relative_path, expected_terms in expected_files.items():
@@ -778,17 +778,17 @@ def test_readme_uses_finished_compatibility_language() -> None:
     assert "## Compatibility" in readme
     assert "docs/schema-compatibility.md" in readme
     assert "## Project Status" in readme
-    assert "PolicyFlow `0.4.0` is published" in readme
+    assert "PolicyFlow `1.0.0` is published" in readme
 
 
 def test_release_docs_reflect_published_release_state() -> None:
     for relative_path in ("README.md", "docs/getting-started.md", "docs/release-and-upgrade.md"):
         text = (ROOT / relative_path).read_text(encoding="utf-8")
 
-        assert "policyflow==0.4.0" in text
-        assert "once `policyflow==0.4.0` is published" not in text
-        assert "https://pypi.org/project/policyflow/0.4.0/" in text
-        assert "https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.4.0" in text
+        assert "policyflow==1.0.0" in text
+        assert "once `policyflow==1.0.0` is published" not in text
+        assert "https://pypi.org/project/policyflow/1.0.0/" in text
+        assert "https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0" in text
 
 
 def test_pyproject_has_public_package_metadata() -> None:

@@ -4,7 +4,7 @@ project:
   lifecycle: example
 
 governance:
-  policyflow_version: "0.4.0"
+  policyflow_version: "1.0.0"
   default_risk: MEDIUM
   runtime_boundary: External systems produce evidence; PolicyFlow validates and reports it.
 

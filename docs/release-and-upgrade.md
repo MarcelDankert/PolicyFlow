@@ -4,11 +4,11 @@ PolicyFlow consumers should install a pinned package version so workflow
 validation, bootstrap assets, and GitHub checks use the same contract.
 
 ```bash
-python -m pip install policyflow==0.4.0
+python -m pip install policyflow==1.0.0
 ```
 
-Release links: [PyPI](https://pypi.org/project/policyflow/0.4.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v0.4.0).
+Release links: [PyPI](https://pypi.org/project/policyflow/1.0.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0).
 Consumer-Repo automation should use the pinned package version.
 
 Use the same version in local developer setup, CI, and Consumer-Repo automation.
@@ -18,9 +18,9 @@ bootstrap assets can change between commits.
 ## Release Channel
 
 The public Consumer-Repo channel is the PyPI package named `policyflow`. The
-current recommended pin is `policyflow==0.4.0`; each published package version
+current recommended pin is `policyflow==1.0.0`; each published package version
 should have a matching GitHub Release named with the same tag, for example
-`v0.4.0`.
+`v1.0.0`.
 
 Consumer-Repos should install from PyPI by version instead of cloning this
 repository. The generated GitHub Actions governance workflow pins the same
@@ -28,7 +28,7 @@ package version through `POLICYFLOW_VERSION`:
 
 ```yaml
 env:
-  POLICYFLOW_VERSION: "0.4.0"
+  POLICYFLOW_VERSION: "1.0.0"
 ```
 
 ```bash
