@@ -13,6 +13,44 @@ class RiskLevel(str, Enum):
     HIGH = "HIGH"
 
 
+class V2RiskLevel(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class V2ConfidenceLevel(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class V2EvidenceType(str, Enum):
+    TEST = "test"
+    SECURITY = "security"
+    REVIEW = "review"
+    APPROVAL = "approval"
+    BUILD = "build"
+    DEPLOYMENT = "deployment"
+    DOCUMENTATION = "documentation"
+    OTHER = "other"
+
+
+class V2EvidenceStatus(str, Enum):
+    PASSED = "passed"
+    FAILED = "failed"
+    PENDING = "pending"
+    MISSING = "missing"
+    WAIVED = "waived"
+
+
+class V2OverrideType(str, Enum):
+    RISK_EXCEPTION = "risk_exception"
+    APPROVAL_EXCEPTION = "approval_exception"
+    EVIDENCE_EXCEPTION = "evidence_exception"
+    SCOPE_EXCEPTION = "scope_exception"
+
+
 class ExecutionMode(str, Enum):
     STRICT = "strict"
 
@@ -433,3 +471,67 @@ class WorkflowDocument(BaseModel):
     overrides: list[WorkflowOverride] | None = None
     runtime: WorkflowRuntime | None = None
     handoffs: list[WorkflowHandoff] | None = None
+
+
+class ChangeV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    type: str = Field(min_length=1)
+    summary: str = Field(min_length=1)
+
+
+class RiskV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    level: V2RiskLevel
+    rationale: str = Field(min_length=1)
+    protected_areas: list[str] = Field(default_factory=list)
+
+
+class GovernanceV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    required_reviews: list[str]
+    human_approval_required: bool = False
+
+
+class ConfidenceV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    level: V2ConfidenceLevel
+    summary: str = Field(min_length=1)
+
+
+class EvidenceV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    type: V2EvidenceType
+    source: str = Field(min_length=1)
+    status: V2EvidenceStatus
+    ref: str = Field(min_length=1)
+
+
+class OverrideV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    type: V2OverrideType
+    reason: str = Field(min_length=1)
+    approved_by: str | None = Field(default=None, min_length=1)
+    approval_ref: str | None = Field(default=None, min_length=1)
+    review_by: date | None = None
+    expires_on: date | None = None
+
+
+class WorkflowDocumentV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: Literal[2]
+    change: ChangeV2
+    risk: RiskV2
+    governance: GovernanceV2
+    confidence: ConfidenceV2
+    evidence: list[EvidenceV2] = Field(default_factory=list)
+    overrides: list[OverrideV2] = Field(default_factory=list)

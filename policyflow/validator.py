@@ -9,8 +9,12 @@ import yaml
 from pydantic import ValidationError
 
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.models import RiskLevel, WorkflowDocument
-from policyflow.schemas import normalize_workflow_payload
+from policyflow.models import RiskLevel, WorkflowDocument, WorkflowDocumentV2
+from policyflow.schemas import (
+    collect_v2_forbidden_field_errors,
+    normalize_workflow_payload,
+    normalize_workflow_v2_payload,
+)
 
 
 REQUIRED_REVIEWS_BY_RISK: dict[str, set[str]] = {
@@ -63,6 +67,24 @@ def validate_workflow_file(path: str | Path) -> WorkflowDocument:
 def validate_workflow_data(raw_data: dict[str, Any]) -> WorkflowDocument:
     workflow, _warnings = inspect_workflow_data(raw_data)
     return workflow
+
+
+def validate_workflow_v2_file(path: str | Path) -> WorkflowDocumentV2:
+    raw_data = _load_workflow_yaml(Path(path))
+    return validate_workflow_v2_data(raw_data)
+
+
+def validate_workflow_v2_data(raw_data: dict[str, Any]) -> WorkflowDocumentV2:
+    normalized_data = normalize_workflow_v2_payload(raw_data)
+    errors = collect_v2_forbidden_field_errors(normalized_data)
+
+    if errors:
+        raise WorkflowValidationError(errors)
+
+    try:
+        return WorkflowDocumentV2.model_validate(normalized_data)
+    except ValidationError as exc:
+        raise WorkflowValidationError(_format_pydantic_errors(exc)) from exc
 
 
 def inspect_workflow_data(raw_data: dict[str, Any]) -> tuple[WorkflowDocument, list[str]]:

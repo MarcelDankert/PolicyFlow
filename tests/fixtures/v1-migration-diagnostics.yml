@@ -1,0 +1,106 @@
+workflow:
+  id: legacy-change
+  type: feature
+
+context:
+  workflow_file: workflows/features/legacy-change.yml
+  risk_level: HIGH
+  confidence:
+    planning: Planning is complete.
+    implementation: Implementation is complete.
+    tests: Tests passed.
+    residual_uncertainty: None.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - database schema
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+
+runtime:
+  status: in_progress
+  current_phase: implementation
+  active_agent: senior-dev-agent
+
+handoffs:
+  - from_phase: planning
+    to_phase: implementation
+    status: pending
+    required_inputs:
+      - contracts.planning
+    produced_outputs:
+      - contracts.implementation
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Legacy contract.
+    acceptance_criteria:
+      - Accepted.
+    approved_scope:
+      - policyflow/models.py
+    non_goals: []
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - database schema
+    confidence_summary: Legacy confidence.
+    escalation_flags: []
+
+loop_governance:
+  loops:
+    - id: review-feedback
+      source_phase: review
+      target_phase: implementation
+      allowed_feedback_sources:
+        - review-findings
+      max_iterations: 3
+      current_iteration: 1
+      status: active
+      stop_conditions:
+        - id: fixed
+          description: Findings fixed.
+      escalation_conditions:
+        - id: max-iterations
+          trigger: max_iterations_exceeded
+          escalate_to: human
+      evidence_refs:
+        - evidence.review
+
+evaluation:
+  compliance_status: pending
+  categories:
+    - id: tests
+      required_metrics:
+        - id: tests-passed
+          name: Tests passed
+          source: ci
+          required: true
+          thresholds:
+            operator: equals
+            value: passed
+          status: pending
+          evidence_refs:
+            - evidence.qa
+          blocks_merge: true
+
+evidence:
+  planning:
+    summary: Planning evidence.
+    scope_locked:
+      - Legacy scope.
+    non_goals_locked: []
+    risk_rationale: Legacy risk.
+
+overrides: []

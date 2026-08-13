@@ -5,7 +5,13 @@ import pytest
 
 import policyflow.validator as validator_module
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.validator import validate_workflow_data, validate_workflow_file
+from policyflow.schemas import collect_v1_migration_diagnostics
+from policyflow.validator import (
+    validate_workflow_data,
+    validate_workflow_file,
+    validate_workflow_v2_data,
+    validate_workflow_v2_file,
+)
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -47,6 +53,92 @@ def test_valid_low_workflow_passes() -> None:
         "review",
     ]
     assert result.contracts.planning.owner_agent == "planning-agent"
+
+
+def test_valid_v2_governance_schema_passes() -> None:
+    result = validate_workflow_v2_file(fixture_path("valid-v2-governance.yml"))
+
+    assert result.version == 2
+    assert result.change.id == "example-change"
+    assert result.change.type == "feature"
+    assert result.change.summary == "Add a governed feature."
+    assert result.risk.level == "medium"
+    assert result.risk.rationale == "Touches application behavior but no protected areas."
+    assert result.risk.protected_areas == []
+    assert result.governance.required_reviews == ["architecture", "qa"]
+    assert result.governance.human_approval_required is False
+    assert result.confidence.level == "medium"
+    assert result.confidence.summary
+    assert [evidence.id for evidence in result.evidence] == ["tests", "review"]
+    assert result.evidence[0].type == "test"
+    assert result.evidence[0].source == "ci"
+    assert result.evidence[0].status == "passed"
+    assert result.evidence[0].ref == "ci://runs/123/tests"
+    assert result.overrides == []
+
+
+def test_v2_schema_requires_core_governance_fields() -> None:
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_v2_file(fixture_path("missing-v2-required-fields.yml"))
+
+    assert "change: Field required" in exc_info.value.errors
+    assert "governance: Field required" in exc_info.value.errors
+    assert "confidence: Field required" in exc_info.value.errors
+
+
+def test_v2_schema_rejects_execution_and_provider_state() -> None:
+    payload = validator_module._load_workflow_yaml(
+        fixture_path("valid-v2-governance.yml")
+    )
+    payload["runtime"] = {"status": "in_progress", "active_agent": "codex"}
+    payload["runner_status"] = "running"
+    payload["provider"] = "codex"
+    payload["change"]["model_id"] = "gpt-example"
+
+    with pytest.raises(WorkflowValidationError) as exc_info:
+        validate_workflow_v2_data(payload)
+
+    errors = "\n".join(exc_info.value.errors)
+    assert "runtime is not allowed in V2 governance schema" in errors
+    assert "runtime.active_agent is not allowed in V2 governance schema" in errors
+    assert "runner_status is not allowed in V2 governance schema" in errors
+    assert "provider is not allowed in V2 governance schema" in errors
+    assert "change.model_id is not allowed in V2 governance schema" in errors
+
+
+def test_v1_migration_diagnostics_classify_removed_runtime_fields() -> None:
+    payload = validator_module._load_workflow_yaml(
+        fixture_path("v1-migration-diagnostics.yml")
+    )
+
+    diagnostics = collect_v1_migration_diagnostics(payload)
+    diagnostics_by_path = {diagnostic.path: diagnostic for diagnostic in diagnostics}
+
+    assert diagnostics_by_path["runtime"].decision == "REMOVE"
+    assert diagnostics_by_path["runtime.active_agent"].decision == "REMOVE"
+    assert diagnostics_by_path["handoffs"].decision == "MOVE"
+    assert diagnostics_by_path["contracts"].decision == "MOVE"
+    assert diagnostics_by_path["execution"].decision == "REMOVE"
+
+
+def test_v1_migration_diagnostics_point_loop_and_evaluation_to_evidence() -> None:
+    payload = validator_module._load_workflow_yaml(
+        fixture_path("v1-migration-diagnostics.yml")
+    )
+
+    diagnostics = collect_v1_migration_diagnostics(payload)
+    diagnostics_by_path = {diagnostic.path: diagnostic for diagnostic in diagnostics}
+
+    assert diagnostics_by_path["loop_governance"].new_representation == (
+        "external runtime policy or evidence"
+    )
+    assert diagnostics_by_path["loop_governance.loops"].new_representation == (
+        "external evidence"
+    )
+    assert diagnostics_by_path["evaluation"].new_representation == "evidence"
+    assert diagnostics_by_path["evaluation.categories"].new_representation == (
+        "evidence[]"
+    )
 
 
 def test_valid_medium_workflow_passes() -> None:
