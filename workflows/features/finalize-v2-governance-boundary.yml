@@ -1,0 +1,105 @@
+workflow:
+  id: finalize-v2-governance-boundary
+  type: documentation-governance
+
+context:
+  workflow_file: workflows/features/finalize-v2-governance-boundary.yml
+  goal: Implement GitHub issue #143 by making ADR-0004 the enforced PolicyFlow V2 governance boundary.
+  scope:
+    - README V2 positioning
+    - Agentic Governance roadmap V2 boundary
+    - repository documentation tests for V2 boundary enforcement
+    - packaged roadmap doc synchronization if roadmap changes
+  non_goals:
+    - no Python behavior changes
+    - no schema cutover
+    - no command removal
+    - no runtime, runner, provider, bootstrap, or GitHub enforcement implementation
+  affected_modules:
+    - README.md
+    - docs/roadmap-agentic-governance.md
+    - policyflow/assets/docs/roadmap-agentic-governance.md
+    - tests/test_repository_docs.py
+  risk_level: LOW
+  confidence:
+    planning: Scope is bounded to documentation positioning and docs tests for GitHub issue #143.
+    implementation: Changes do not modify executable behavior, schema validation, CLI behavior, bootstrap output, or GitHub enforcement.
+    tests: Validation will use the active workflow validation and repository documentation tests.
+    residual_uncertainty: Broader V2 implementation remains governed by the follow-up V2 issues.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #143 is limited to finalizing and enforcing the V2 governance boundary in docs and docs tests.
+    scope_locked:
+      - reference ADR-0004 as the final V2 architecture decision
+      - prevent README from reintroducing workflow orchestration as V2 positioning
+      - keep docs aligned with PolicyFlow 2.0 as a governance-only validator
+    non_goals_locked:
+      - no Python behavior changes
+      - no schema cutover
+      - no command removal
+      - no runtime or provider implementation changes
+    risk_rationale: LOW risk because the work updates documentation and documentation tests only.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Implement GitHub issue #143 by making the V2 governance boundary authoritative in docs.
+    acceptance_criteria:
+      - ADR-0004 exists and declares PolicyFlow 2.0 as governance-only
+      - repository docs no longer present runtime execution as a V2 core responsibility
+      - tests fail if README reintroduces workflow orchestration framework as V2 positioning
+      - ADR-0002 and ADR-0004 are not contradictory
+    approved_scope:
+      - README.md
+      - docs/roadmap-agentic-governance.md
+      - policyflow/assets/docs/roadmap-agentic-governance.md
+      - tests/test_repository_docs.py
+      - workflows/features/finalize-v2-governance-boundary.yml
+    non_goals:
+      - implementation changes
+      - schema cutover
+      - command removal
+      - GitHub enforcement changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence because the issue is documentation-boundary enforcement only.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Implemented GitHub issue #143 by making ADR-0004 the visible V2 architecture decision in README and the Agentic Governance roadmap, narrowing the roadmap's V2 target to Governance Core, and adding repository documentation tests that enforce the V2 governance-only boundary.
+    changed_files:
+      - README.md
+      - docs/roadmap-agentic-governance.md
+      - policyflow/assets/docs/roadmap-agentic-governance.md
+      - tests/test_repository_docs.py
+      - workflows/features/finalize-v2-governance-boundary.yml
+    test_summary: "Passed: pytest -q tests/test_repository_docs.py; python -m policyflow.cli validate workflows/features/finalize-v2-governance-boundary.yml"
+    docs_updates:
+      - README.md
+      - docs/roadmap-agentic-governance.md
+      - policyflow/assets/docs/roadmap-agentic-governance.md
+    known_limitations:
+      - Broader V2 schema, CLI, API, runtime removal, bootstrap, and release changes remain deferred to issues #144 through #150.
+    unresolved_questions:
+      - The external home for runner and Codex adapter functionality remains unresolved and is intentionally outside issue #143.

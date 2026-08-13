@@ -1,5 +1,19 @@
 # PolicyFlow Agentic Governance Roadmap
 
+## V2 Decision
+
+ADR-0004 is the final PolicyFlow 2.0 architecture decision. PolicyFlow 2.0
+returns to a small provider-neutral policy-as-code governance core. It validates
+declared governance policy and evidence, validates pull request claims,
+validates GitHub approval evidence, and produces a merge-readiness decision. It
+does not execute work.
+
+The earlier Agentic Governance Platform roadmap remains strategic background
+for governance concepts, but runtime execution, runner configuration,
+Codex/Copilot/provider adapters, prompt management, handoff orchestration, model
+routing, scheduling, queues, memory, analytics, GitHub mutation, merge
+automation, and managed asset synchronization are outside the V2 core.
+
 ## Vision
 
 PolicyFlow defines governance for agentic software delivery independent of
@@ -9,7 +23,7 @@ agent, runtime, provider, or orchestration framework.
 
 Today: AI-native SDLC Governance.
 
-Target: Agentic Governance Platform.
+V2 target: Governance Core.
 
 PolicyFlow remains a governance system. It defines rules, validates rules, and
 reports compliance. It does not own agent execution.
@@ -30,22 +44,23 @@ Non-goals:
 
 ### 1. Workflow Governance
 
-Workflow Governance is the existing PolicyFlow core. It covers risk-based
-workflows, canonical phases, phase states, evidence, role contracts, review
-gates, typed overrides, human approval requirements, PR validation, GitHub
-approval checks, status views, audit views, bootstrap assets, doctor checks, and
-managed asset sync.
+Workflow Governance is the existing PolicyFlow core. In V2 it is narrowed to
+risk-based change governance, evidence, review gates, typed overrides, human
+approval requirements, PR validation, GitHub approval checks, merge readiness,
+minimal bootstrap, and minimal doctor checks.
 
 Scope:
 
-- define workflow governance schemas and templates
-- validate risk level, required reviews, required phases, transitions, evidence,
-  contracts, overrides, runtime state, handoffs, PR claims, and GitHub approvals
-- report workflow status, merge readiness, blocked states, and audit summaries
+- define governance schemas and minimal examples
+- validate risk level, protected areas, required reviews, evidence, overrides,
+  PR claims, and GitHub approvals
+- report validation diagnostics and merge readiness
 
 Non-scope:
 
 - run the project implementation
+- mutate runtime state or phase state
+- own first-class handoff state
 - own provider credentials
 - merge pull requests
 - replace target-project architecture or domain context
@@ -189,17 +204,22 @@ Possible issues:
 - Add machine-readable audit JSON
 - Document audit reporting
 
-### v2.0 - Agentic Governance Platform
+### v2.0 - Return To Governance Core
 
-Goal: official positioning and stable governance interfaces.
+Goal: official positioning and stable governance-only interfaces.
 
 Possible issues:
 
-- Stabilize workflow, loop, and evaluation schemas
+- Finalize and enforce the V2 governance boundary
+- Introduce the V2 governance schema and migration diagnostics
+- Rebuild core validation around policy, evidence, and merge readiness
+- Cut over the public API and CLI to governance-only behavior
+- Remove runtime, runner execution, provider adapters, handoffs, and agent
+  execution ownership
+- Rebuild minimal consumer init, config, and doctor
+- Simplify GitHub integration, reporting, and packaged assets
+- Rewrite docs, migration guide, and prepare V2 release
 - Publish v2 migration guide
-- Document provider-neutral integration contract
-- Add reference consumer project
-- Add Querypilot pilot documentation
 
 ## Querypilot Pilot
 
@@ -253,14 +273,10 @@ The default v2 stance is conservative:
 
 ## Open Decisions
 
-- How much runtime mutation remains allowed?
-- How are evaluation scores calculated?
-- Which metrics are generic enough for PolicyFlow?
+- Which external home should own runner and Codex adapter functionality?
+- Which evidence types should be included in the first V2 schema?
 - Which parts belong in Consumer-Repos?
-- How is backward compatibility for `0.x` schemas handled?
-- How should loop governance represent nested or repeated review and QA loops
-  without becoming an execution model?
-- Which evaluation failures should block validation versus produce warnings?
+- How is bounded V1 to V2 migration handled without indefinite compatibility?
 - How should human arbitration evidence be represented across GitHub-governed
   and local-only Consumer-Repos?
 - Should Automerge Governance become a future Consumer Governance extension, or
