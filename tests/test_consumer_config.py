@@ -24,7 +24,6 @@ def test_default_consumer_config_uses_plug_and_play_paths(tmp_path: Path) -> Non
     assert config.paths.agents == Path("ai/agents")
     assert config.paths.rules == Path("ai/rules")
     assert config.paths.project_context == Path("ai/project-context.yml")
-    assert config.paths.runner_config == Path("policyflow.runners.yml")
     assert config.paths.pr_template == Path(".github/PULL_REQUEST_TEMPLATE.md")
     assert config.paths.issue_templates == Path(".github/ISSUE_TEMPLATE")
     assert config.paths.governance_workflow == Path(
@@ -32,7 +31,6 @@ def test_default_consumer_config_uses_plug_and_play_paths(tmp_path: Path) -> Non
     )
     assert config.features.pr_validation is True
     assert config.features.github_approval_checks is True
-    assert config.features.runner_execution is True
     assert config.features.bootstrap_managed_assets is True
     assert config.bootstrap.managed_assets == []
 
@@ -49,7 +47,6 @@ def test_consumer_config_accepts_path_and_feature_overrides(tmp_path: Path) -> N
                 "  agents: agents",
                 "features:",
                 "  github_approval_checks: false",
-                "  runner_execution: false",
                 "bootstrap:",
                 "  managed_assets:",
                 "    - ai/workflows",
@@ -66,7 +63,6 @@ def test_consumer_config_accepts_path_and_feature_overrides(tmp_path: Path) -> N
     assert config.paths.agents == Path("agents")
     assert config.paths.rules == Path("ai/rules")
     assert config.features.github_approval_checks is False
-    assert config.features.runner_execution is False
     assert config.bootstrap.managed_assets == [
         Path("ai/workflows"),
         Path(".github/PULL_REQUEST_TEMPLATE.md"),
@@ -127,7 +123,6 @@ def test_published_consumer_config_examples_are_valid() -> None:
 
     assert minimal.features.pr_validation is False
     assert minimal.features.github_approval_checks is False
-    assert minimal.features.runner_execution is False
     assert github_governed.features.pr_validation is True
     assert github_governed.features.github_approval_checks is True
     assert github_governed.bootstrap.managed_assets

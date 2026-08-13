@@ -18,7 +18,6 @@ class ConsumerConfigPaths(BaseModel):
     agents: Path = Path("ai/agents")
     rules: Path = Path("ai/rules")
     project_context: Path = Path("ai/project-context.yml")
-    runner_config: Path = Path("policyflow.runners.yml")
     pr_template: Path = Path(".github/PULL_REQUEST_TEMPLATE.md")
     issue_templates: Path = Path(".github/ISSUE_TEMPLATE")
     governance_workflow: Path = Path(".github/workflows/policyflow-governance.yml")
@@ -29,7 +28,6 @@ class ConsumerConfigPaths(BaseModel):
         "agents",
         "rules",
         "project_context",
-        "runner_config",
         "pr_template",
         "issue_templates",
         "governance_workflow",
@@ -44,7 +42,6 @@ class ConsumerConfigPaths(BaseModel):
 class ConsumerConfigFeatures(BaseModel):
     pr_validation: bool = True
     github_approval_checks: bool = True
-    runner_execution: bool = True
     bootstrap_managed_assets: bool = True
 
 

@@ -3,8 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.runtime import load_workflow_raw
 from policyflow.validator import (
     _collect_override_lifecycle_statuses,
     inspect_workflow_file,
@@ -13,7 +14,7 @@ from policyflow.validator import (
 
 def workflow_status(path: Path) -> dict[str, Any]:
     workflow, warnings = inspect_workflow_file(path)
-    raw = load_workflow_raw(path)
+    raw = _load_invalid_workflow_raw(path)
     phase_states = _phase_states(raw)
     runtime = workflow.runtime
     handoffs = workflow.handoffs or []
@@ -511,7 +512,7 @@ def _phase_states(raw: dict[str, Any]) -> dict[str, str]:
 
 def _load_invalid_workflow_raw(path: Path) -> dict[str, Any]:
     try:
-        raw = load_workflow_raw(path)
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except Exception:
         return {}
     return raw if isinstance(raw, dict) else {}

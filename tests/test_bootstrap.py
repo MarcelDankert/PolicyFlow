@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 
 from typer.testing import CliRunner
-import yaml
 
-from policyflow.bootstrap import bootstrap_consumer_repo
+from policyflow.bootstrap import bootstrap_assets, bootstrap_consumer_repo
 from policyflow.cli import app
 from policyflow.consumer_config import load_consumer_config
 
@@ -20,7 +19,7 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     assert result.created
     assert not result.skipped
     assert (tmp_path / "policyflow.yml").exists()
-    assert (tmp_path / "policyflow.runners.yml").exists()
+    assert not (tmp_path / "policyflow.runners.yml").exists()
     assert (tmp_path / "ai/project-context.yml").exists()
     assert (tmp_path / "ai/agents/planning-agent.md").exists()
     assert (tmp_path / "ai/prompts/planning-agent.prompt.md").exists()
@@ -34,25 +33,8 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     )
     assert "confidence:" in starter_workflow
     assert "residual_uncertainty:" in starter_workflow
-
-    runner_config = yaml.safe_load(
-        (tmp_path / "policyflow.runners.yml").read_text(encoding="utf-8")
-    )
-    assert runner_config["default_runner"] == "command"
-    command_runner = runner_config["runners"]["command"]
-    assert command_runner["type"] == "command"
-    assert command_runner["command"] == [
-        "policyflow-runner",
-        "--input",
-        "{input_path}",
-        "--output",
-        "{output_path}",
-    ]
-    codex_runner = runner_config["runners"]["codex"]
-    codex_command = codex_runner["command"]
-    assert codex_runner["type"] == "codex"
-    assert "scripts/policyflow_codex_wrapper.py" not in codex_command
-    assert codex_command[:3] == ["{python_executable}", "-m", "policyflow.codex_runner"]
+    assert "runtime:" not in starter_workflow
+    assert "handoffs:" not in starter_workflow
 
     config = load_consumer_config(tmp_path / "policyflow.yml")
     assert config.paths.workflows == Path("ai/workflows")
@@ -62,10 +44,25 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
     )
     assert metadata["policyflow_version"] == "1.0.0"
     assert "policyflow.yml" in metadata["managed_assets"]
+    assert "policyflow.runners.yml" not in metadata["managed_assets"]
     assert "ai/workflows/templates/feature-workflow.template.yml" in metadata["managed_assets"]
     assert "ai/workflows/features/starter-workflow.yml" in metadata["managed_assets"]
     assert metadata["asset_hashes"]["policyflow.yml"]
     assert metadata["asset_hashes"]["ai/workflows/templates/feature-workflow.template.yml"]
+
+
+def test_bootstrap_assets_do_not_include_runner_or_codex_assets() -> None:
+    bootstrap_consumer_repo_assets = bootstrap_assets()
+    targets = {asset.target.as_posix() for asset in bootstrap_consumer_repo_assets}
+    source_names = {
+        asset.source.as_posix()
+        for asset in bootstrap_consumer_repo_assets
+        if asset.source is not None
+    }
+
+    assert "policyflow.runners.yml" not in targets
+    assert not any("codex" in source.lower() for source in source_names)
+    assert not any("runner" in target.lower() for target in targets)
 
 
 def test_bootstrap_dry_run_does_not_write_files(tmp_path: Path) -> None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -61,6 +62,14 @@ def test_importing_policyflow_does_not_import_runtime_execution_modules() -> Non
     assert "policyflow.agent_execution" not in imported_policyflow_modules
     assert "policyflow.codex_runner" not in imported_policyflow_modules
     assert "policyflow.reporting" not in imported_policyflow_modules
+
+
+def test_runtime_execution_modules_are_not_part_of_core_package() -> None:
+    package_root = Path(policyflow.__file__).resolve().parent
+
+    for module_name in ("agent_execution", "codex_runner", "runtime"):
+        assert not (package_root / f"{module_name}.py").exists()
+        assert importlib.util.find_spec(f"policyflow.{module_name}") is None
 
 
 def test_public_api_validates_v1_workflow_pr_body_and_github_approvals() -> None:

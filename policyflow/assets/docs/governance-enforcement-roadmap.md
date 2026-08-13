@@ -58,7 +58,6 @@ GitHub state, or decide release execution order automatically.
 - PR body completeness validation with `policyflow validate-pr`
 - GitHub approval metadata validation with `policyflow validate-pr --github-reviews`
 - status and audit views with `policyflow status` and `policyflow audit`
-- synchronous provider-neutral runner execution with `policyflow run-phase`
 - managed asset drift preview and update with `policyflow sync`
 
 ## Current Fail Conditions
@@ -80,7 +79,6 @@ GitHub state, or decide release execution order automatically.
 - PR body workflow path, declared risk, approval login, override type, or override approver mismatches the workflow
 - GitHub review metadata missing required `APPROVED` reviews from declared approvers
 - Consumer-Repo readiness gaps detected by doctor
-- runner command failures or invalid runner output during `run-phase`
 
 ## Remaining Roadmap
 
