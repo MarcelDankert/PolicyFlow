@@ -1,0 +1,148 @@
+workflow:
+  id: policyflow-v2-scope-reduction-analysis
+  type: architecture-planning
+
+context:
+  workflow_file: workflows/features/policyflow-v2-scope-reduction-analysis.yml
+  goal: Derive a concrete PolicyFlow 2.0 simplification roadmap from the current repository state.
+  scope:
+    - repository architecture analysis
+    - greenfield PolicyFlow 2.0 architecture proposal
+    - PolicyFlow 2.0 design principles and product boundary
+    - final PolicyFlow 2.0 architecture ADR
+    - final V2 implementation epic and issue plan
+    - V1 to V2 migration matrix
+    - GitHub epic and issue creation for the finalized V2 implementation plan
+    - PolicyFlow 2.0 responsibility boundary
+    - module, CLI, schema, test, and documentation impact assessment
+    - created GitHub issue backlog for the finalized V2 implementation plan
+  non_goals:
+    - no code implementation
+    - no pull request creation
+    - no runtime, validator, schema, bootstrap, or GitHub enforcement behavior changes
+  affected_modules:
+    - docs/planning
+    - docs/adr
+  risk_level: LOW
+  confidence:
+    planning: The work is limited to inspecting the repository and producing planning reports.
+    implementation: Documentation edits will not change executable behavior, packaged assets, schemas, or consumer bootstrap output.
+    tests: Validation will use PolicyFlow workflow validation and targeted documentation checks where available.
+    residual_uncertainty: Final implementation sequencing will require separate governed workflows for each V2 issue.
+
+governance:
+  required_reviews:
+    - review-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched:
+    - none
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: pending
+
+evidence:
+  planning:
+    summary: Scope-reduction analysis is bounded to documentation and issue proposals derived from repository inspection.
+    scope_locked:
+      - inspect architecture source-of-truth documents and repository implementation
+      - design a greenfield PolicyFlow 2.0 architecture without preserving current implementation choices
+      - define durable V2 design principles and product boundary
+      - create the final architecture decision ADR and executable implementation plan
+      - create the V1 to V2 migration matrix
+      - create the GitHub epic and implementation issues after the final plan is approved by the user
+      - classify major subsystems as KEEP, SIMPLIFY, MOVE, or REMOVE
+      - propose V2 module, CLI, consumer footprint, schema, migration, test, and documentation strategy
+      - create 6-10 GitHub issues in dependency order
+    non_goals_locked:
+      - no code implementation
+      - no pull request creation
+      - no model routing, advisor, analytics, agent runtime, or orchestration feature proposals for PolicyFlow core
+    risk_rationale: LOW risk because this adds a planning report only and does not change consumer-facing behavior.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Produce a concrete PolicyFlow 2.0 simplification roadmap from current repository evidence.
+    acceptance_criteria:
+      - docs/planning/policyflow-v2-scope-reduction-analysis.md exists
+      - docs/planning/policyflow-v2-greenfield-architecture.md exists
+      - docs/planning/policyflow-v2-design-principles.md exists
+      - docs/planning/policyflow-v2-product-boundary.md exists
+      - docs/planning/policyflow-v2-gap-analysis.md exists
+      - docs/adr/0004-policyflow-v2-return-to-governance-core.md exists
+      - docs/planning/policyflow-v2-epic.md exists
+      - docs/planning/policyflow-v2-issues.md exists
+      - docs/planning/policyflow-v1-v2-migration-matrix.md exists
+      - report covers all requested sections and specific questions
+      - report classifies major subsystems with paths, dependencies, impact, and breaking-change risk
+      - GitHub epic and implementation issues are created after user approval
+      - no executable behavior, schema, validator, runner, bootstrap, or GitHub enforcement changes are introduced
+    approved_scope:
+      - docs/planning/policyflow-v2-scope-reduction-analysis.md
+      - docs/planning/policyflow-v2-greenfield-architecture.md
+      - docs/planning/policyflow-v2-design-principles.md
+      - docs/planning/policyflow-v2-product-boundary.md
+      - docs/planning/policyflow-v2-gap-analysis.md
+      - docs/adr/0004-policyflow-v2-return-to-governance-core.md
+      - docs/planning/policyflow-v2-epic.md
+      - docs/planning/policyflow-v2-issues.md
+      - docs/planning/policyflow-v1-v2-migration-matrix.md
+      - workflows/features/policyflow-v2-scope-reduction-analysis.yml
+    non_goals:
+      - implementation changes
+      - PR creation
+      - consumer-facing contract changes
+    initial_risk_level: LOW
+    protected_areas_touched:
+      - none
+    confidence_summary: High confidence that repository inspection can support a planning-only scope-reduction report.
+    escalation_flags:
+      - none
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added the PolicyFlow 2.0 scope-reduction analysis, greenfield architecture package, final ADR, implementation epic, ordered issue plan, and V1 to V2 migration matrix with strict governance-only product boundary; after user approval, created the GitHub epic and eight implementation issues.
+    changed_files:
+      - docs/planning/policyflow-v2-scope-reduction-analysis.md
+      - docs/planning/policyflow-v2-greenfield-architecture.md
+      - docs/planning/policyflow-v2-design-principles.md
+      - docs/planning/policyflow-v2-product-boundary.md
+      - docs/planning/policyflow-v2-gap-analysis.md
+      - docs/adr/0004-policyflow-v2-return-to-governance-core.md
+      - docs/planning/policyflow-v2-epic.md
+      - docs/planning/policyflow-v2-issues.md
+      - docs/planning/policyflow-v1-v2-migration-matrix.md
+      - workflows/features/policyflow-v2-scope-reduction-analysis.yml
+    test_summary: "Passed: python -m policyflow.cli validate workflows/features/policyflow-v2-scope-reduction-analysis.yml; pytest -q tests/test_repository_docs.py"
+    docs_updates:
+      - docs/planning/policyflow-v2-scope-reduction-analysis.md
+      - docs/planning/policyflow-v2-greenfield-architecture.md
+      - docs/planning/policyflow-v2-design-principles.md
+      - docs/planning/policyflow-v2-product-boundary.md
+      - docs/planning/policyflow-v2-gap-analysis.md
+      - docs/adr/0004-policyflow-v2-return-to-governance-core.md
+      - docs/planning/policyflow-v2-epic.md
+      - docs/planning/policyflow-v2-issues.md
+      - docs/planning/policyflow-v1-v2-migration-matrix.md
+    known_limitations:
+      - No code, schema, runtime, bootstrap, or GitHub enforcement changes were implemented.
+      - The final issue plan intentionally defers runtime removal until the V2 validation path exists and is tested.
+    github_issues_created:
+      - https://github.com/MarcelDankert/PolicyFlow/issues/142
+      - https://github.com/MarcelDankert/PolicyFlow/issues/143
+      - https://github.com/MarcelDankert/PolicyFlow/issues/144
+      - https://github.com/MarcelDankert/PolicyFlow/issues/145
+      - https://github.com/MarcelDankert/PolicyFlow/issues/146
+      - https://github.com/MarcelDankert/PolicyFlow/issues/147
+      - https://github.com/MarcelDankert/PolicyFlow/issues/148
+      - https://github.com/MarcelDankert/PolicyFlow/issues/149
+      - https://github.com/MarcelDankert/PolicyFlow/issues/150
+    unresolved_questions:
+      - The exact external home for runner and Codex adapter functionality still needs a separate governed decision.

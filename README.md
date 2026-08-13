@@ -6,18 +6,34 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Typed](https://img.shields.io/badge/typed-yes-brightgreen.svg)](pyproject.toml)
 
-PolicyFlow is a reusable governance and lightweight workflow orchestration
-framework for agent-assisted software delivery.
+PolicyFlow is a reusable governance framework for agent-assisted software
+delivery.
 
-It provides policy-as-code style documentation, risk-aware workflow templates, explicit agent handoffs, human approval gates, and GitHub governance patterns that a target project can adopt without building its own process layer from scratch.
+It provides policy-as-code style documentation, risk-aware workflow templates,
+human approval gates, evidence validation, and GitHub governance patterns that a
+target project can adopt without building its own process layer from scratch.
+
+## PolicyFlow 2.0 Architecture Decision
+
+PolicyFlow 2.0 returns to a small provider-neutral policy-as-code governance
+core. It validates declared governance policy and evidence, validates pull
+request claims, validates GitHub approval evidence, and produces a
+merge-readiness decision. It does not execute work.
+
+The final V2 boundary is defined in
+[ADR-0004: PolicyFlow 2.0 Returns To Governance Core](docs/adr/0004-policyflow-v2-return-to-governance-core.md).
+Runtime execution, runner configuration, Codex/Copilot/provider adapters,
+prompt management, handoff orchestration, model routing, scheduling, queues,
+memory, analytics, GitHub mutation, merge automation, and managed asset
+synchronization are outside the V2 core.
 
 ## What PolicyFlow Is
 
 - A template repository for agentic SDLC governance
 - A set of reusable rules, workflows, prompts, and GitHub intake patterns
 - A way to make agent-driven work more reviewable, risk-aware, and auditable
-- A lightweight workflow orchestration layer for phase state, handoffs, runner
-  execution, and governance evidence
+- A governance validator for declared policy, evidence, human approval, and PR
+  merge readiness
 
 ## What PolicyFlow Is Not
 
@@ -35,13 +51,9 @@ Many teams want to use coding agents, review agents, and workflow automation, bu
 
 - Policy-as-code
 - Risk-aware workflows
-- Workflow execution state
 - Phase evidence schema
-- Agent role contracts
 - Typed workflow overrides
-- Runtime workflow orchestration
 - Confidence governance
-- Explicit agent handoffs
 - Human-in-the-loop controls
 - GitHub governance templates
 
@@ -443,7 +455,8 @@ path.
 
 ## Future Roadmap
 
-- strategic direction: [Agentic Governance Roadmap](docs/roadmap-agentic-governance.md)
+- V2 decision: [ADR-0004: PolicyFlow 2.0 Returns To Governance Core](docs/adr/0004-policyflow-v2-return-to-governance-core.md)
+- strategic background: [Agentic Governance Roadmap](docs/roadmap-agentic-governance.md)
   and [Architecture Decision Records](docs/adr/)
 - release publishing automation after packaged release checks are proven
 - additional consumer validation beyond AurumEdge once more repos adopt the workflow

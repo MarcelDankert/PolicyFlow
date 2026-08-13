@@ -38,7 +38,14 @@ def test_readme_has_public_repository_status_badges() -> None:
 def test_readme_matches_current_consumer_onboarding_positioning() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "lightweight workflow orchestration layer" in readme
+    assert "PolicyFlow 2.0 Architecture Decision" in readme
+    assert "ADR-0004: PolicyFlow 2.0 Returns To Governance Core" in readme
+    assert "does not execute work" in readme
+    v2_section = readme.split("## PolicyFlow 2.0 Architecture Decision", maxsplit=1)[1]
+    v2_section = v2_section.split("## What PolicyFlow Is", maxsplit=1)[0]
+    assert "workflow orchestration framework" not in v2_section
+    assert "runner configuration" in v2_section
+    assert "outside the V2 core" in v2_section
     assert "not a hosted scheduler, merge bot, or provider credential manager" in readme
     assert "policyflow init ." in readme
     assert "policyflow doctor ." in readme
@@ -46,6 +53,28 @@ def test_readme_matches_current_consumer_onboarding_positioning() -> None:
     assert "Copy `rules/`, `agents/`, `workflows/`, and `prompts/`" not in readme
     assert "Not a runtime orchestration system" not in readme
     assert "GitHub API-based PR validation as a later target state" not in readme
+
+
+def test_v2_governance_boundary_adrs_are_consistent() -> None:
+    adr2 = (ROOT / "docs/adr/0002-policyflow-is-not-an-agent-runtime.md").read_text(
+        encoding="utf-8"
+    )
+    adr4 = (ROOT / "docs/adr/0004-policyflow-v2-return-to-governance-core.md").read_text(
+        encoding="utf-8"
+    )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "PolicyFlow will not become an agent runtime" in adr2
+    assert "PolicyFlow 2.0 will return to a governance-only core" in adr4
+    assert "| `runtime.py` | REMOVE |" in adr4
+    assert "Runtime ownership is removed from core" in adr4
+    assert "ADR-0004" in readme
+    assert "ADR-0004 is the final PolicyFlow 2.0 architecture decision" in roadmap
+    assert "V2 target: Governance Core" in roadmap
+    assert "Target: Agentic Governance Platform" not in roadmap
 
 
 def test_public_root_docs_do_not_include_machine_local_paths() -> None:
