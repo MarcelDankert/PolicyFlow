@@ -9,7 +9,8 @@ import yaml
 from pydantic import ValidationError
 
 from policyflow.exceptions import WorkflowValidationError
-from policyflow.models import RiskLevel, WorkflowDocument, WorkflowDocumentV2
+from policyflow.models import RiskLevel, ValidationResultV2, WorkflowDocument, WorkflowDocumentV2
+from policyflow.rules import evaluate_workflow_v2
 from policyflow.schemas import (
     collect_v2_forbidden_field_errors,
     normalize_workflow_payload,
@@ -85,6 +86,24 @@ def validate_workflow_v2_data(raw_data: dict[str, Any]) -> WorkflowDocumentV2:
         return WorkflowDocumentV2.model_validate(normalized_data)
     except ValidationError as exc:
         raise WorkflowValidationError(_format_pydantic_errors(exc)) from exc
+
+
+def inspect_workflow_v2_file(
+    path: str | Path, *, allow_pending_human_approval: bool = False
+) -> ValidationResultV2:
+    raw_data = _load_workflow_yaml(Path(path))
+    return inspect_workflow_v2_data(
+        raw_data, allow_pending_human_approval=allow_pending_human_approval
+    )
+
+
+def inspect_workflow_v2_data(
+    raw_data: dict[str, Any], *, allow_pending_human_approval: bool = False
+) -> ValidationResultV2:
+    workflow = validate_workflow_v2_data(raw_data)
+    return evaluate_workflow_v2(
+        workflow, allow_pending_human_approval=allow_pending_human_approval
+    )
 
 
 def inspect_workflow_data(raw_data: dict[str, Any]) -> tuple[WorkflowDocument, list[str]]:

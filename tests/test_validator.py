@@ -1,12 +1,15 @@
 import copy
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 import policyflow.validator as validator_module
 from policyflow.exceptions import WorkflowValidationError
+from policyflow.rules import evaluate_workflow_v2
 from policyflow.schemas import collect_v1_migration_diagnostics
 from policyflow.validator import (
+    inspect_workflow_v2_file,
     validate_workflow_data,
     validate_workflow_file,
     validate_workflow_v2_data,
@@ -75,6 +78,95 @@ def test_valid_v2_governance_schema_passes() -> None:
     assert result.evidence[0].status == "passed"
     assert result.evidence[0].ref == "ci://runs/123/tests"
     assert result.overrides == []
+
+
+def test_valid_v2_change_returns_pass_and_json_result() -> None:
+    result = inspect_workflow_v2_file(fixture_path("valid-v2-governance.yml"))
+
+    assert result.decision == "PASS"
+    assert result.merge_ready is True
+    assert result.errors == []
+    assert result.warnings == []
+
+    json_result = result.to_json_dict()
+    assert json_result["schema_version"] == "policyflow.validation.v2"
+    assert json_result["decision"] == "PASS"
+    assert json_result["merge_ready"] is True
+    assert json_result["workflow"]["change"]["id"] == "example-change"
+
+
+def test_v2_missing_required_evidence_returns_block() -> None:
+    result = inspect_workflow_v2_file(fixture_path("v2-missing-required-evidence.yml"))
+
+    assert result.decision == "BLOCK"
+    assert result.merge_ready is False
+    assert [error.code for error in result.errors] == ["missing_required_evidence"]
+    assert "review" in result.errors[0].message
+
+
+def test_v2_missing_human_approval_blocks_by_default() -> None:
+    result = inspect_workflow_v2_file(fixture_path("v2-pending-human-approval.yml"))
+
+    assert result.decision == "BLOCK"
+    assert result.merge_ready is False
+    assert "missing_human_approval" in {error.code for error in result.errors}
+
+
+def test_v2_pending_human_approval_can_warn_without_merge_readiness() -> None:
+    result = inspect_workflow_v2_file(
+        fixture_path("v2-pending-human-approval.yml"),
+        allow_pending_human_approval=True,
+    )
+
+    assert result.decision == "WARN"
+    assert result.merge_ready is False
+    assert result.errors == []
+    assert [warning.code for warning in result.warnings] == [
+        "pending_human_approval"
+    ]
+
+
+def test_v2_expiring_override_returns_warn() -> None:
+    workflow = validate_workflow_v2_file(fixture_path("v2-expiring-override.yml"))
+
+    result = evaluate_workflow_v2(workflow, today=lambda: date(2026, 8, 13))
+
+    assert result.decision == "WARN"
+    assert result.merge_ready is False
+    assert result.errors == []
+    assert [warning.code for warning in result.warnings] == ["expiring_override"]
+
+
+def test_v2_expired_override_returns_block() -> None:
+    workflow = validate_workflow_v2_file(fixture_path("v2-expired-override.yml"))
+
+    result = evaluate_workflow_v2(workflow, today=lambda: date(2026, 8, 13))
+
+    assert result.decision == "BLOCK"
+    assert result.merge_ready is False
+    assert [error.code for error in result.errors] == ["expired_override"]
+
+
+def test_v2_merge_readiness_ignores_runtime_runner_handoff_loop_and_metrics() -> None:
+    payload = validator_module._load_workflow_yaml(
+        fixture_path("valid-v2-governance.yml")
+    )
+    for forbidden_field in (
+        "runtime",
+        "runner_status",
+        "handoffs",
+        "loop_governance",
+        "evaluation",
+    ):
+        altered_payload = copy.deepcopy(payload)
+        altered_payload[forbidden_field] = {}
+
+        with pytest.raises(WorkflowValidationError) as exc_info:
+            validate_workflow_v2_data(altered_payload)
+
+        assert f"{forbidden_field} is not allowed in V2 governance schema" in (
+            "\n".join(exc_info.value.errors)
+        )
 
 
 def test_v2_schema_requires_core_governance_fields() -> None:
