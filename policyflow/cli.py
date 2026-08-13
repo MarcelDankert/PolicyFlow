@@ -2,40 +2,21 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import typer
+import yaml
 from rich.console import Console
 
-from policyflow.agent_execution import run_phase_with_runner
 from policyflow.bootstrap import bootstrap_consumer_repo
-from policyflow.consumer_config import load_consumer_config
 from policyflow.doctor import doctor_consumer_repo
 from policyflow.exceptions import WorkflowValidationError
 from policyflow.github_approval import validate_github_pr_approvals
-from policyflow.runtime import (
-    block_phase as block_workflow_phase,
-    complete_phase as complete_workflow_phase,
-    handoff_status_summary,
-    next_step_summary,
-    record_handoff as record_workflow_handoff,
-    start_phase as start_workflow_phase,
-)
-from policyflow.reporting import (
-    audit_directory,
-    audit_lines,
-    evaluation_report_directory,
-    evaluation_report_lines,
-    loop_report_directory,
-    loop_report_lines,
-    status_lines,
-    workflow_status,
-)
-from policyflow.sync import sync_consumer_assets
 from policyflow.validator import (
     inspect_workflow_file,
+    inspect_workflow_v2_file,
     validate_pull_request,
 )
-from policyflow.workflow_generator import create_workflow_instance
 
 
 app = typer.Typer(help="PolicyFlow governance validator.")
@@ -48,35 +29,54 @@ def main() -> None:
 
 
 @app.command()
-def validate(workflow_path: Path) -> None:
-    """Validate a workflow file against lightweight governance rules."""
+def validate(
+    workflow_path: Path,
+    json_output: bool = typer.Option(False, "--json"),
+    allow_pending: bool = typer.Option(
+        False,
+        "--allow-pending",
+        help="Return WARN instead of BLOCK for pending V2 human approval evidence.",
+    ),
+) -> None:
+    """Validate governance policy and evidence for a change."""
 
     try:
-        _workflow, warnings = inspect_workflow_file(workflow_path)
+        if _is_v2_workflow(workflow_path):
+            result = inspect_workflow_v2_file(
+                workflow_path, allow_pending_human_approval=allow_pending
+            )
+            if json_output:
+                typer.echo(json.dumps(result.to_json_dict(), indent=2))
+            else:
+                _print_v2_validation_result(result.to_json_dict())
+            if result.decision == "BLOCK":
+                raise typer.Exit(code=1)
+            return
+
+        workflow, warnings = inspect_workflow_file(workflow_path)
     except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Workflow validation failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
+        _print_errors("Workflow validation failed.", exc.errors, json_output=json_output)
         raise typer.Exit(code=1) from exc
+
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "schema_version": "policyflow.validation.v1",
+                    "decision": "WARN" if warnings else "PASS",
+                    "merge_ready": not warnings,
+                    "workflow_id": workflow.workflow.id,
+                    "warnings": warnings,
+                    "errors": [],
+                },
+                indent=2,
+            )
+        )
+        return
 
     for warning in warnings:
         console.print(f"[yellow][WARN][/yellow] {warning}")
     console.print("[green][SUCCESS][/green] Workflow validation passed.")
-
-
-@app.command("config-check")
-def config_check(config_path: Path = typer.Argument(Path("policyflow.yml"))) -> None:
-    """Validate a Consumer-Repo PolicyFlow config file."""
-
-    try:
-        load_consumer_config(config_path)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Consumer config validation failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print("[green][SUCCESS][/green] Consumer config validation passed.")
 
 
 @app.command("init")
@@ -85,7 +85,7 @@ def init(
     dry_run: bool = typer.Option(False, "--dry-run"),
     force: bool = typer.Option(False, "--force"),
 ) -> None:
-    """Bootstrap PolicyFlow assets into a Consumer-Repo."""
+    """Bootstrap PolicyFlow governance assets into a repository."""
 
     result = bootstrap_consumer_repo(target, dry_run=dry_run, force=force)
 
@@ -103,42 +103,6 @@ def init(
     console.print("[green][SUCCESS][/green] PolicyFlow bootstrap completed.")
 
 
-@app.command("new-workflow")
-def new_workflow(
-    workflow_type: str,
-    workflow_id: str = typer.Option(..., "--id"),
-    risk: str = typer.Option(..., "--risk"),
-    target: Path = typer.Option(Path("."), "--target"),
-    dry_run: bool = typer.Option(False, "--dry-run"),
-    force: bool = typer.Option(False, "--force"),
-) -> None:
-    """Create a new workflow instance from PolicyFlow defaults."""
-
-    try:
-        result = create_workflow_instance(
-            target,
-            workflow_type=workflow_type,
-            workflow_id=workflow_id,
-            risk_level=risk,
-            dry_run=dry_run,
-            force=force,
-        )
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Workflow generation failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    for path in result.created:
-        console.print(f"created {path}", markup=False)
-    for path in result.overwritten:
-        console.print(f"overwrote {path}", markup=False)
-    for path in result.would_create:
-        console.print(f"would create {path}", markup=False)
-
-    console.print("[green][SUCCESS][/green] Workflow generation completed.")
-
-
 @app.command("doctor")
 def doctor(
     target: Path = typer.Argument(Path(".")),
@@ -149,7 +113,7 @@ def doctor(
         help="Run GitHub App governance permission preflight for OWNER/REPO.",
     ),
 ) -> None:
-    """Check whether a Consumer-Repo is ready to run PolicyFlow."""
+    """Check whether a repository is ready to run PolicyFlow governance."""
 
     report = doctor_consumer_repo(
         target,
@@ -173,279 +137,112 @@ def doctor(
         raise typer.Exit(code=1)
 
 
-@app.command("sync")
-def sync(
-    target: Path = typer.Argument(Path(".")),
-    apply: bool = typer.Option(False, "--apply"),
-    force: bool = typer.Option(False, "--force"),
-) -> None:
-    """Preview or apply updates for PolicyFlow-managed Consumer-Repo assets."""
-
-    result = sync_consumer_assets(target, apply=apply, force=force)
-
-    for path in result.added:
-        console.print(f"{'created' if apply else 'would create'} {path}", markup=False)
-    for path in result.changed:
-        console.print(f"{'updated' if apply else 'would update'} {path}", markup=False)
-    for path in result.locally_modified:
-        if apply and force:
-            console.print(f"overwrote local modification {path}", markup=False)
-        else:
-            console.print(f"local modification preserved {path}", markup=False)
-    for path in result.removed:
-        console.print(f"upstream removed managed asset {path}", markup=False)
-
-    if apply:
-        console.print("[green][SUCCESS][/green] PolicyFlow asset sync completed.")
-    else:
-        console.print("[green][SUCCESS][/green] PolicyFlow asset sync preview completed.")
-
-
 @app.command("validate-pr")
-def validate_pr(workflow_path: Path, pr_body_path: Path) -> None:
-    """Validate a PR body markdown file against a workflow file."""
+def validate_pr(
+    workflow_path: Path,
+    pr_body_path: Path,
+    github_reviews: Path | None = typer.Option(
+        None,
+        "--github-reviews",
+        help="Read-only GitHub PR reviews JSON used to validate declared approvers.",
+    ),
+    allow_pending: bool = typer.Option(
+        False,
+        "--allow-pending",
+        help="Treat missing matching GitHub approvals as pending instead of failed.",
+    ),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Validate PR governance claims against workflow policy and evidence."""
 
     try:
-        validate_pull_request(workflow_path, pr_body_path)
+        if github_reviews is None:
+            workflow = validate_pull_request(workflow_path, pr_body_path)
+            payload: dict[str, Any] = {
+                "schema_version": "policyflow.pr_validation.v1",
+                "decision": "PASS",
+                "workflow_id": workflow.workflow.id,
+                "github_approval_status": "not_checked",
+                "pending_logins": [],
+                "errors": [],
+            }
+        else:
+            result = validate_github_pr_approvals(
+                workflow_path,
+                pr_body_path,
+                github_reviews,
+                allow_pending=allow_pending,
+            )
+            payload = {
+                "schema_version": "policyflow.pr_validation.v1",
+                "decision": "WARN" if result.status == "pending" else "PASS",
+                "workflow_id": result.workflow.workflow.id,
+                "github_approval_status": result.status,
+                "pending_logins": result.pending_logins,
+                "errors": [],
+            }
     except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Pull request validation failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
+        _print_errors("Pull request validation failed.", exc.errors, json_output=json_output)
         raise typer.Exit(code=1) from exc
+
+    if json_output:
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    if payload["github_approval_status"] == "pending":
+        console.print("[yellow][PENDING][/yellow] GitHub approval pending.")
+        for login in payload["pending_logins"]:
+            console.print(f"  - awaiting APPROVED review from login: {login}")
+        return
 
     console.print("[green][SUCCESS][/green] Pull request validation passed.")
 
 
-@app.command("validate-github-approvals")
-def validate_github_approvals(
-    workflow_path: Path,
-    pr_body_path: Path,
-    reviews_path: Path,
-    allow_pending: bool = typer.Option(
-        False,
-        "--allow-pending",
-        help=(
-            "Treat missing matching GitHub approvals as a pending lifecycle state "
-            "instead of a failed validation."
-        ),
-    ),
-) -> None:
-    """Validate PR approval logins against GitHub review metadata."""
-
+def _is_v2_workflow(path: Path) -> bool:
     try:
-        result = validate_github_pr_approvals(
-            workflow_path,
-            pr_body_path,
-            reviews_path,
-            allow_pending=allow_pending,
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise WorkflowValidationError([f"Invalid YAML: {exc}"]) from exc
+
+    if not isinstance(data, dict):
+        raise WorkflowValidationError(["Workflow file must contain a top-level YAML mapping"])
+
+    return data.get("version") == 2
+
+
+def _print_v2_validation_result(payload: dict[str, Any]) -> None:
+    decision = payload["decision"]
+    if decision == "PASS":
+        console.print("[green][SUCCESS][/green] Workflow validation passed.")
+    elif decision == "WARN":
+        console.print("[yellow][WARN][/yellow] Workflow validation has warnings.")
+    else:
+        console.print("[red][ERROR][/red] Workflow validation blocked.")
+
+    for warning in payload["warnings"]:
+        console.print(f"  - {warning['message']}")
+    for error in payload["errors"]:
+        console.print(f"  - {error['message']}")
+
+
+def _print_errors(title: str, errors: list[str], *, json_output: bool) -> None:
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "decision": "BLOCK",
+                    "merge_ready": False,
+                    "errors": errors,
+                    "warnings": [],
+                },
+                indent=2,
+            )
         )
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] GitHub approval validation failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    if result.status == "pending":
-        console.print("[yellow][PENDING][/yellow] GitHub approval pending.")
-        for login in result.pending_logins:
-            console.print(f"  - awaiting APPROVED review from login: {login}")
         return
 
-    console.print("[green][SUCCESS][/green] GitHub approval validation passed.")
-
-
-@app.command("status")
-def status(workflow_path: Path, json_output: bool = typer.Option(False, "--json")) -> None:
-    """Show a detailed workflow status and merge-readiness view."""
-
-    try:
-        payload = workflow_status(workflow_path)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Workflow status query failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    if json_output:
-        typer.echo(json.dumps(payload, indent=2))
-        return
-
-    for line in status_lines(payload):
-        console.print(line, markup=False)
-
-
-@app.command("audit")
-def audit(directory: Path, json_output: bool = typer.Option(False, "--json")) -> None:
-    """Show an audit overview for workflow files in a directory tree."""
-
-    payload = audit_directory(directory)
-
-    if json_output:
-        typer.echo(json.dumps(payload, indent=2))
-        return
-
-    for line in audit_lines(payload):
-        console.print(line, markup=False)
-
-
-@app.command("evaluation-report")
-def evaluation_report(
-    directory: Path, json_output: bool = typer.Option(False, "--json")
-) -> None:
-    """Show evaluation governance compliance across workflow files."""
-
-    payload = evaluation_report_directory(directory)
-
-    if json_output:
-        typer.echo(json.dumps(payload, indent=2))
-        return
-
-    for line in evaluation_report_lines(payload):
-        console.print(line, markup=False)
-
-
-@app.command("loop-report")
-def loop_report(
-    directory: Path, json_output: bool = typer.Option(False, "--json")
-) -> None:
-    """Show loop governance compliance across workflow files."""
-
-    payload = loop_report_directory(directory)
-
-    if json_output:
-        typer.echo(json.dumps(payload, indent=2))
-        return
-
-    for line in loop_report_lines(payload):
-        console.print(line, markup=False)
-
-
-@app.command("run-phase")
-def run_phase(
-    workflow_path: Path,
-    phase: str,
-    runner_config: Path = typer.Option(Path("policyflow.runners.yml"), "--runner-config"),
-) -> None:
-    """Run one agent-owned workflow phase through the configured external runner."""
-
-    try:
-        run_phase_with_runner(workflow_path, phase, runner_config)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Agent phase execution failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(f"[green][SUCCESS][/green] Executed phase {phase}.")
-
-
-@app.command("next-step")
-def next_step(workflow_path: Path) -> None:
-    """Show the next actionable orchestration step for a workflow."""
-
-    try:
-        summary = next_step_summary(workflow_path)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Workflow orchestration query failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(summary)
-
-
-@app.command("handoff-status")
-def handoff_status(workflow_path: Path) -> None:
-    """Show recorded workflow handoffs."""
-
-    try:
-        lines = handoff_status_summary(workflow_path)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Workflow handoff query failed.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    for line in lines:
-        console.print(line, markup=False)
-
-
-@app.command("start-phase")
-def start_phase(workflow_path: Path, phase: str) -> None:
-    """Start a declared workflow phase and persist the runtime state."""
-
-    try:
-        start_workflow_phase(workflow_path, phase)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Could not start phase.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(f"[green][SUCCESS][/green] Started phase {phase}.")
-
-
-@app.command("complete-phase")
-def complete_phase(workflow_path: Path, phase: str) -> None:
-    """Complete an in-progress workflow phase and persist the runtime state."""
-
-    try:
-        complete_workflow_phase(workflow_path, phase)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Could not complete phase.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(f"[green][SUCCESS][/green] Completed phase {phase}.")
-
-
-@app.command("block-phase")
-def block_phase(workflow_path: Path, phase: str, reason: str = typer.Option(..., "--reason")) -> None:
-    """Block a workflow phase with an explicit reason and persist the runtime state."""
-
-    try:
-        block_workflow_phase(workflow_path, phase, reason)
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Could not block phase.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(f"[green][SUCCESS][/green] Blocked phase {phase}.")
-
-
-@app.command("record-handoff")
-def record_handoff(
-    workflow_path: Path,
-    from_phase: str = typer.Option(..., "--from-phase"),
-    to_phase: str = typer.Option(..., "--to-phase"),
-    required_input: list[str] = typer.Option([], "--required-input"),
-    produced_output: list[str] = typer.Option([], "--produced-output"),
-    blocker: list[str] = typer.Option([], "--blocker"),
-    override_ref: list[str] = typer.Option([], "--override-ref"),
-) -> None:
-    """Record a workflow handoff with concrete input and output artifacts."""
-
-    try:
-        record_workflow_handoff(
-            workflow_path,
-            from_phase,
-            to_phase,
-            required_input,
-            produced_output,
-            blocker,
-            override_ref,
-        )
-    except WorkflowValidationError as exc:
-        console.print("[red][ERROR][/red] Could not record handoff.")
-        for error in exc.errors:
-            console.print(f"  - {error}")
-        raise typer.Exit(code=1) from exc
-
-    console.print(
-        f"[green][SUCCESS][/green] Recorded handoff {from_phase} -> {to_phase}."
-    )
+    console.print(f"[red][ERROR][/red] {title}")
+    for error in errors:
+        console.print(f"  - {error}")
 
 
 if __name__ == "__main__":

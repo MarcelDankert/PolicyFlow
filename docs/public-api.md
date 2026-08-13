@@ -1,11 +1,14 @@
 # Public Python API
 
-Consumer-Repos and integrations should import PolicyFlow through `policyflow`
-or `policyflow.api`. Modules such as `policyflow.validator`,
-`policyflow.runtime`, and `policyflow.reporting` remain internal implementation details and may change as long as the public API keeps its documented behavior.
+PolicyFlow 2.0 exposes a governance-only public API through `policyflow` and
+`policyflow.api`.
+
+Internal modules remain outside the compatibility boundary. In particular,
+runtime mutation, runner execution, reporting internals, asset synchronization,
+workflow generation, and provider adapters are not public API.
 
 For the provider-neutral evidence boundary used by external runtimes, CI
-systems, and agent frameworks, see
+systems, and evidence producers, see
 [provider-neutral-integration-contract.md](provider-neutral-integration-contract.md).
 Source path: `docs/provider-neutral-integration-contract.md`.
 
@@ -14,132 +17,106 @@ Source path: `docs/provider-neutral-integration-contract.md`.
 Package root imports are supported:
 
 ```python
-from policyflow import validate_workflow, get_workflow_status
+from policyflow import inspect_workflow_v2, validate_pr_body
 
-workflow = validate_workflow("ai/workflows/features/first-feature.yml")
-status = get_workflow_status("ai/workflows/features/first-feature.yml")
+result = inspect_workflow_v2("policyflow/change.yml")
+validate_pr_body("workflows/features/change.yml", "pr-body.md")
 ```
 
-The same functions are available from `policyflow.api`:
+The same functions are available from `policyflow.api`.
 
-```python
-from policyflow.api import validate_pr_body, validate_github_approvals
+## Governance API
 
-validate_pr_body("ai/workflows/features/first-feature.yml", "pr-body.md")
-validate_github_approvals(
-    "ai/workflows/features/first-feature.yml",
-    "pr-body.md",
-    "pr-reviews.json",
-)
-```
+V1 compatibility validation:
 
-## Validation API
+- `inspect_workflow(path)`: returns `(WorkflowDocument, warnings)`.
+- `validate_workflow(path)`: returns a validated `WorkflowDocument`.
+- `validate_workflow_data(raw_data)`: validates an in-memory V1 workflow mapping.
 
-- `inspect_workflow(path)`: returns `(WorkflowDocument, warnings)`
-- `validate_workflow(path)`: returns a validated `WorkflowDocument`
-- `validate_workflow_data(raw_data)`: validates an in-memory workflow mapping
+V2 governance validation:
+
+- `validate_workflow_v2(path)`: returns a validated `WorkflowDocumentV2`.
+- `validate_workflow_v2_data(raw_data)`: validates an in-memory V2 governance
+  mapping.
+- `inspect_workflow_v2(path, allow_pending_human_approval=False)`: returns a
+  `ValidationResultV2` with `PASS`, `WARN`, or `BLOCK`.
+- `inspect_workflow_v2_data(raw_data, allow_pending_human_approval=False)`:
+  returns a `ValidationResultV2` for an in-memory V2 mapping.
+
+PR governance validation:
+
 - `validate_pr_body(workflow_path, pr_body_path)`: validates PR body governance
-- `validate_github_approvals(workflow_path, pr_body_path, reviews_path)`: checks
-  required GitHub approvals
+  claims against the workflow.
+- `validate_github_approvals(workflow_path, pr_body_path, reviews_path,
+  allow_pending=False)`: validates declared human approvers against read-only
+  GitHub review JSON.
 
 Validation failures raise `WorkflowValidationError`.
 
-## Reporting API
+## Validation Result
 
-```python
-from policyflow import audit_workflows, get_workflow_status
+`ValidationResultV2.to_json_dict()` returns the machine-readable
+`policyflow.validation.v2` contract:
 
-status = get_workflow_status("ai/workflows/features/first-feature.yml")
-audit = audit_workflows("ai/workflows")
+```json
+{
+  "schema_version": "policyflow.validation.v2",
+  "decision": "PASS",
+  "merge_ready": true,
+  "workflow": {},
+  "errors": [],
+  "warnings": []
+}
 ```
 
-`get_workflow_status` returns the same status payload used by `policyflow
-status --json`. `audit_workflows` returns the same audit payload used by
-`policyflow audit --json`.
+`PASS` means governance is satisfied. `WARN` means the change is not merge-ready
+but has a non-blocking governance condition, such as pending approval when that
+state is explicitly allowed. `BLOCK` means governance is not satisfied.
 
-### Audit JSON Contract
+Merge readiness is computed from governance policy, normalized evidence, and
+override lifecycle only. It does not use runtime state, active agent state,
+runner state, handoffs, loop iteration counters, evaluation metric values, or
+metric calculation.
 
-`audit_workflows` and `policyflow audit --json` return the machine-readable
-audit contract `policyflow.audit.v1` with `report_type: workflow_audit`.
+## Removed Public API
 
-The top-level payload includes:
+The following V1 helpers are removed from the public API:
 
-- `schema_version`: currently `policyflow.audit.v1`
-- `report_type`: currently `workflow_audit`
-- `compatibility`: compatibility notes for downstream consumers
-- `summary`: aggregate `workflow_governance`, `loop_governance`,
-  `evaluation_governance`, and `human_governance` status counts
-- `workflows`: per-workflow audit entries
+- `get_workflow_status`
+- `audit_workflows`
+- `start_workflow_phase`
+- `complete_workflow_phase`
+- `block_workflow_phase`
+- `record_workflow_handoff`
 
-The existing workflow audit fields remain present in each `workflows[]` entry,
-including `path`, `workflow_id`, `risk_level`, `current_phase`,
-`runtime_status`, `valid`, `merge_ready`, `loop_governance`, and `evaluation`.
-Downstream consumers should treat new top-level keys as additive and continue
-reading existing workflow-level fields during the `0.x` compatibility window.
+Consumers that used runtime mutation helpers should move execution and workflow
+state handling to external runtimes or repository tooling.
 
-New machine-readable per-workflow status groups are additive:
+runtime mutation helpers should move execution and workflow state handling to external runtimes.
 
-- `workflow_governance`: validation, merge-readiness, blocked state, and
-  workflow-level errors
-- `loop_governance`: declared loop count, loop status counts, and loop
-  compliance errors
-- `evaluation`: declared evaluation categories, metric counts, failed metrics,
-  and evaluation errors
-- `human_governance`: human approval requirement, approval evidence presence,
-  missing approval evidence, and approval-related errors
+Those systems may emit normalized evidence for PolicyFlow to validate.
 
-## Runtime Mutation API
+Consumers that used audit/status helpers should use validation JSON output as
+the V2 governance integration point.
 
-```python
-from policyflow import start_workflow_phase, record_workflow_handoff
+## CLI Boundary
 
-start_workflow_phase("ai/workflows/features/first-feature.yml", "implementation")
-record_workflow_handoff(
-    "ai/workflows/features/first-feature.yml",
-    "implementation",
-    "review",
-    required_inputs=["implementation_summary"],
-    produced_outputs=["review_findings"],
-)
+The V2 CLI is intentionally small:
+
+```text
+policyflow init
+policyflow validate
+policyflow validate-pr
+policyflow doctor
 ```
 
-Stable runtime helpers:
-
-- `start_workflow_phase(path, phase)`
-- `complete_workflow_phase(path, phase)`
-- `block_workflow_phase(path, phase, reason)`
-- `record_workflow_handoff(path, from_phase, to_phase, required_inputs,
-  produced_outputs, blockers=None, override_refs=None)`
-
-These helpers persist the workflow file after applying the same validation rules
-as the CLI.
+`validate-pr --github-reviews pr-reviews.json` is the read-only GitHub approval
+validation path. PolicyFlow validates declared approvers; it does not request
+reviews, approve PRs, label PRs, merge PRs, or mutate GitHub state.
 
 ## Compatibility Boundary
 
-The public API follows the canonical workflow schema described in
-[schema-compatibility.md](schema-compatibility.md). Existing CLI commands keep
-using the same service behavior as these public wrappers. Internal modules can
-remain importable for tests and local development, but Consumer-Repos should not
-treat internal module paths as the compatibility contract.
-
-## v2 Public API Expectations
-
-PolicyFlow 2.x consumers should continue to use `policyflow` and `policyflow.api`
-for supported integration code. Internal modules remain outside the compatibility boundary. They may change when implementation details move.
-
-`WorkflowDocument` remains the normalized governance document returned by
-validation helpers. It represents the canonical workflow, context, governance,
-execution, evidence, contracts, overrides, runtime, handoff, loop governance,
-and evaluation governance shape after compatibility normalization.
-
-`validate_workflow`, `inspect_workflow`, and `validate_workflow_data` remain the
-public validation entry points. `validate_pr_body` and
-`validate_github_approvals` remain the public PR governance entry points.
-
-`audit_workflows` remains the reporting entry point for `policyflow.audit.v1`.
-Consumers that parse audit JSON should read `schema_version`, use documented
-workflow, loop, evaluation, and human governance fields, and tolerate additive
-fields unless a future release note declares a new schema version.
-
-Runtime mutation helpers remain lightweight workflow-state helpers for
-PolicyFlow-owned YAML fields. PolicyFlow validates and reports governance; it does not execute external systems, host runtimes, schedule agents, route messages, manage memory, manage provider credentials, approve pull requests, or replace Consumer-Repo CI and review systems.
+The public API follows the schemas described in
+[schema-compatibility.md](schema-compatibility.md). Existing V1 workflow
+validation remains available during this cutover, but new integrations should
+target V2 governance validation and `policyflow.validation.v2`.

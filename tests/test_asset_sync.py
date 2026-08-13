@@ -87,26 +87,24 @@ def test_sync_reports_assets_removed_from_current_package(tmp_path: Path) -> Non
     assert (tmp_path / "ai/removed-template.md").exists()
 
 
-def test_sync_command_outputs_dry_run_actions(tmp_path: Path) -> None:
+def test_sync_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
     bootstrap_consumer_repo(tmp_path)
     _mark_asset_as_installed_from_old_content(tmp_path, "policyflow.yml", "version: 1\nold: true\n")
 
     result = runner.invoke(app, ["sync", str(tmp_path)])
 
-    assert result.exit_code == 0
-    assert "would update policyflow.yml" in result.stdout
-    assert "[SUCCESS] PolicyFlow asset sync preview completed." in result.stdout
+    assert result.exit_code == 2
+    assert "No such command" in result.output
 
 
-def test_sync_command_apply_updates_assets(tmp_path: Path) -> None:
+def test_sync_apply_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
     bootstrap_consumer_repo(tmp_path)
     _mark_asset_as_installed_from_old_content(tmp_path, "policyflow.yml", "version: 1\nold: true\n")
 
     result = runner.invoke(app, ["sync", str(tmp_path), "--apply"])
 
-    assert result.exit_code == 0
-    assert "updated policyflow.yml" in result.stdout
-    assert "[SUCCESS] PolicyFlow asset sync completed." in result.stdout
+    assert result.exit_code == 2
+    assert "No such command" in result.output
 
 
 def _mark_asset_as_installed_from_old_content(

@@ -99,25 +99,24 @@ def test_consumer_config_missing_file_fails_with_actionable_error(tmp_path: Path
     assert "Consumer config file not found" in exc_info.value.errors[0]
 
 
-def test_config_check_command_reports_valid_config(tmp_path: Path) -> None:
+def test_config_check_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
     config_path = tmp_path / "policyflow.yml"
     config_path.write_text("version: 1\n", encoding="utf-8")
 
     result = runner.invoke(app, ["config-check", str(config_path)])
 
-    assert result.exit_code == 0
-    assert "[SUCCESS] Consumer config validation passed." in result.stdout
+    assert result.exit_code == 2
+    assert "No such command" in result.output
 
 
-def test_config_check_command_reports_invalid_config(tmp_path: Path) -> None:
+def test_config_check_invalid_config_is_handled_by_doctor_not_cli_command(tmp_path: Path) -> None:
     config_path = tmp_path / "policyflow.yml"
     config_path.write_text("version: 2\n", encoding="utf-8")
 
     result = runner.invoke(app, ["config-check", str(config_path)])
 
-    assert result.exit_code == 1
-    assert "[ERROR] Consumer config validation failed." in result.stdout
-    assert "version must be 1" in result.stdout
+    assert result.exit_code == 2
+    assert "No such command" in result.output
 
 
 def test_published_consumer_config_examples_are_valid() -> None:

@@ -187,7 +187,7 @@ def test_new_workflow_force_overwrites_existing_file(tmp_path: Path) -> None:
     validate_workflow_file(existing)
 
 
-def test_new_workflow_command_creates_valid_workflow(tmp_path: Path) -> None:
+def test_new_workflow_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
     bootstrap_consumer_repo(tmp_path)
 
     result = runner.invoke(
@@ -204,6 +204,6 @@ def test_new_workflow_command_creates_valid_workflow(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 0
-    assert "created ai/workflows/features/cli-feature.yml" in result.stdout
-    validate_workflow_file(tmp_path / "ai/workflows/features/cli-feature.yml")
+    assert result.exit_code == 2
+    assert "No such command" in result.output
+    assert not (tmp_path / "ai/workflows/features/cli-feature.yml").exists()
