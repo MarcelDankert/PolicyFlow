@@ -90,7 +90,6 @@ def asset_digest(asset: BootstrapAsset) -> str:
 def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
     assets: list[BootstrapAsset] = [
         BootstrapAsset(None, Path("policyflow.yml"), _consumer_config_content()),
-        BootstrapAsset(None, Path("policyflow.runners.yml"), _consumer_runner_config_content()),
         BootstrapAsset(
             source_root / "examples" / "project-context.yml",
             Path("ai/project-context.yml"),
@@ -139,7 +138,6 @@ def _consumer_config_content() -> str:
             "agents": "ai/agents",
             "rules": "ai/rules",
             "project_context": "ai/project-context.yml",
-            "runner_config": "policyflow.runners.yml",
             "pr_template": ".github/PULL_REQUEST_TEMPLATE.md",
             "issue_templates": ".github/ISSUE_TEMPLATE",
             "governance_workflow": ".github/workflows/policyflow-governance.yml",
@@ -147,70 +145,10 @@ def _consumer_config_content() -> str:
         "features": {
             "pr_validation": True,
             "github_approval_checks": True,
-            "runner_execution": True,
             "bootstrap_managed_assets": True,
         },
         "bootstrap": {
             "managed_assets": [],
-        },
-    }
-    return yaml.safe_dump(payload, sort_keys=False)
-
-
-def _consumer_runner_config_content() -> str:
-    payload = {
-        "default_runner": "command",
-        "runners": {
-            "command": {
-                "type": "command",
-                "command": [
-                    "policyflow-runner",
-                    "--input",
-                    "{input_path}",
-                    "--output",
-                    "{output_path}",
-                ],
-                "prompt_paths": {
-                    "planning": "ai/prompts/planning-agent.prompt.md",
-                    "architecture-check": "ai/prompts/architecture-agent.prompt.md",
-                    "implementation": "ai/prompts/senior-dev-agent.prompt.md",
-                    "review": "ai/prompts/review-agent.prompt.md",
-                    "qa": "ai/prompts/qa-agent.prompt.md",
-                },
-                "agent_paths": {
-                    "planning": "ai/agents/planning-agent.md",
-                    "architecture-check": "ai/agents/architecture-agent.md",
-                    "implementation": "ai/agents/senior-dev-agent.md",
-                    "review": "ai/agents/review-agent.md",
-                    "qa": "ai/agents/qa-agent.md",
-                },
-            },
-            "codex": {
-                "type": "codex",
-                "command": [
-                    "{python_executable}",
-                    "-m",
-                    "policyflow.codex_runner",
-                    "--input",
-                    "{input_path}",
-                    "--output",
-                    "{output_path}",
-                ],
-                "prompt_paths": {
-                    "planning": "ai/prompts/planning-agent.prompt.md",
-                    "architecture-check": "ai/prompts/architecture-agent.prompt.md",
-                    "implementation": "ai/prompts/senior-dev-agent.prompt.md",
-                    "review": "ai/prompts/review-agent.prompt.md",
-                    "qa": "ai/prompts/qa-agent.prompt.md",
-                },
-                "agent_paths": {
-                    "planning": "ai/agents/planning-agent.md",
-                    "architecture-check": "ai/agents/architecture-agent.md",
-                    "implementation": "ai/agents/senior-dev-agent.md",
-                    "review": "ai/agents/review-agent.md",
-                    "qa": "ai/agents/qa-agent.md",
-                },
-            }
         },
     }
     return yaml.safe_dump(payload, sort_keys=False)
@@ -312,30 +250,6 @@ def _starter_workflow_content() -> str:
                 "compensating_controls": [
                     "review findings tracked before QA sign-off"
                 ],
-            }
-        ],
-        "runtime": {
-            "status": "handoff_pending",
-            "current_phase": "architecture-check",
-            "active_agent": "senior-dev-agent",
-            "last_transition": "architecture-check completed and ready for implementation handoff",
-            "block_reason": None,
-        },
-        "handoffs": [
-            {
-                "from_phase": "architecture-check",
-                "to_phase": "implementation",
-                "status": "pending",
-                "required_inputs": [
-                    "architecture_assessment",
-                    "implementation_constraints",
-                ],
-                "produced_outputs": [
-                    "implementation_summary",
-                    "test_summary",
-                ],
-                "blockers": [],
-                "override_refs": ["starter-phase-bypass"],
             }
         ],
     }

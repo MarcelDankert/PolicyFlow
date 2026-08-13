@@ -1,0 +1,191 @@
+workflow:
+  id: policyflow-v2-remove-runtime-ownership
+  type: feature
+
+context:
+  workflow_file: workflows/features/remove-runtime-ownership.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #147 defines the runtime and runner execution removal after the V2 CLI/API cutover.
+    implementation: Scope is limited to removing PolicyFlow-owned execution modules and runner config handling from core readiness paths.
+    tests: Import, bootstrap, doctor, packaging, CLI, and full-suite checks will verify the runtime ownership removal.
+    residual_uncertainty: Minimal init footprint and reporting simplification remain later V2 issues.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - runtime execution
+    - package surface
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #147 was selected after Issue #146 merged and branch codex/policyflow-v2-remove-runtime-ownership was created from origin/main.
+    scope_locked:
+      - Remove PolicyFlow-owned runner execution modules from the core package.
+      - Stop bootstrap from generating runner configuration.
+      - Stop doctor from validating runner command configuration as core readiness.
+      - Preserve migration diagnostics for old runtime and handoff fields.
+    non_goals_locked:
+      - No replacement runtime.
+      - No provider adapter.
+      - No model routing.
+      - No agent prompt management.
+      - No full minimal init rebuild beyond runner ownership removal.
+    risk_rationale: HIGH because removing execution modules and generated runner configuration is a deliberate breaking change.
+  architecture-check:
+    decision: PolicyFlow core must not own execution dispatch, Codex adapter behavior, runtime state mutation, or runner configuration readiness.
+    constraints:
+      - External systems own execution and may produce normalized evidence.
+      - PolicyFlow core validates governance only.
+      - GitHub integration remains read-only.
+      - V1 runtime and handoff fields remain migration diagnostics, not execution behavior.
+    approval_path: ADR-0004 and Issue #147.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/147
+    scope_confirmed: true
+  review:
+    outcome: approved
+    findings_summary: Local review found no execution ownership reintroduced in the V2 core path.
+    residual_risk: Deleting runtime modules is a breaking change and requires PR review before merge.
+  qa:
+    outcome: passed
+    evidence_summary: Focused tests, repository docs tests, full pytest suite, import absence check, and active workflow validation passed locally.
+    unresolved_risks: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Remove runtime and runner execution ownership from PolicyFlow core.
+    acceptance_criteria:
+      - The package no longer imports or shells out to Codex.
+      - No core module executes external runner commands.
+      - No V2 model contains active_agent, runner, runtime.status, or first-class handoffs.
+      - Runtime and handoff V1 fields remain covered by migration diagnostics.
+      - Tests for moved runner and Codex functionality are removed from core.
+    approved_scope:
+      - policyflow/agent_execution.py
+      - policyflow/codex_runner.py
+      - policyflow/runtime.py
+      - policyflow/bootstrap.py
+      - policyflow/doctor.py
+      - policyflow/consumer_config.py
+      - tests
+      - docs/runner-contract.md
+    non_goals:
+      - No replacement runtime.
+      - No provider adapter.
+      - No model routing.
+      - No agent prompt management.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - runtime execution
+      - package surface
+    confidence_summary: "#147 follows the completed V2 governance boundary, schema, validation, and API/CLI cutover issues."
+    escalation_flags:
+      - Breaking execution module removal
+      - Consumer bootstrap behavior change
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Runtime execution modules can be removed now because the V2 validation path and governance-only CLI/API are already available.
+    approved_scope:
+      - Remove execution modules from core package.
+      - Remove runner config generation and doctor checks.
+      - Replace Codex/runner tests with absence and import-boundary tests.
+      - Mark runner contract docs as externalized.
+    module_boundaries:
+      - validator remains governance validation.
+      - bootstrap may scaffold governance assets but not runner configuration.
+      - doctor may check governance readiness but not runner readiness.
+      - external runtimes own runner config, adapters, prompts, and execution.
+    contract_impact: Consumers relying on PolicyFlow runner execution must move that behavior outside PolicyFlow core.
+    risk_review_decision: HIGH risk accepted because ADR-0004 requires this breaking boundary enforcement.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not add replacement execution commands.
+      - Do not add provider-specific adapters.
+      - Do not remove V2 validation diagnostics.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Removed runtime mutation, agent execution, and Codex runner modules; stopped bootstrap and doctor from owning runner configuration; removed provider-specific prompt and runner assets from core examples and packaged assets.
+    changed_files:
+      - policyflow/agent_execution.py
+      - policyflow/codex_runner.py
+      - policyflow/runtime.py
+      - policyflow/bootstrap.py
+      - policyflow/doctor.py
+      - policyflow/consumer_config.py
+      - policyflow/reporting.py
+      - tests/test_bootstrap.py
+      - tests/test_doctor.py
+      - tests/test_consumer_config.py
+      - tests/test_public_api.py
+      - docs/runner-contract.md
+      - docs/getting-started.md
+      - README.md
+      - examples
+      - policyflow/assets
+      - workflows/features/remove-runtime-ownership.yml
+    test_summary: pytest -q, focused boundary tests, import absence check, and active workflow validation passed locally.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/runner-contract.md
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/docs/runner-contract.md
+    known_limitations:
+      - Reporting module remains a V1-style read-only helper until the reporting simplification issue.
+      - Full minimal init rebuild remains the next consumer-experience issue.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: pending-pr-review
+    review_approval: pending-pr-review
+    residual_risk: Breaking removal of runtime modules and runner assets needs PR review.
+    qa_focus_areas:
+      - deleted execution modules are not importable
+      - bootstrap does not create runner config
+      - doctor does not validate runner command readiness
+      - docs do not instruct users to run PolicyFlow-owned execution
+    test_expectations:
+      - pytest -q tests/test_repository_docs.py tests/test_bootstrap.py tests/test_doctor.py tests/test_consumer_config.py tests/test_public_api.py
+      - python -m policyflow.cli validate workflows/features/remove-runtime-ownership.yml
+      - pytest -q
+  qa:
+    owner_agent: qa-agent
+    qa_report: Full test suite and active workflow validation passed locally.
+    quality_gate_status: passed
+    unresolved_risks: []
+    approval_required: true
+    merge_readiness: true
+
+overrides: []

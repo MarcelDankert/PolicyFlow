@@ -28,7 +28,6 @@ policyflow init .
 Bootstrap writes:
 
 - `policyflow.yml`
-- `policyflow.runners.yml`
 - `.policyflow/bootstrap.json`
 - `ai/project-context.yml`
 - `ai/agents/`, `ai/prompts/`, `ai/rules/`
@@ -49,7 +48,6 @@ Make the minimal project-specific edits:
 
 - update `ai/project-context.yml`
 - choose local-only or GitHub-governed features in `policyflow.yml`
-- configure `policyflow.runners.yml` if you will run agent-owned phases
 - keep project-specific overlays separate from managed assets
 
 Validate readiness:
@@ -118,20 +116,9 @@ policyflow new-workflow feature --id first-feature --risk LOW --force
 
 PolicyFlow uses a provider-neutral `type: command` runner contract. Any local
 CLI, hosted-adapter wrapper, or internal runner can execute phases if it reads
-PolicyFlow input JSON and writes PolicyFlow result JSON.
-
-See [runner-contract.md](runner-contract.md) for the command placeholders,
-input/output JSON contract, blocked/completed semantics, and Codex reference
-adapter.
-
-After configuring the selected runner, execute an agent-owned phase:
-
-```bash
-policyflow run-phase ai/workflows/features/first-feature.yml implementation
-```
-
-If the runner cannot execute, PolicyFlow blocks the phase with an actionable
-reason instead of leaving workflow state ambiguous.
+External systems execute implementation work, tests, scans, reviews, and release
+steps. PolicyFlow starts after those systems publish governance evidence and
+returns a validation decision for the repository change.
 
 ## First PR Governance
 
@@ -207,7 +194,6 @@ version: 1
 features:
   pr_validation: false
   github_approval_checks: false
-  runner_execution: false
   bootstrap_managed_assets: false
 ```
 
@@ -228,7 +214,6 @@ paths:
   agents: ai/agents
   rules: ai/rules
   project_context: ai/project-context.yml
-  runner_config: policyflow.runners.yml
   pr_template: .github/PULL_REQUEST_TEMPLATE.md
   issue_templates: .github/ISSUE_TEMPLATE
   governance_workflow: .github/workflows/policyflow-governance.yml
@@ -236,7 +221,6 @@ paths:
 features:
   pr_validation: true
   github_approval_checks: true
-  runner_execution: true
   bootstrap_managed_assets: true
 ```
 
@@ -344,13 +328,12 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 4. add machine-readable `evidence` blocks as phases complete
 5. add matching machine-readable `contracts` blocks as completed agent-owned phases finish
 6. add typed `overrides` only for explicit approved exceptions, surface them in the PR when present, and keep their `review_by` or `expires_on` dates current
-7. use `runtime` and `handoffs` to persist the current orchestration state as the workflow advances
+7. keep runtime and handoff orchestration outside PolicyFlow and record governance-relevant outcomes as evidence
 8. advance phases only when their prerequisite workflow phases are completed
 9. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
 10. treat the workflow as the steering artifact for the change, not as retrospective documentation
 11. keep same-PR workflow edits limited to same-scope clarifications
-12. keep the repo-level runner configuration current if you use external agent execution
-13. configure the default `type: command` runner to any provider adapter that implements the PolicyFlow runner contract before `policyflow run-phase`
+12. keep external execution systems responsible for their own runner configuration and provider adapters
 
 ## First Recommended Checks
 
@@ -372,6 +355,5 @@ PolicyFlow defaults to strict workflow execution in every consumer repo:
 - confirm which owner agent and output contract each completed phase must carry
 - confirm which CLI orchestration commands should be used to advance the workflow state
 - confirm which reporting views should be used to check merge readiness and blocked workflows
-- confirm which central runner config should execute canonical phases and where its JSON contract output is written
-- confirm that `policyflow.runners.yml` points to a valid `type: command` provider adapter
-- confirm the selected provider CLI or hosted-adapter wrapper is installed, authenticated, and ready before agent-owned phase execution
+- confirm which external systems will produce test, review, approval, security, build, or deployment evidence
+- confirm that external execution output is normalized into evidence PolicyFlow can validate

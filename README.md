@@ -102,15 +102,13 @@ Then make the minimal project-specific edits:
 
 1. update `ai/project-context.yml`
 2. choose local-only or GitHub-governed features in `policyflow.yml`
-3. configure `policyflow.runners.yml` if agent-owned phases should run through
-   a local CLI, hosted-adapter wrapper, or internal runner
-4. add project-specific overlays such as `ai/architecture.md`,
+3. add project-specific overlays such as `ai/architecture.md`,
    `ai/rules/project-overrides.md`, or `contracts/` if applicable
-5. create workflow instances for real work under `ai/workflows/features/` or the
+4. create workflow instances for real work under `ai/workflows/features/` or the
    configured workflow location before implementation starts
 
 See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
-Quickstart, including PR validation, GitHub approval checks, runner setup, and
+Quickstart, including PR validation, GitHub approval checks, and
 managed asset sync.
 
 Audit Reporting is documented in
@@ -270,40 +268,10 @@ policyflow audit workflows/features
 policyflow audit workflows/features --json
 ```
 
-Provider-neutral runner configuration:
-
-```bash
-policyflow run-phase workflows/examples/example-feature-workflow.yml implementation
-policyflow run-phase workflows/examples/example-feature-workflow.yml implementation --runner-config policyflow.runners.yml
-```
-
-PolicyFlow executes agent-owned phases through a generic command runner
-contract. The default `type: command` runner can be any local CLI, hosted model
-adapter, or internal wrapper that reads PolicyFlow input JSON and writes
-PolicyFlow result JSON. See [docs/runner-contract.md](docs/runner-contract.md)
-for the full input/output contract, placeholders, exit-code behavior, and
-examples.
-
-The packaged Codex wrapper is a reference adapter, not a PolicyFlow
-requirement:
-
-```text
-python -m policyflow.codex_runner --input <input.json> --output <output.json>
-```
-
-The wrapper calls `codex exec` and expects Codex to return a single JSON object
-as its final response. If you choose the Codex adapter, install and authenticate
-Codex CLI and verify the local environment with:
-
-```bash
-codex doctor
-```
-
-In CI, install PolicyFlow and the provider runner selected in
-`policyflow.runners.yml` before the governance step. Provider credentials and
-runtime setup stay outside PolicyFlow. If the configured runner is missing or
-cannot run, PolicyFlow blocks the phase with an actionable runtime reason instead
-of leaving the workflow in an ambiguous state.
+Execution systems are external to PolicyFlow. Local tools, CI jobs, hosted
+agent systems, and provider adapters may produce normalized evidence; PolicyFlow
+validates that evidence against repository governance policy and returns a
+governance decision.
 
 Runner result contract:
 

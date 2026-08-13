@@ -6,7 +6,6 @@ paths:
   agents: ai/agents
   rules: ai/rules
   project_context: ai/project-context.yml
-  runner_config: policyflow.runners.yml
   pr_template: .github/PULL_REQUEST_TEMPLATE.md
   issue_templates: .github/ISSUE_TEMPLATE
   governance_workflow: .github/workflows/policyflow-governance.yml
@@ -14,7 +13,6 @@ paths:
 features:
   pr_validation: false
   github_approval_checks: false
-  runner_execution: true
   bootstrap_managed_assets: true
 
 bootstrap:
@@ -23,5 +21,4 @@ bootstrap:
     - ai/prompts
     - ai/agents
     - ai/rules
-    - policyflow.runners.yml
 
