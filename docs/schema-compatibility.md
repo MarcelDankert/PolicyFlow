@@ -57,6 +57,46 @@ state, handoff state, provider fields, model fields, runner state, first-class
 loop state, and analytics/evaluation state. External systems may still produce
 normalized evidence that PolicyFlow validates.
 
+## PolicyFlow 2.0 Validation Result
+
+V2 governance validation returns a machine-readable result with
+`schema_version: policyflow.validation.v2`.
+
+```json
+{
+  "schema_version": "policyflow.validation.v2",
+  "decision": "PASS",
+  "merge_ready": true,
+  "workflow": {},
+  "errors": [],
+  "warnings": []
+}
+```
+
+Decision semantics:
+
+- `PASS`: governance is satisfied and the change is merge-ready from PolicyFlow's
+  perspective.
+- `WARN`: governance has a non-blocking condition that requires attention, such
+  as an expiring override or pending human approval when pending approval is
+  explicitly allowed.
+- `BLOCK`: governance is not satisfied, for example because required evidence is
+  missing, human approval is missing, blocking evidence failed, or an override
+  expired.
+
+Merge readiness is derived from governance policy, normalized evidence, and
+override lifecycle only. It does not use runtime state, active agent state,
+runner state, handoffs, loop iteration counters, evaluation metric values, or
+metric calculation.
+
+Human approval behavior:
+
+- By default, required human approval must have passed approval evidence or the
+  decision is `BLOCK`.
+- When callers opt into `allow_pending_human_approval`, pending approval evidence
+  produces `WARN` and `merge_ready: false`.
+- Pending approval never produces `PASS`.
+
 ## V1 Migration Diagnostics
 
 V1 files can be inspected for bounded migration diagnostics before the V2

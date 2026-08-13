@@ -51,6 +51,12 @@ class V2OverrideType(str, Enum):
     SCOPE_EXCEPTION = "scope_exception"
 
 
+class ValidationDecision(str, Enum):
+    PASS = "PASS"
+    WARN = "WARN"
+    BLOCK = "BLOCK"
+
+
 class ExecutionMode(str, Enum):
     STRICT = "strict"
 
@@ -535,3 +541,25 @@ class WorkflowDocumentV2(BaseModel):
     confidence: ConfidenceV2
     evidence: list[EvidenceV2] = Field(default_factory=list)
     overrides: list[OverrideV2] = Field(default_factory=list)
+
+
+class ValidationFindingV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    path: str | None = Field(default=None, min_length=1)
+
+
+class ValidationResultV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal["policyflow.validation.v2"] = "policyflow.validation.v2"
+    decision: ValidationDecision
+    merge_ready: bool
+    workflow: WorkflowDocumentV2
+    errors: list[ValidationFindingV2] = Field(default_factory=list)
+    warnings: list[ValidationFindingV2] = Field(default_factory=list)
+
+    def to_json_dict(self) -> dict:
+        return self.model_dump(mode="json")

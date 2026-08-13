@@ -1,0 +1,29 @@
+version: 2
+
+change:
+  id: missing-evidence
+  type: feature
+  summary: Missing required review evidence.
+
+risk:
+  level: medium
+  rationale: Medium risk requires test and review evidence.
+  protected_areas: []
+
+governance:
+  required_reviews:
+    - architecture
+  human_approval_required: false
+
+confidence:
+  level: medium
+  summary: Confidence depends on external review evidence.
+
+evidence:
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://runs/123/tests
+
+overrides: []
