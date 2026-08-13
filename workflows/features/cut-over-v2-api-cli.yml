@@ -1,0 +1,183 @@
+workflow:
+  id: policyflow-v2-api-cli-cutover
+  type: feature
+
+context:
+  workflow_file: workflows/features/cut-over-v2-api-cli.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #146 defines the public API and CLI cutover after V2 schema and validation results landed.
+    implementation: Scope is limited to exported API and CLI command surface; runtime modules are not deleted in this issue.
+    tests: Public API, CLI help, PR validation, and full-suite regression checks will verify the cutover.
+    residual_uncertainty: Runtime module deletion and minimal init rebuild remain later issues.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - public API
+    - CLI behavior
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: completed
+
+evidence:
+  planning:
+    summary: Issue #146 was selected after #145 merged and branch codex/policyflow-v2-api-cli-cutover was created from origin/main.
+    scope_locked:
+      - Reduce CLI to init, validate, validate-pr, and doctor.
+      - Fold GitHub approval validation into validate-pr --github-reviews.
+      - Remove runtime mutation helpers from public API and package root exports.
+      - Document governance-only public API.
+    non_goals_locked:
+      - No runtime module deletion.
+      - No migration command.
+      - No separate explain command.
+      - No init footprint rebuild.
+    risk_rationale: HIGH because CLI and public API changes are breaking consumer-facing behavior.
+  architecture-check:
+    decision: Cut public surfaces to governance validation while leaving internal V1 runtime implementation files for the next removal issue.
+    constraints:
+      - Do not import runtime execution modules from policyflow.api, policyflow.__init__, or policyflow.cli.
+      - Keep validate-pr as the single PR governance command.
+      - Keep GitHub review handling read-only.
+      - Preserve init and doctor until their consumer-experience rebuild issue.
+    approval_path: ADR-0004 and Issue #146.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/146
+    scope_confirmed: true
+  review:
+    outcome: approved
+    findings_summary: Review pending in PR; local cutover has no known findings.
+    residual_risk: Breaking CLI/API behavior should be reviewed before merge.
+  qa:
+    outcome: passed
+    evidence_summary: pytest -q and active workflow validation passed locally.
+    unresolved_risks: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Cut over the public API and CLI to governance-only behavior.
+    acceptance_criteria:
+      - policyflow --help exposes only init, validate, validate-pr, and doctor.
+      - validate-pr --github-reviews pr-reviews.json validates declared approvers.
+      - Package root no longer exports runtime mutation helpers.
+      - Importing PolicyFlow does not import runtime execution modules.
+      - Public API docs list governance APIs only.
+    approved_scope:
+      - policyflow/api.py
+      - policyflow/__init__.py
+      - policyflow/cli.py
+      - tests/test_public_api.py
+      - tests/test_runtime_cli.py
+      - tests/test_github_approval.py
+      - docs/public-api.md
+    non_goals:
+      - No runtime module deletion.
+      - No migration command.
+      - No separate explain command.
+      - No init footprint rebuild.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - public API
+      - CLI behavior
+    confidence_summary: "#144 and #145 provide the V2 target; this issue exposes the governance-only interface."
+    escalation_flags:
+      - Breaking public API
+      - Breaking CLI surface
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: A narrow API/CLI cutover avoids deleting runtime implementation files before Issue #147.
+    approved_scope:
+      - CLI command registration
+      - Public API exports
+      - PR GitHub review option
+      - Public API documentation
+    module_boundaries:
+      - cli owns command surface only.
+      - api owns stable governance import surface.
+      - github_approval remains read-only approval evidence validation.
+      - runtime modules remain internal and unexported.
+    contract_impact: Removes runtime mutation helpers and report helpers from public API and package root.
+    risk_review_decision: HIGH risk accepted because the V2 ADR declares this as a deliberate breaking cutover.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not delete runtime files.
+      - Do not add workflow execution commands.
+      - Do not add GitHub mutation.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Reduced CLI command surface, cut public API exports to governance-only functions, folded GitHub review validation into validate-pr, and rewrote public API docs/tests.
+    changed_files:
+      - policyflow/api.py
+      - policyflow/__init__.py
+      - policyflow/cli.py
+      - tests/test_public_api.py
+      - tests/test_runtime_cli.py
+      - tests/test_github_approval.py
+      - tests/test_asset_sync.py
+      - tests/test_consumer_config.py
+      - tests/test_workflow_generator.py
+      - tests/test_golden_consumer_smoke.py
+      - tests/test_repository_docs.py
+      - docs/public-api.md
+      - policyflow/assets/docs/public-api.md
+      - workflows/features/cut-over-v2-api-cli.yml
+    test_summary: pytest -q and python -m policyflow.cli validate workflows/features/cut-over-v2-api-cli.yml passed locally.
+    docs_updates:
+      - docs/public-api.md
+      - policyflow/assets/docs/public-api.md
+    known_limitations:
+      - Runtime implementation modules remain for Issue #147.
+      - Init and doctor are still V1-style until the consumer experience issue.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: pending-pr-review
+    review_approval: pending-pr-review
+    residual_risk: Breaking command removals and public API removals need PR review.
+    qa_focus_areas:
+      - CLI help command surface
+      - validate-pr --github-reviews
+      - package root exports
+      - import boundary
+    test_expectations:
+      - pytest -q tests/test_public_api.py tests/test_runtime_cli.py tests/test_github_approval.py
+      - python -m policyflow.cli validate workflows/features/cut-over-v2-api-cli.yml
+      - pytest -q
+  qa:
+    owner_agent: qa-agent
+    qa_report: Full test suite and active workflow validation passed locally.
+    quality_gate_status: passed
+    unresolved_risks: []
+    approval_required: true
+    merge_readiness: true
+
+overrides: []

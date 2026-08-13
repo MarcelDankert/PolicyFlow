@@ -90,24 +90,26 @@ def test_validate_github_approvals_command_succeeds() -> None:
     result = runner.invoke(
         app,
         [
-            "validate-github-approvals",
+            "validate-pr",
             str(fixture_path("valid-high.yml")),
             str(fixture_path("valid-high-pr-body.md")),
+            "--github-reviews",
             str(fixture_path("github-reviews-valid-high.json")),
         ],
     )
 
     assert result.exit_code == 0
-    assert "[SUCCESS] GitHub approval validation passed." in result.stdout
+    assert "[SUCCESS] Pull request validation passed." in result.stdout
 
 
 def test_validate_github_approvals_command_allows_pending_when_requested() -> None:
     result = runner.invoke(
         app,
         [
-            "validate-github-approvals",
+            "validate-pr",
             str(fixture_path("valid-high.yml")),
             str(fixture_path("valid-high-pr-body.md")),
+            "--github-reviews",
             str(fixture_path("github-reviews-missing-human-approval.json")),
             "--allow-pending",
         ],

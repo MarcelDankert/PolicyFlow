@@ -98,7 +98,7 @@ def test_getting_started_has_end_to_end_consumer_quickstart() -> None:
         "policyflow status ai/workflows/features/first-feature.yml",
         "policyflow audit ai/workflows",
         "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md",
-        "policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-body.md pr-reviews.json",
+        "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md --github-reviews pr-reviews.json",
         "policyflow sync .",
     ):
         assert command in text
@@ -167,7 +167,7 @@ def test_docs_define_pending_approval_lifecycle_split() -> None:
     ).read_text(encoding="utf-8")
 
     for expected in (
-        "policyflow validate-github-approvals --allow-pending",
+        "policyflow validate-pr --github-reviews pr-reviews.json --allow-pending",
         "pending approval instead of a failed governance check",
         "Use GitHub required approving review rules to block merge while approval is pending",
         "strict local or CI runs can omit `--allow-pending`",
@@ -251,11 +251,7 @@ def test_schema_docs_define_loop_governance_shape() -> None:
 
 
 def test_audit_json_docs_define_machine_readable_contract() -> None:
-    public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
     schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
-    packaged_public_api = (ROOT / "policyflow/assets/docs/public-api.md").read_text(
-        encoding="utf-8"
-    )
     packaged_schema = (
         ROOT / "policyflow/assets/docs/schema-compatibility.md"
     ).read_text(encoding="utf-8")
@@ -270,10 +266,8 @@ def test_audit_json_docs_define_machine_readable_contract() -> None:
         "existing workflow audit fields remain present",
         "Downstream consumers should treat new top-level keys as additive",
     ):
-        assert expected in public_api
         assert expected in schema
 
-    assert packaged_public_api == public_api
     assert packaged_schema == schema
 
 
@@ -518,7 +512,7 @@ def test_overview_and_roadmap_reflect_current_capabilities() -> None:
     assert "future automated governance validation" not in overview
     assert "lightweight workflow orchestration layer" in overview
     assert "policyflow new-workflow" in roadmap
-    assert "policyflow validate-github-approvals" in roadmap
+    assert "policyflow validate-pr --github-reviews" in roadmap
     assert "GitHub API-based PR validation after the markdown-file workflow" not in roadmap
 
 
@@ -603,12 +597,14 @@ def test_schema_compatibility_docs_define_v2_stable_governance_boundaries() -> N
         assert expected in schema
 
     for expected in (
-        "## v2 Public API Expectations",
-        "PolicyFlow 2.x consumers should continue to use `policyflow` and `policyflow.api`",
+        "PolicyFlow 2.0 exposes a governance-only public API",
         "Internal modules remain outside the compatibility boundary",
-        "`WorkflowDocument` remains the normalized governance document",
-        "`audit_workflows` remains the reporting entry point for `policyflow.audit.v1`",
-        "PolicyFlow validates and reports governance; it does not execute external systems",
+        "validate_workflow_v2",
+        "inspect_workflow_v2",
+        "validate_pr_body",
+        "validate_github_approvals",
+        "Removed Public API",
+        "runtime mutation helpers should move execution and workflow state handling to external runtimes",
     ):
         assert expected in public_api
 
@@ -706,7 +702,7 @@ def test_provider_neutral_integration_contract_defines_evidence_boundary() -> No
         assert expected in contract
 
     assert "docs/provider-neutral-integration-contract.md" in runner
-    assert "docs/provider-neutral-integration-contract.md" in public_api
+    assert "provider-neutral-integration-contract.md" in public_api
     assert packaged_contract == contract
 
 
@@ -776,13 +772,15 @@ def test_schema_todo_was_replaced_with_migration_path() -> None:
 def test_public_api_docs_define_stable_import_boundary() -> None:
     text = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
 
-    assert "from policyflow import validate_workflow" in text
-    assert "from policyflow.api import validate_pr_body" in text
+    assert "from policyflow import inspect_workflow_v2, validate_pr_body" in text
+    assert "validate_workflow_v2" in text
+    assert "inspect_workflow_v2" in text
+    assert "validate_github_approvals" in text
     assert "get_workflow_status" in text
     assert "start_workflow_phase" in text
     assert "audit_workflows" in text
-    assert "validate_github_approvals" in text
-    assert "internal implementation details" in text
+    assert "removed from the public API" in text
+    assert "Internal modules remain outside the compatibility boundary" in text
 
 
 def test_public_repository_standard_files_are_present() -> None:

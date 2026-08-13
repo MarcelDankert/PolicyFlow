@@ -1,36 +1,38 @@
-"""PolicyFlow lightweight governance validator."""
+"""PolicyFlow governance validator."""
 
 from policyflow.api import (
+    ApprovalValidationResult,
+    ValidationResultV2,
     WorkflowDocument,
+    WorkflowDocumentV2,
     WorkflowValidationError,
-    audit_workflows,
-    block_workflow_phase,
-    complete_workflow_phase,
-    get_workflow_status,
     inspect_workflow,
-    record_workflow_handoff,
-    start_workflow_phase,
+    inspect_workflow_v2,
+    inspect_workflow_v2_data,
     validate_github_approvals,
     validate_pr_body,
     validate_workflow,
     validate_workflow_data,
+    validate_workflow_v2,
+    validate_workflow_v2_data,
 )
 
 __all__ = [
+    "ApprovalValidationResult",
+    "ValidationResultV2",
     "WorkflowDocument",
+    "WorkflowDocumentV2",
     "WorkflowValidationError",
     "__version__",
-    "audit_workflows",
-    "block_workflow_phase",
-    "complete_workflow_phase",
-    "get_workflow_status",
     "inspect_workflow",
-    "record_workflow_handoff",
-    "start_workflow_phase",
+    "inspect_workflow_v2",
+    "inspect_workflow_v2_data",
     "validate_github_approvals",
     "validate_pr_body",
     "validate_workflow",
     "validate_workflow_data",
+    "validate_workflow_v2",
+    "validate_workflow_v2_data",
 ]
 
 __version__ = "1.0.0"
