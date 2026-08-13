@@ -1,0 +1,35 @@
+version: 2
+
+change:
+  id: example-change
+  type: feature
+  summary: Add a governed feature.
+
+risk:
+  level: medium
+  rationale: Touches application behavior but no protected areas.
+  protected_areas: []
+
+governance:
+  required_reviews:
+    - architecture
+    - qa
+  human_approval_required: false
+
+confidence:
+  level: medium
+  summary: Evidence is sufficient for governance review, with limited residual uncertainty.
+
+evidence:
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://runs/123/tests
+  - id: review
+    type: review
+    source: github
+    status: passed
+    ref: https://github.com/example/repo/pull/1#pullrequestreview-1
+
+overrides: []

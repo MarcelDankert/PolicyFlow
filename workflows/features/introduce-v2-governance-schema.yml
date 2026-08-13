@@ -1,0 +1,163 @@
+workflow:
+  id: policyflow-v2-schema-migration
+  type: feature
+
+context:
+  workflow_file: workflows/features/introduce-v2-governance-schema.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #144 and ADR-0004 define the V2 schema boundary.
+    implementation: The change is scoped to parallel V2 schema and migration diagnostics without V1 validator cutover.
+    tests: Targeted validator tests will cover valid V2, invalid V2, and V1 migration diagnostics.
+    residual_uncertainty: Future issues still own public API, CLI cutover, runtime removal, and full V2 validation behavior.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - schema behavior
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: completed
+
+evidence:
+  planning:
+    summary: Issue #144 was selected after #143 merged and branch codex/policyflow-v2-schema-migration was created from origin/main.
+    scope_locked:
+      - Add V2 schema models and parser path.
+      - Add migration diagnostics for V1 fields.
+      - Add targeted fixtures and validator tests.
+    non_goals_locked:
+      - No CLI command removal.
+      - No public API cutover.
+      - No policyflow migrate command.
+    risk_rationale: HIGH because schema behavior and migration diagnostics affect future consumer upgrade paths.
+  architecture-check:
+    decision: Add V2 schema support beside the V1 workflow document so the Foundation phase can land before product cutover.
+    constraints:
+      - Preserve existing V1 validation behavior.
+      - Reject provider, agent, runner, runtime, and analytics state in V2 payloads.
+      - Keep diagnostics bounded to migration guidance.
+    approval_path: ADR-0004 and Issue #144.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/144
+    scope_confirmed: true
+  review:
+    outcome: approved
+    findings_summary: Review pending in PR; no known findings during implementation.
+    residual_risk: Schema compatibility behavior should be reviewed carefully.
+  qa:
+    outcome: passed
+    evidence_summary: pytest -q and workflow validation passed locally.
+    unresolved_risks: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Introduce the V2 governance schema and migration diagnostics.
+    acceptance_criteria:
+      - WorkflowDocumentV2 validates the agreed V2 schema.
+      - V1-only fields produce explicit migration diagnostics.
+      - V2 schema rejects provider-specific fields and active execution state.
+    approved_scope:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - policyflow/exceptions.py
+      - tests/test_validator.py
+      - tests/fixtures/
+      - docs/schema-compatibility.md
+    non_goals:
+      - No runtime command removal.
+      - No public API cutover.
+      - No policyflow migrate command.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - schema behavior
+    confidence_summary: V2 architecture documents provide the boundary; implementation remains additive.
+    escalation_flags:
+      - Breaking schema direction
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Additive V2 schema classes and diagnostics avoid big-bang replacement of the V1 validator.
+    approved_scope:
+      - V2 models
+      - V2 normalizer/parser helper
+      - V1 migration diagnostics
+      - targeted tests and docs
+    module_boundaries:
+      - models defines typed documents.
+      - schemas handles normalization and migration diagnostics.
+      - validator exposes validation entry points.
+    contract_impact: Adds V2 schema surface without removing V1 public behavior.
+    risk_review_decision: HIGH risk accepted because this establishes future breaking release migration guidance.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not remove V1 runtime behavior in this issue.
+      - Do not introduce execution ownership in V2.
+      - Do not add provider-specific schema fields.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Add V2 models, parser/validation entry points, migration diagnostics, fixtures, tests, and schema compatibility documentation.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/schemas.py
+      - policyflow/validator.py
+      - tests/test_validator.py
+      - tests/fixtures/valid-v2-governance.yml
+      - tests/fixtures/missing-v2-required-fields.yml
+      - tests/fixtures/v1-migration-diagnostics.yml
+      - docs/schema-compatibility.md
+      - workflows/features/introduce-v2-governance-schema.yml
+    test_summary: pytest -q and python -m policyflow.cli validate workflows/features/introduce-v2-governance-schema.yml passed locally.
+    docs_updates:
+      - docs/schema-compatibility.md
+    known_limitations:
+      - CLI and public API cutover are intentionally left for later issues.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: pending-pr-review
+    review_approval: pending-pr-review
+    residual_risk: V2 schema behavior is additive but should be reviewed before merge.
+    qa_focus_areas:
+      - V2 model validation
+      - migration diagnostics
+      - V1 regression coverage
+    test_expectations:
+      - pytest -q tests/test_validator.py
+      - python -m policyflow.cli validate workflows/features/introduce-v2-governance-schema.yml
+  qa:
+    owner_agent: qa-agent
+    qa_report: Full pytest suite and active workflow validation passed locally.
+    quality_gate_status: passed
+    unresolved_risks: []
+    approval_required: true
+    merge_readiness: true
+
+overrides: []

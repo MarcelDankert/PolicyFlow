@@ -1,0 +1,9 @@
+version: 2
+
+risk:
+  level: medium
+  rationale: Missing change, governance, and confidence blocks.
+  protected_areas: []
+
+evidence: []
+overrides: []

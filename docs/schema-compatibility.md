@@ -1,5 +1,92 @@
 # Workflow Schema Compatibility
 
+## PolicyFlow 2.0 Governance Schema
+
+PolicyFlow 2.0 introduces a small governance-only schema beside the existing
+V1 workflow schema. The V2 schema is additive in this Foundation phase: it gives
+later cutover work a tested target without removing the current V1 validator
+entry points.
+
+The V2 schema shape is:
+
+```yaml
+version: 2
+
+change:
+  id: example-change
+  type: feature
+  summary: Example change.
+
+risk:
+  level: medium
+  rationale: Governance risk rationale.
+  protected_areas: []
+
+governance:
+  required_reviews: []
+  human_approval_required: false
+
+confidence:
+  level: medium
+  summary: Confidence summary for the governance decision.
+
+evidence:
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://runs/123/tests
+
+overrides: []
+```
+
+Field intent:
+
+- `version`: selects the V2 governance schema.
+- `change`: identifies the governed software change.
+- `risk`: declares risk level, rationale, and protected areas that affect
+  governance.
+- `governance`: declares required reviews and whether human approval is
+  required.
+- `confidence`: records confidence used to explain the governance decision.
+- `evidence`: contains normalized evidence produced by external systems.
+- `overrides`: contains governed exceptions with approval or lifecycle metadata.
+
+V2 schema validation rejects runtime state, execution phase state, active agent
+state, handoff state, provider fields, model fields, runner state, first-class
+loop state, and analytics/evaluation state. External systems may still produce
+normalized evidence that PolicyFlow validates.
+
+## V1 Migration Diagnostics
+
+V1 files can be inspected for bounded migration diagnostics before the V2
+cutover. Diagnostics classify fields as `KEEP`, `RENAME`, `MOVE`, `REMOVE`, or
+`SIMPLIFY` and point to the V2 representation when one exists.
+
+Key classifications:
+
+- `workflow`: `RENAME` to `change`.
+- `context`: `REBUILD` into `change`, `risk`, and `confidence`.
+- `governance.required_reviews`: `KEEP`.
+- `governance.human_approval_required`: `KEEP`.
+- `governance.protected_areas_touched`: `RENAME` to `risk.protected_areas`.
+- `governance.approval_evidence`: `SIMPLIFY` to `evidence[]` with
+  `type: approval`.
+- `execution`: `REMOVE`; phase state belongs to external workflow tooling.
+- `runtime`: `REMOVE`; runtime state is not V2 governance input.
+- `handoffs`: `MOVE` to external runtime evidence.
+- `contracts`: `MOVE` to external evidence.
+- `loop_governance`: `MOVE` to external runtime policy or evidence.
+- `evaluation`: `SIMPLIFY` to normalized evidence.
+- `overrides`: `KEEP` as simplified governance exceptions.
+- keyed V1 `evidence`: `SIMPLIFY` to normalized `evidence[]`.
+
+This release step does not add a `policyflow migrate` command. Migration
+diagnostics and documentation are the bounded upgrade path until a later issue
+proves that a command is worth its implementation and maintenance cost.
+
+## PolicyFlow 1.x Compatibility
+
 PolicyFlow workflows have one canonical schema for new Consumer-Repo workflow
 files. Validators still accept a small set of root-level fallback fields during
 the `0.x` compatibility window so existing early adopters can upgrade without a
