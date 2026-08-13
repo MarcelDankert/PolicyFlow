@@ -108,5 +108,4 @@ jobs:
             exit 1
           fi
 
-          policyflow validate-pr "$workflow_path" pr-body.md
-          policyflow validate-github-approvals "$workflow_path" pr-body.md pr-reviews.json --allow-pending
+          policyflow validate-pr "$workflow_path" pr-body.md --github-reviews pr-reviews.json --allow-pending

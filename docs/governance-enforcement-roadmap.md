@@ -56,7 +56,7 @@ GitHub state, or decide release execution order automatically.
 - Consumer-Repo readiness checks with `policyflow doctor`
 - workflow instance generation with `policyflow new-workflow`
 - PR body completeness validation with `policyflow validate-pr`
-- GitHub approval metadata validation with `policyflow validate-github-approvals`
+- GitHub approval metadata validation with `policyflow validate-pr --github-reviews`
 - status and audit views with `policyflow status` and `policyflow audit`
 - synchronous provider-neutral runner execution with `policyflow run-phase`
 - managed asset drift preview and update with `policyflow sync`

@@ -98,7 +98,7 @@ def test_getting_started_has_end_to_end_consumer_quickstart() -> None:
         "policyflow status ai/workflows/features/first-feature.yml",
         "policyflow audit ai/workflows",
         "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md",
-        "policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-body.md pr-reviews.json",
+        "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md --github-reviews pr-reviews.json",
         "policyflow sync .",
     ):
         assert command in text
@@ -167,7 +167,7 @@ def test_docs_define_pending_approval_lifecycle_split() -> None:
     ).read_text(encoding="utf-8")
 
     for expected in (
-        "policyflow validate-github-approvals --allow-pending",
+        "policyflow validate-pr --github-reviews pr-reviews.json --allow-pending",
         "pending approval instead of a failed governance check",
         "Use GitHub required approving review rules to block merge while approval is pending",
         "strict local or CI runs can omit `--allow-pending`",
@@ -512,7 +512,7 @@ def test_overview_and_roadmap_reflect_current_capabilities() -> None:
     assert "future automated governance validation" not in overview
     assert "lightweight workflow orchestration layer" in overview
     assert "policyflow new-workflow" in roadmap
-    assert "policyflow validate-github-approvals" in roadmap
+    assert "policyflow validate-pr --github-reviews" in roadmap
     assert "GitHub API-based PR validation after the markdown-file workflow" not in roadmap
 
 

@@ -258,7 +258,7 @@ policyflow validate-pr workflows/examples/example-feature-workflow.yml path/to/p
 Validate PR approval logins against GitHub review metadata:
 
 ```bash
-policyflow validate-github-approvals workflows/examples/example-architecture-change-workflow.yml path/to/pull-request.md path/to/pr-reviews.json
+policyflow validate-pr workflows/examples/example-architecture-change-workflow.yml path/to/pull-request.md --github-reviews path/to/pr-reviews.json
 ```
 
 Workflow reporting helpers:

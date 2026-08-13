@@ -156,12 +156,12 @@ policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md
 For GitHub-governed repos, validate review metadata as well:
 
 ```bash
-policyflow validate-github-approvals ai/workflows/features/first-feature.yml pr-body.md pr-reviews.json
+policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md --github-reviews pr-reviews.json
 ```
 
 The installed GitHub Actions workflow performs the PR body and GitHub approval
 checks automatically on pull requests. The generated workflow uses
-`policyflow validate-github-approvals --allow-pending` so a missing matching
+`policyflow validate-pr --github-reviews pr-reviews.json --allow-pending` so a missing matching
 approval is reported as pending approval instead of a failed governance check.
 Use GitHub required approving review rules to block merge while approval is pending. PolicyFlow still validates that the workflow and PR body name the
 expected approval evidence, and strict local or CI runs can omit `--allow-pending` when missing approval should fail immediately.
@@ -242,7 +242,7 @@ features:
 
 The generated workflow uses read-only `contents` and `pull-requests`
 permissions, fetches live PR body and review metadata, and runs
-`policyflow validate-pr` plus `policyflow validate-github-approvals`.
+`policyflow validate-pr --github-reviews`.
 
 ## Confidence And Evidence
 

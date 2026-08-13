@@ -34,7 +34,7 @@ def test_consumer_github_actions_template_has_governance_steps() -> None:
     assert "REVIEW_PULL_REQUEST_URL##*/" in resolve_step["run"]
     validate_step = next(step for step in steps if step["name"] == "Validate PR body governance")
     assert "policyflow validate-pr" in validate_step["run"]
-    assert "policyflow validate-github-approvals" in validate_step["run"]
+    assert "--github-reviews pr-reviews.json" in validate_step["run"]
     assert "--allow-pending" in validate_step["run"]
     install_step = next(step for step in steps if step["name"] == "Install PolicyFlow")
     assert "python -m pip install \"policyflow==${POLICYFLOW_VERSION}\"" in install_step["run"]
