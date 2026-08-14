@@ -9,11 +9,11 @@ optional read-only GitHub PR validation assets.
 Install and pin PolicyFlow:
 
 ```bash
-python -m pip install policyflow==1.0.0
+python -m pip install policyflow==2.0.0
 ```
 
-Release links: [PyPI](https://pypi.org/project/policyflow/1.0.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0).
+Release links: [PyPI](https://pypi.org/project/policyflow/2.0.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.0).
 
 Bootstrap with GitHub governance enabled:
 

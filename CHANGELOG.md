@@ -1,10 +1,39 @@
 # Changelog
 
 All notable PolicyFlow changes are tracked here. Release notes should call out
-validator, workflow schema, bootstrap, runner, GitHub governance, and managed
-asset compatibility changes.
+validator, schema, bootstrap, GitHub governance, public API, packaged asset,
+and migration compatibility changes.
 
 ## Unreleased
+
+## 2.0.0
+
+Released: 2026-08-14
+
+Governance Core release.
+
+- Returned PolicyFlow to a provider-neutral governance validator for
+  AI-assisted software changes.
+- Added the V2 governance schema with `version`, `change`, `risk`,
+  `governance`, `confidence`, normalized `evidence[]`, and `overrides[]`.
+- Added V2 validation JSON with `decision`, `merge_ready`,
+  `merge_readiness.explanation`, and structured findings.
+- Reduced the CLI to `init`, `validate`, `validate-pr`, and `doctor`.
+- Removed runtime execution, runner configuration, Codex runner, agent
+  execution, workflow generation, managed asset sync, and reporting modules.
+- Removed `new-workflow`, `sync`, `status`, `audit`, `evaluation-report`,
+  `loop-report`, runtime phase mutation commands, and standalone
+  `validate-github-approvals`.
+- Rebuilt `policyflow init` around the minimal consumer footprint:
+  `policyflow.yml`, `policyflow/change.example.yml`, optional PR template, and
+  optional read-only GitHub workflow.
+- Rebuilt `policyflow doctor` around local V2 readiness checks.
+- Kept GitHub integration read-only around PR body and review JSON validation.
+- Reduced packaged assets to V2 governance assets only.
+- Added final migration docs, schema compatibility docs, public API docs, and
+  release guidance for the breaking V2 upgrade.
+- Validated release readiness with the V2 golden consumer smoke path and full
+  test suite.
 
 ## 1.0.0
 
