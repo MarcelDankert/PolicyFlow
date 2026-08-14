@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from typing import Callable
 
 from policyflow.models import (
+    MergeReadinessV2,
     ValidationDecision,
     ValidationFindingV2,
     ValidationResultV2,
@@ -43,12 +44,46 @@ def evaluate_workflow_v2(
     else:
         decision = ValidationDecision.PASS
 
+    merge_ready = decision == ValidationDecision.PASS
     return ValidationResultV2(
         decision=decision,
-        merge_ready=decision == ValidationDecision.PASS,
+        merge_ready=merge_ready,
+        merge_readiness=_merge_readiness(
+            merge_ready=merge_ready,
+            errors=errors,
+            warnings=warnings,
+        ),
         workflow=workflow,
         errors=errors,
         warnings=warnings,
+    )
+
+
+def _merge_readiness(
+    *,
+    merge_ready: bool,
+    errors: list[ValidationFindingV2],
+    warnings: list[ValidationFindingV2],
+) -> MergeReadinessV2:
+    if merge_ready:
+        return MergeReadinessV2(
+            ready=True,
+            explanation="Governance validation passed with no blocking findings.",
+            blockers=[],
+        )
+
+    blockers = [finding.message for finding in errors] or [
+        finding.message for finding in warnings
+    ]
+    if errors:
+        explanation = "Governance validation is blocked by required policy or evidence findings."
+    else:
+        explanation = "Governance validation has pending warnings; merge readiness is false until they are resolved."
+
+    return MergeReadinessV2(
+        ready=False,
+        explanation=explanation,
+        blockers=blockers,
     )
 
 

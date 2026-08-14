@@ -1,0 +1,218 @@
+workflow:
+  id: policyflow-v2-github-reporting-packaged-assets
+  type: feature
+
+context:
+  workflow_file: workflows/features/simplify-github-reporting-packaged-assets.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #149 defines the Phase 3 cleanup after the minimal V2 consumer init cutover.
+    implementation: Scope is limited to read-only GitHub validation, validation-result reporting, and packaged V2 governance assets.
+    tests: Targeted GitHub, packaging, docs, CLI, and public API tests plus the full suite will verify the cutover.
+    residual_uncertainty: Full release documentation rewrite remains Issue #150.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - packaged assets
+    - reporting boundary
+    - GitHub validation
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #149 was selected after Issue #148 merged and branch codex/policyflow-v2-github-reporting-assets was created from main.
+    scope_locked:
+      - Keep GitHub integration read-only around PR body and review JSON validation.
+      - Remove redundant reporting architecture in favor of validation JSON and merge-readiness explanation.
+      - Remove obsolete packaged agents, prompts, rules, workflow templates, issue templates, project context, and broad packaged docs.
+      - Update package data and tests to prove the smaller V2 asset footprint.
+    non_goals_locked:
+      - No GitHub mutation.
+      - No analytics dashboards.
+      - No model or productivity metrics.
+      - No managed asset sync.
+      - No full release documentation rewrite.
+    risk_rationale: HIGH because package contents and reporting JSON are consumer-facing protected areas in the V2 breaking-release cleanup.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/149
+    scope_confirmed: true
+  implementation:
+    summary: GitHub validation stayed read-only, reporting collapsed into V2 validation JSON, and packaged assets now contain only the V2 consumer footprint.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/rules.py
+      - policyflow/reporting.py
+      - policyflow/assets
+      - pyproject.toml
+      - docs/audit-reporting.md
+      - README.md
+      - tests/test_github_approval.py
+      - tests/test_release_packaging.py
+      - tests/test_repository_docs.py
+      - tests/test_runtime_cli.py
+      - tests/test_public_api.py
+  review:
+    outcome: approved
+    findings_summary: Review found no GitHub mutation path, no reporting command architecture, and no packaged agents, prompts, rules, runner assets, or obsolete templates.
+    residual_risk: Full release documentation rewrite remains Issue #150.
+  qa:
+    outcome: passed
+    evidence_summary: Focused GitHub, packaging, docs, CLI, public API tests and the full suite passed locally.
+    checks_run:
+      - pytest -q tests/test_github_approval.py tests/test_consumer_github_workflow.py tests/test_release_packaging.py tests/test_repository_docs.py tests/test_runtime_cli.py tests/test_public_api.py
+      - pytest -q
+    unresolved_risks:
+      - Full release documentation rewrite remains Issue #150.
+  architecture-check:
+    decision: Reporting should be represented by V2 validation results, not a separate status, audit, loop, or evaluation report subsystem.
+    constraints:
+      - GitHub code must not check or require mutation permissions.
+      - Package data must not include agents, prompts, runners, provider adapters, obsolete templates, or broad packaged docs.
+      - Source documentation may remain for Issue #150, but package assets should contain only the V2 consumer footprint.
+      - External systems remain responsible for analytics and report aggregation.
+    approval_path: ADR-0004 and Issue #149.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Simplify GitHub integration, reporting, and packaged assets.
+    acceptance_criteria:
+      - GitHub workflow performs read-only validation only.
+      - No GitHub code checks mutation capabilities for branch, issue, PR creation, labels, milestones, or merges.
+      - Validation JSON includes merge-readiness explanation.
+      - No core command exposes loop/evaluation dashboards or productivity analytics.
+      - Package data excludes agents, prompts, runners, provider adapters, and obsolete templates.
+      - Asset source-of-truth drift is eliminated or tested.
+    approved_scope:
+      - policyflow/github_approval.py
+      - policyflow/reporting.py
+      - policyflow/models.py
+      - policyflow/rules.py
+      - policyflow/assets
+      - pyproject.toml
+      - docs/audit-reporting.md
+      - README.md
+      - tests/test_github_approval.py
+      - tests/test_consumer_github_workflow.py
+      - tests/test_release_packaging.py
+      - tests/test_repository_docs.py
+      - tests/test_runtime_cli.py
+      - tests/test_public_api.py
+    non_goals:
+      - No GitHub mutation.
+      - No analytics dashboards.
+      - No model or productivity metrics.
+      - No managed asset sync.
+      - No full release documentation rewrite.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - packaged assets
+      - reporting boundary
+      - GitHub validation
+    confidence_summary: "#149 follows completed V2 schema, CLI, runtime removal, and minimal consumer init work."
+    escalation_flags:
+      - Package asset breaking change.
+      - Reporting contract simplification.
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The separate reporting module is redundant because V2 validation results now carry merge-readiness explanation.
+    approved_scope:
+      - Remove reporting.py.
+      - Add merge_readiness explanation to V2 validation JSON.
+      - Remove obsolete packaged assets.
+      - Keep GitHub workflow and approval validation read-only.
+    module_boundaries:
+      - rules owns V2 governance decision and merge-readiness explanation.
+      - validator owns schema parsing and PR body validation.
+      - github_approval owns read-only review JSON interpretation.
+      - bootstrap owns copying the minimal packaged assets.
+    contract_impact: V1 audit/status/report consumers must migrate to V2 validation JSON or external reporting.
+    risk_review_decision: HIGH risk accepted because protected package and reporting contract changes align with ADR-0004 breaking-release scope.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not add GitHub mutation checks.
+      - Do not add analytics.
+      - Do not rebuild reporting as a dashboard subsystem.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Removed the redundant reporting module, added merge_readiness explanation to V2 validation JSON, and reduced packaged assets to the V2 consumer footprint.
+    changed_files:
+      - policyflow/models.py
+      - policyflow/rules.py
+      - policyflow/reporting.py
+      - policyflow/assets/agents
+      - policyflow/assets/prompts
+      - policyflow/assets/rules
+      - policyflow/assets/workflows
+      - policyflow/assets/github/ISSUE_TEMPLATE
+      - policyflow/assets/examples/project-context.yml
+      - policyflow/assets/docs
+      - pyproject.toml
+      - docs/audit-reporting.md
+      - README.md
+      - tests/test_github_approval.py
+      - tests/test_release_packaging.py
+      - tests/test_repository_docs.py
+      - tests/test_runtime_cli.py
+      - tests/test_public_api.py
+    test_summary: 67 focused tests and 204 full-suite tests passed locally.
+    docs_updates:
+      - docs/audit-reporting.md
+      - README.md
+    known_limitations:
+      - Source docs still contain V1 migration context for Issue #150 to rewrite.
+      - External consumers of policyflow.audit.v1 must migrate to validation JSON.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: approved
+    review_approval: Scope matches Issue #149 and preserves the V2 governance-only boundary.
+    residual_risk: Source documentation still needs the planned release-phase rewrite in Issue #150.
+    qa_focus_areas:
+      - GitHub read-only workflow and approval code.
+      - Package data exclusions for obsolete assets.
+      - V2 validation JSON merge-readiness explanation.
+      - Removed reporting module import/package absence.
+    test_expectations:
+      - Focused GitHub, packaging, docs, CLI, and public API tests pass.
+      - Full pytest suite passes.
+  qa:
+    owner_agent: qa-agent
+    qa_report: Focused tests and full pytest suite passed locally.
+    quality_gate_status: passed
+    unresolved_risks:
+      - Full release documentation rewrite remains Issue #150.
+    approval_required: true
+    merge_readiness: true
+
+overrides: []

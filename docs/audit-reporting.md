@@ -1,122 +1,41 @@
-# Audit Reporting
+# Reporting Boundary
 
-PolicyFlow audit reporting gives Consumer-Repos a read-only view of declared
-governance state across workflow files. It helps reviewers, maintainers, and CI
-jobs answer whether workflows, loops, evaluations, and human approvals are
-declared, evidenced, and merge-ready.
+PolicyFlow 2.0 reports governance compliance from validation results. It does
+not provide audit dashboards, loop reports, evaluation reports, productivity
+analytics, model comparison, team metrics, or forecasting.
 
-Audit reporting is read-only. PolicyFlow does not execute workflows, does not
-run loops, does not calculate metrics, does not approve pull requests, and does
-not fetch external artifacts or provider credentials.
+## Supported Output
 
-## Local Usage
-
-Use the workflow audit when developing or reviewing a Consumer-Repo locally:
+Use validation output when a machine-readable compliance result is required:
 
 ```bash
-policyflow audit ai/workflows
-policyflow audit ai/workflows --json
+policyflow validate policyflow/change.example.yml --json
+policyflow validate-pr policyflow/change.example.yml pr-body.md --json
 ```
 
-Use focused reports when a review needs a narrower governance question:
+The V2 validation JSON includes:
 
-```bash
-policyflow evaluation-report ai/workflows
-policyflow evaluation-report ai/workflows --json
-policyflow loop-report ai/workflows
-policyflow loop-report ai/workflows --json
-```
+- `decision`: `PASS`, `WARN`, or `BLOCK`
+- `merge_ready`: boolean compatibility flag
+- `merge_readiness.ready`: boolean merge-readiness value
+- `merge_readiness.explanation`: human-readable compliance explanation
+- `merge_readiness.blockers`: blocking findings or pending warnings
+- `errors` and `warnings`: structured governance findings
 
-Use a single-workflow status view when debugging one workflow instance:
+## Removed Output
 
-```bash
-policyflow status ai/workflows/features/first-feature.yml
-policyflow status ai/workflows/features/first-feature.yml --json
-```
+PolicyFlow 2.0 does not expose these core reporting commands:
 
-Local reporting is useful before opening a PR, after changing workflow
-evidence, and before claiming that a workflow is merge-ready.
+- `policyflow status`
+- `policyflow audit`
+- `policyflow evaluation-report`
+- `policyflow loop-report`
 
-## CI Usage
-
-CI jobs can run the same commands after checkout and package installation:
-
-```bash
-python -m pip install policyflow==0.3.0
-policyflow audit ai/workflows --json
-policyflow evaluation-report ai/workflows --json
-policyflow loop-report ai/workflows --json
-```
-
-Use JSON output when a downstream job needs a stable machine-readable artifact.
-The workflow audit JSON uses `policyflow.audit.v1` with
-`report_type: workflow_audit`.
-
-The top-level audit summary groups governance state by:
-
-- `workflow_governance`
-- `loop_governance`
-- `evaluation_governance`
-- `human_governance`
-
-Existing workflow-level audit fields remain available during the `0.x`
-compatibility window. Downstream consumers should treat new top-level summary
-keys as additive and keep parsers tolerant of additional fields.
-
-## Governance Examples
-
-Workflow governance identifies whether each workflow validates, is blocked, and
-is merge-ready. It reflects declared workflow metadata, execution state,
-evidence, contracts, overrides, runtime state, and handoff state.
-
-Loop governance identifies declared feedback loops, loop compliance state,
-iteration-limit failures, missing stop evidence, missing escalation evidence,
-and unresolved escalated loops. See
-[docs/loop-governance.md](loop-governance.md) for the loop model and consumer
-expectations.
-
-Evaluation governance identifies declared evaluation categories, required
-metrics, failing merge-blocking metrics, missing required categories, and
-missing evidence references. See
-[docs/evaluation-governance.md](evaluation-governance.md) and
-[docs/metric-governance.md](metric-governance.md) for the evaluation and metric
-models.
-
-Human governance identifies whether human approval is required, whether
-approval evidence is present, and whether approval-gated workflows are missing
-required approval evidence.
+Consumers that previously parsed `policyflow.audit.v1` should migrate to V2
+validation JSON and read `decision`, `merge_ready`, and `merge_readiness`.
 
 ## Runtime Boundary
 
-Audit reporting describes declared governance state. It does not make
-PolicyFlow a runtime platform.
-
-PolicyFlow does not execute workflows. Workflow execution remains the
-responsibility of the Consumer-Repo, its maintainers, its CI system, and any
-external agent runner selected by that repo.
-
-PolicyFlow does not run loops. Feedback-loop work, review cycles, QA cycles,
-security follow-up, and human arbitration remain external processes.
-
-PolicyFlow does not calculate metrics. Test results, coverage values, scanner
-findings, benchmark outputs, and review decisions must be produced by external
-tools or people and then referenced as workflow evidence.
-
-PolicyFlow does not approve pull requests. Human approval remains a GitHub
-review and repository governance responsibility. PolicyFlow can validate that
-the workflow and PR body point to the expected approval evidence.
-
-PolicyFlow also does not schedule work, route messages, manage memory, host
-agent runtimes, manage provider credentials, or replace CI and review systems.
-
-## Related Contracts
-
-- [docs/public-api.md](public-api.md) defines stable imports and the audit API.
-- [docs/schema-compatibility.md](schema-compatibility.md) defines the audit JSON
-  contract and compatibility policy.
-- [docs/evaluation-governance.md](evaluation-governance.md) explains declared
-  evaluation criteria and evidence.
-- [docs/loop-governance.md](loop-governance.md) explains bounded feedback-loop
-  governance.
-- [docs/metric-governance.md](metric-governance.md) explains metric declaration,
-  metric sources, and metric evidence.
+Reporting explains compliance only. PolicyFlow does not execute workflows, run
+loops, run evaluations, calculate metrics, approve pull requests, merge pull
+requests, or mutate GitHub state.

@@ -118,3 +118,23 @@ def test_validate_github_approvals_command_allows_pending_when_requested() -> No
     assert result.exit_code == 0
     assert "[PENDING] GitHub approval pending." in result.stdout
     assert "arch-board" in result.stdout
+
+
+def test_github_approval_module_is_read_only_review_json_validation() -> None:
+    source = (Path(__file__).resolve().parents[1] / "policyflow/github_approval.py").read_text(
+        encoding="utf-8"
+    )
+
+    for forbidden in (
+        "subprocess",
+        "gh ",
+        "create branch",
+        "create_issue",
+        "create_pull",
+        "labels",
+        "milestones",
+        "merge",
+        "contents: write",
+        "pull_requests: write",
+    ):
+        assert forbidden not in source

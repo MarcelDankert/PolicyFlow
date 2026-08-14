@@ -551,12 +551,21 @@ class ValidationFindingV2(BaseModel):
     path: str | None = Field(default=None, min_length=1)
 
 
+class MergeReadinessV2(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ready: bool
+    explanation: str = Field(min_length=1)
+    blockers: list[str] = Field(default_factory=list)
+
+
 class ValidationResultV2(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: Literal["policyflow.validation.v2"] = "policyflow.validation.v2"
     decision: ValidationDecision
     merge_ready: bool
+    merge_readiness: MergeReadinessV2
     workflow: WorkflowDocumentV2
     errors: list[ValidationFindingV2] = Field(default_factory=list)
     warnings: list[ValidationFindingV2] = Field(default_factory=list)
