@@ -2,9 +2,9 @@
 
 ## Consumer Quickstart
 
-Use this path for a fresh Consumer-Repo. It starts from a package install,
-bootstraps the standard layout, creates the first governed workflow, and reaches
-the first PR governance checks without manually copying PolicyFlow directories.
+Use this path for a fresh Consumer-Repo. PolicyFlow 2.0 bootstraps a minimal
+governance validator footprint: configuration, one V2 change example, and
+optional read-only GitHub PR validation assets.
 
 Install and pin PolicyFlow:
 
@@ -15,11 +15,7 @@ python -m pip install policyflow==1.0.0
 Release links: [PyPI](https://pypi.org/project/policyflow/1.0.0/) and
 [GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0).
 
-Use the same package pin in local setup, CI, and GitHub Actions. See
-[release-and-upgrade.md](release-and-upgrade.md) for release notes and upgrade
-expectations.
-
-Bootstrap the Consumer-Repo:
+Bootstrap with GitHub governance enabled:
 
 ```bash
 policyflow init .
@@ -28,14 +24,20 @@ policyflow init .
 Bootstrap writes:
 
 - `policyflow.yml`
-- `.policyflow/bootstrap.json`
-- `ai/project-context.yml`
-- `ai/agents/`, `ai/prompts/`, `ai/rules/`
-- `ai/workflows/templates/`
-- `ai/workflows/features/starter-workflow.yml`
+- `policyflow/change.example.yml`
 - `.github/PULL_REQUEST_TEMPLATE.md`
-- `.github/ISSUE_TEMPLATE/`
-- `.github/workflows/policyflow-governance.yml`
+- `.github/workflows/policyflow.yml`
+
+Bootstrap without GitHub assets:
+
+```bash
+policyflow init . --no-github
+```
+
+The non-GitHub path writes only:
+
+- `policyflow.yml`
+- `policyflow/change.example.yml`
 
 Preview or force bootstrap only when needed:
 
@@ -44,316 +46,73 @@ policyflow init . --dry-run
 policyflow init . --force
 ```
 
-Make the minimal project-specific edits:
-
-- update `ai/project-context.yml`
-- choose local-only or GitHub-governed features in `policyflow.yml`
-- keep project-specific overlays separate from managed assets
-
 Validate readiness:
 
 ```bash
-policyflow config-check policyflow.yml
 policyflow doctor .
 policyflow doctor . --json
 ```
 
-For GitHub-governed repos, run the GitHub App governance preflight before
-release orchestration or PR automation:
+Validate the example V2 change:
 
 ```bash
-policyflow doctor . --github-app-preflight OWNER/REPO
+policyflow validate policyflow/change.example.yml
+policyflow validate policyflow/change.example.yml --json
 ```
 
-The preflight uses GitHub CLI with `GH_TOKEN` or `GITHUB_TOKEN`; set that
-environment variable to the GitHub App installation token that release or PR
-automation will use. It verifies non-mutating repository access and reports the
-governance capabilities that must be available before mutation:
+## Configuration
 
-- read metadata
-- create branches
-- push commits
-- create/edit issues
-- create/edit pull requests
-- apply labels
-- assign milestones
-- read pull request reviews
-
-When GitHub returns App permission metadata, missing capabilities identify the
-likely GitHub permission area, such as `Contents: write`, `Issues: write`, or
-`Pull requests: write`.
-
-Create the first real governed workflow:
-
-```bash
-policyflow new-workflow feature --id first-feature --risk LOW
-policyflow validate ai/workflows/features/first-feature.yml
-policyflow status ai/workflows/features/first-feature.yml
-policyflow audit ai/workflows
-```
-
-Audit and reporting usage is documented in
-[audit-reporting.md](audit-reporting.md). The repository source path is
-`docs/audit-reporting.md`. It covers local and CI usage for workflow audit,
-evaluation reports, loop reports, and the read-only reporting boundary.
-
-Other first workflow shapes:
-
-```bash
-policyflow new-workflow bugfix --id parser-fix --risk MEDIUM
-policyflow new-workflow architecture-change --id storage-boundary --risk HIGH
-policyflow new-workflow low-risk --id docs-update --risk LOW
-```
-
-Preview or overwrite generated workflows only when intentional:
-
-```bash
-policyflow new-workflow feature --id preview-feature --risk LOW --dry-run
-policyflow new-workflow feature --id first-feature --risk LOW --force
-```
-
-## Runner Setup
-
-PolicyFlow uses a provider-neutral `type: command` runner contract. Any local
-CLI, hosted-adapter wrapper, or internal runner can execute phases if it reads
-External systems execute implementation work, tests, scans, reviews, and release
-steps. PolicyFlow starts after those systems publish governance evidence and
-returns a validation decision for the repository change.
-
-## First PR Governance
-
-Open the PR with the installed pull request template and fill these sections
-from the generated workflow:
-
-- linked issue
-- workflow file path
-- declared risk level
-- confidence summary from `context.confidence`
-- evidence references such as `evidence.planning`
-- override references when overrides exist
-- human approval login and reference when required
-- checked workflow governance confirmations
-
-Validate the PR body locally before pushing or while iterating:
-
-```bash
-policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md
-```
-
-For GitHub-governed repos, validate review metadata as well:
-
-```bash
-policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md --github-reviews pr-reviews.json
-```
-
-The installed GitHub Actions workflow performs the PR body and GitHub approval
-checks automatically on pull requests. The generated workflow uses
-`policyflow validate-pr --github-reviews pr-reviews.json --allow-pending` so a missing matching
-approval is reported as pending approval instead of a failed governance check.
-Use GitHub required approving review rules to block merge while approval is pending. PolicyFlow still validates that the workflow and PR body name the
-expected approval evidence, and strict local or CI runs can omit `--allow-pending` when missing approval should fail immediately.
-
-The generated workflow also reruns on `pull_request_review` submitted and dismissed events, so approval changes refresh the governance status without keeping a CI job waiting.
-
-If a PolicyFlow PR check fails because the PR body is incomplete, update the PR
-body and then rerun the failed PolicyFlow job or push a new commit. In GitHub,
-editing a PR body may not trigger a new GitHub Actions run by itself, so the old
-failed check can remain visible until the job is rerun.
-
-Treat draft PRs and stacked PRs as explicit governance states:
-
-- draft PRs are planning or preview artifacts unless the author promotes them to
-  merge readiness and the PR body, workflow evidence, and required checks all
-  support that state
-- stacked PRs are dependency-bound and not normal merge candidates until upstream dependencies are merged or otherwise satisfied
-
-For `HIGH` risk workflows with `governance.human_approval_required: true`, keep
-the governance declaration and the approval evidence separate:
-
-- `governance.approval_evidence` describes which human approval is required by
-  the workflow.
-- `evidence.approval` records the concrete approval evidence used by PR
-  validation.
-- PR approval validation reads the required GitHub login from `evidence.approval.approved_by`
-  and expects the PR body to reference
-  `Approval evidence: evidence.approval`.
-
-`governance.approval_evidence` does not replace `evidence.approval`; HIGH-risk
-approval-gated workflows need the `evidence.approval.approved_by`,
-`evidence.approval.reference`, and `evidence.approval.scope_confirmed` fields
-for actionable PR approval validation.
-
-## Local-Only Adoption
-
-Use local-only adoption when you want PolicyFlow validation and workflow state
-without GitHub enforcement:
+Default `policyflow.yml`:
 
 ```yaml
-version: 1
-
-features:
-  pr_validation: false
-  github_approval_checks: false
-  bootstrap_managed_assets: false
-```
-
-Local-only repos can still use `validate`, `status`, `audit`, `doctor`, and
-`new-workflow`.
-
-## GitHub-Governed Adoption
-
-Use GitHub-governed adoption when PR templates, issue templates, and the
-governance workflow should enforce PolicyFlow checks:
-
-```yaml
-version: 1
+version: 2
 
 paths:
-  workflows: ai/workflows
-  prompts: ai/prompts
-  agents: ai/agents
-  rules: ai/rules
-  project_context: ai/project-context.yml
+  changes: policyflow
   pr_template: .github/PULL_REQUEST_TEMPLATE.md
-  issue_templates: .github/ISSUE_TEMPLATE
-  governance_workflow: .github/workflows/policyflow-governance.yml
+  governance_workflow: .github/workflows/policyflow.yml
 
-features:
-  pr_validation: true
-  github_approval_checks: true
-  bootstrap_managed_assets: true
+github:
+  enabled: true
 ```
 
-The generated workflow uses read-only `contents` and `pull-requests`
-permissions, fetches live PR body and review metadata, and runs
-`policyflow validate-pr --github-reviews`.
-
-## Confidence And Evidence
-
-Every workflow file must declare confidence in `context.confidence` before
-implementation starts:
+Local-only configuration:
 
 ```yaml
-context:
-  workflow_file: ai/workflows/features/example.yml
-  risk_level: MEDIUM
-  confidence:
-    planning: Scope, non-goals, and risk are stable enough for implementation.
-    implementation: Implementation is bounded by the declared module constraints.
-    tests: Direct validation and regression checks are planned.
-    residual_uncertainty: Review must confirm no hidden contract impact.
+version: 2
+
+github:
+  enabled: false
 ```
 
-The PR `Confidence summary` should summarize these four fields instead of
-introducing a separate confidence claim.
+## Change Schema
 
-## Evaluation Governance
+The generated `policyflow/change.example.yml` uses the V2 governance schema.
+External systems execute implementation work, tests, scans, reviews, and release
+steps. PolicyFlow starts after those systems publish governance evidence and
+returns a validation decision.
 
-When a workflow needs measurable quality criteria, declare an optional
-`evaluation` block with categories, required metrics, thresholds, status, and
-evidence references. See
-[evaluation-governance.md](evaluation-governance.md) for the full Consumer-Repo
-guide. The repository source path is `docs/evaluation-governance.md`. Use
-`workflows/examples/evaluation-governance-workflow.yml` as a provider-neutral
-example covering tests, coverage, review, security, and performance.
+## GitHub Governance
 
-CI, scanners, test tooling, benchmark tools, and human reviewers remain
-external. PolicyFlow validates declared evaluation governance metadata; it does
-not execute or fetch the underlying checks.
-
-## Loop Governance
-
-When a workflow needs bounded feedback loops, declare an optional
-`loop_governance` block with source and target phases, allowed feedback sources,
-iteration limits, stop conditions, escalation conditions, status, and evidence
-references. See [loop-governance.md](loop-governance.md) for the full
-Consumer-Repo guide. The repository source path is `docs/loop-governance.md`.
-Use `workflows/examples/loop-governance-workflow.yml` as a provider-neutral
-example covering review, QA, security, human arbitration, and
-Querypilot-inspired SQL safety loops.
-
-Reviewers, QA systems, scanners, SQL review tools, agent runtimes, and human
-owners remain external. PolicyFlow validates declared loop governance metadata;
-it does not execute loops, schedule loop execution, route messages, provide
-memory, or call provider runtimes.
-
-## Upgrade Managed Assets
-
-Preview managed asset changes after upgrading the PolicyFlow package:
+When `github.enabled: true`, the generated GitHub workflow uses read-only
+`contents` and `pull-requests` permissions, fetches live PR body and review
+metadata, and runs:
 
 ```bash
-policyflow sync .
+policyflow validate-pr "$workflow_path" pr-body.md --github-reviews pr-reviews.json --allow-pending
 ```
 
-Apply safe upstream asset updates when no local modifications block the change:
+The workflow runs on `pull_request` and `pull_request_review` activity.
 
-```bash
-policyflow sync . --apply
-```
+With `--allow-pending`, missing required human approval is reported as pending approval instead of a failed governance check; strict local or CI runs can omit `--allow-pending`.
 
-Use `--force` only when the Consumer-Repo intentionally accepts overwriting
-locally modified managed assets.
+Use GitHub required approving review rules to block merge while approval is pending.
 
-PolicyFlow's golden Consumer-Repo smoke test guards this plug-and-play path by
-bootstrapping a temporary repo, running doctor, generating and validating a
-workflow, executing one implementation phase through a local fake runner, and
-validating a starter PR body without real provider or GitHub network calls.
+For high-risk changes, set `governance.human_approval_required: true` and include approval evidence from the external review system in the V2 `evidence` list. PolicyFlow validates after external systems publish governance evidence.
+
+PolicyFlow does not create branches, create issues, mutate labels, assign milestones, approve pull requests, merge pull requests, or check credentials.
 
 For a maintained static reference project, see `examples/reference-consumer`.
-It demonstrates bootstrap layout expectations, `policyflow doctor`, workflow
-validation, Loop Governance, Evaluation Governance, and audit reporting without
-a hosted runtime, provider SDK, or provider credentials.
-
-## Advanced Manual Adoption
-
-Prefer `policyflow init` for normal adoption. Manual copying is only for unusual
-repositories that cannot run bootstrap.
-
-If you must install assets manually, copy the same generated layout that
-bootstrap would create and then run:
-
-```bash
-policyflow config-check policyflow.yml
-policyflow doctor .
-policyflow validate ai/workflows/features/first-feature.yml
-```
-
-## Default Execution Mode
-
-PolicyFlow defaults to strict workflow execution in every consumer repo:
-
-1. create the workflow file before implementation
-2. lock scope, non-goals, and risk before code changes
-3. declare an `execution` block with canonical phases and states
-4. add machine-readable `evidence` blocks as phases complete
-5. add matching machine-readable `contracts` blocks as completed agent-owned phases finish
-6. add typed `overrides` only for explicit approved exceptions, surface them in the PR when present, and keep their `review_by` or `expires_on` dates current
-7. keep runtime and handoff orchestration outside PolicyFlow and record governance-relevant outcomes as evidence
-8. advance phases only when their prerequisite workflow phases are completed
-9. execute `planning`, `architecture-check`, `review`, and `qa` as real workflow phases
-10. treat the workflow as the steering artifact for the change, not as retrospective documentation
-11. keep same-PR workflow edits limited to same-scope clarifications
-12. keep external execution systems responsible for their own runner configuration and provider adapters
-
-## First Recommended Checks
-
-- confirm protected areas
-- confirm risk classifications
-- confirm workflow instance paths
-- confirm the initial execution phases and states
-- confirm which evidence blocks should exist for the first completed phases
-- confirm which role contract blocks should exist for the first completed phases
-- confirm whether any typed override is truly needed, and if so which override type applies
-- confirm which handoffs require concrete input and output artifact lists
-- confirm which phase transitions are currently allowed or blocked
-- confirm which workflow evidence blocks must be referenced in the PR body
-- confirm which workflow overrides must be referenced in the PR body
-- confirm whether any declared override is already `expiring` or `revalidation_required`
-- confirm human approval expectations
-- confirm which GitHub login must appear in `approved_by` and must produce the real PR approval
-- confirm how planning, architecture, review, and QA evidence will be made visible in the PR
-- confirm which owner agent and output contract each completed phase must carry
-- confirm which CLI orchestration commands should be used to advance the workflow state
-- confirm which reporting views should be used to check merge readiness and blocked workflows
-- confirm which external systems will produce test, review, approval, security, build, or deployment evidence
-- confirm that external execution output is normalized into evidence PolicyFlow can validate
+It demonstrates the minimal V2 layout, `policyflow doctor`, and V2 governance
+schema validation without a hosted runtime, provider SDK, or provider
+credentials.

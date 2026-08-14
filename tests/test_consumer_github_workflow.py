@@ -73,10 +73,11 @@ def test_packaged_consumer_github_actions_template_matches_source() -> None:
 def test_bootstrap_installs_consumer_github_actions_workflow(tmp_path: Path) -> None:
     result = bootstrap_consumer_repo(tmp_path)
 
-    workflow_path = tmp_path / ".github/workflows/policyflow-governance.yml"
+    workflow_path = tmp_path / ".github/workflows/policyflow.yml"
 
     assert workflow_path.exists()
-    assert ".github/workflows/policyflow-governance.yml" in result.created
+    assert ".github/workflows/policyflow.yml" in result.created
+    assert ".github/workflows/policyflow-governance.yml" not in result.created
 
 
 def test_doctor_passes_github_workflow_artifact_after_bootstrap(tmp_path: Path) -> None:

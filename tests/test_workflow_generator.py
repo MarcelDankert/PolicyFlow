@@ -2,189 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-import yaml
 from typer.testing import CliRunner
 
 from policyflow.bootstrap import bootstrap_consumer_repo
 from policyflow.cli import app
-from policyflow.exceptions import WorkflowValidationError
-from policyflow.validator import validate_workflow_file
-from policyflow.workflow_generator import create_workflow_instance
 
 
-ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
-
-
-def test_create_low_risk_workflow_uses_consumer_paths_and_validates(tmp_path: Path) -> None:
-    bootstrap_consumer_repo(tmp_path)
-
-    result = create_workflow_instance(
-        tmp_path,
-        workflow_type="feature",
-        workflow_id="first-feature",
-        risk_level="LOW",
-    )
-
-    workflow_path = tmp_path / "ai/workflows/features/first-feature.yml"
-    assert result.created == ["ai/workflows/features/first-feature.yml"]
-    assert workflow_path.exists()
-
-    workflow = validate_workflow_file(workflow_path)
-    assert workflow.workflow.id == "first-feature"
-    assert workflow.workflow.type == "feature"
-    assert workflow.context.workflow_file == "ai/workflows/features/first-feature.yml"
-    assert workflow.context.risk_level == "LOW"
-    assert workflow.governance.required_reviews == ["review-agent"]
-
-    data = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
-    root_fallback_fields = {
-        "workflow_file",
-        "risk_level",
-        "confidence",
-        "required_reviews",
-        "human_approval_required",
-        "escalation_required",
-        "protected_areas_touched",
-        "approval_evidence",
-    }
-    assert root_fallback_fields.isdisjoint(data)
-    assert [phase["phase"] for phase in data["execution"]["phases"]] == [
-        "planning",
-        "implementation",
-        "review",
-    ]
-    assert data["runtime"]["status"] == "idle"
-    assert data["handoffs"] == []
-
-
-@pytest.mark.parametrize(
-    ("workflow_type", "risk_level", "expected_path", "expected_reviews", "expected_phases"),
-    [
-        (
-            "bugfix",
-            "MEDIUM",
-            "ai/workflows/bugfixes/parser-fix.yml",
-            ["architecture-agent", "review-agent", "qa-agent"],
-            ["planning", "architecture-check", "implementation", "review", "qa"],
-        ),
-        (
-            "architecture-change",
-            "HIGH",
-            "ai/workflows/architecture-changes/storage-boundary.yml",
-            ["architecture-agent", "review-agent", "qa-agent", "human approval"],
-            ["planning", "architecture-check", "implementation", "review", "qa", "approval"],
-        ),
-    ],
-)
-def test_create_medium_and_high_workflows_validate(
-    tmp_path: Path,
-    workflow_type: str,
-    risk_level: str,
-    expected_path: str,
-    expected_reviews: list[str],
-    expected_phases: list[str],
-) -> None:
-    bootstrap_consumer_repo(tmp_path)
-    workflow_id = Path(expected_path).stem
-
-    create_workflow_instance(
-        tmp_path,
-        workflow_type=workflow_type,
-        workflow_id=workflow_id,
-        risk_level=risk_level,
-    )
-
-    data = yaml.safe_load((tmp_path / expected_path).read_text(encoding="utf-8"))
-    workflow = validate_workflow_file(tmp_path / expected_path)
-
-    assert workflow.workflow.type == workflow_type
-    assert workflow.context.workflow_file == expected_path
-    assert workflow.context.risk_level == risk_level
-    assert workflow.governance.required_reviews == expected_reviews
-    assert [phase["phase"] for phase in data["execution"]["phases"]] == expected_phases
-
-
-def test_workflow_templates_emit_canonical_schema_only() -> None:
-    root_fallback_fields = {
-        "workflow_file",
-        "risk_level",
-        "confidence",
-        "required_reviews",
-        "human_approval_required",
-        "escalation_required",
-        "protected_areas_touched",
-        "approval_evidence",
-    }
-
-    for template_path in (ROOT / "workflows/templates").glob("*workflow.template.yml"):
-        data = yaml.safe_load(template_path.read_text(encoding="utf-8"))
-
-        assert root_fallback_fields.isdisjoint(data), template_path
-        assert "context" in data
-        assert "governance" in data
-        assert "execution" in data
-
-
-def test_packaged_workflow_templates_match_source_templates() -> None:
-    for source_path in (ROOT / "workflows/templates").glob("*.yml"):
-        packaged_path = (
-            ROOT / "policyflow/assets/workflows/templates" / source_path.name
-        )
-
-        assert packaged_path.read_text(encoding="utf-8") == source_path.read_text(
-            encoding="utf-8"
-        )
-
-
-def test_new_workflow_dry_run_reports_without_writing(tmp_path: Path) -> None:
-    bootstrap_consumer_repo(tmp_path)
-
-    result = create_workflow_instance(
-        tmp_path,
-        workflow_type="feature",
-        workflow_id="preview-feature",
-        risk_level="LOW",
-        dry_run=True,
-    )
-
-    assert result.would_create == ["ai/workflows/features/preview-feature.yml"]
-    assert not (tmp_path / "ai/workflows/features/preview-feature.yml").exists()
-
-
-def test_new_workflow_protects_existing_files(tmp_path: Path) -> None:
-    bootstrap_consumer_repo(tmp_path)
-    existing = tmp_path / "ai/workflows/features/existing.yml"
-    existing.write_text("local: edit\n", encoding="utf-8")
-
-    with pytest.raises(WorkflowValidationError) as exc_info:
-        create_workflow_instance(
-            tmp_path,
-            workflow_type="feature",
-            workflow_id="existing",
-            risk_level="LOW",
-        )
-
-    assert "already exists" in exc_info.value.errors[0]
-    assert existing.read_text(encoding="utf-8") == "local: edit\n"
-
-
-def test_new_workflow_force_overwrites_existing_file(tmp_path: Path) -> None:
-    bootstrap_consumer_repo(tmp_path)
-    existing = tmp_path / "ai/workflows/features/existing.yml"
-    existing.write_text("local: edit\n", encoding="utf-8")
-
-    result = create_workflow_instance(
-        tmp_path,
-        workflow_type="feature",
-        workflow_id="existing",
-        risk_level="LOW",
-        force=True,
-    )
-
-    assert result.overwritten == ["ai/workflows/features/existing.yml"]
-    validate_workflow_file(existing)
 
 
 def test_new_workflow_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
@@ -207,3 +31,11 @@ def test_new_workflow_command_is_removed_from_v2_cli(tmp_path: Path) -> None:
     assert result.exit_code == 2
     assert "No such command" in result.output
     assert not (tmp_path / "ai/workflows/features/cli-feature.yml").exists()
+
+
+def test_v2_init_does_not_create_workflow_generator_template_tree(tmp_path: Path) -> None:
+    bootstrap_consumer_repo(tmp_path)
+
+    assert not (tmp_path / "ai/workflows").exists()
+    assert not (tmp_path / "workflows/templates").exists()
+    assert (tmp_path / "policyflow/change.example.yml").exists()

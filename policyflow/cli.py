@@ -84,10 +84,15 @@ def init(
     target: Path = typer.Argument(Path(".")),
     dry_run: bool = typer.Option(False, "--dry-run"),
     force: bool = typer.Option(False, "--force"),
+    github: bool = typer.Option(
+        True,
+        "--github/--no-github",
+        help="Include read-only GitHub PR template and governance workflow assets.",
+    ),
 ) -> None:
     """Bootstrap PolicyFlow governance assets into a repository."""
 
-    result = bootstrap_consumer_repo(target, dry_run=dry_run, force=force)
+    result = bootstrap_consumer_repo(target, dry_run=dry_run, force=force, github=github)
 
     for path in result.created:
         console.print(f"created {path}", markup=False)
@@ -107,18 +112,10 @@ def init(
 def doctor(
     target: Path = typer.Argument(Path(".")),
     json_output: bool = typer.Option(False, "--json"),
-    github_app_preflight: str | None = typer.Option(
-        None,
-        "--github-app-preflight",
-        help="Run GitHub App governance permission preflight for OWNER/REPO.",
-    ),
 ) -> None:
     """Check whether a repository is ready to run PolicyFlow governance."""
 
-    report = doctor_consumer_repo(
-        target,
-        github_app_preflight_repo=github_app_preflight,
-    )
+    report = doctor_consumer_repo(target)
 
     if json_output:
         typer.echo(json.dumps(report, indent=2))

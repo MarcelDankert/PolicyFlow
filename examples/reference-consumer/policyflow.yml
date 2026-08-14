@@ -1,24 +1,10 @@
-version: 1
+version: 2
 
 paths:
-  workflows: ai/workflows
-  prompts: ai/prompts
-  agents: ai/agents
-  rules: ai/rules
-  project_context: ai/project-context.yml
+  changes: policyflow
   pr_template: .github/PULL_REQUEST_TEMPLATE.md
-  issue_templates: .github/ISSUE_TEMPLATE
-  governance_workflow: .github/workflows/policyflow-governance.yml
+  governance_workflow: .github/workflows/policyflow.yml
 
-features:
-  pr_validation: false
-  github_approval_checks: false
-  bootstrap_managed_assets: true
-
-bootstrap:
-  managed_assets:
-    - ai/workflows
-    - ai/prompts
-    - ai/agents
-    - ai/rules
+github:
+  enabled: false
 

@@ -1,6 +1,4 @@
-version: 1
+version: 2
 
-features:
-  pr_validation: false
-  github_approval_checks: false
-  bootstrap_managed_assets: false
+github:
+  enabled: false

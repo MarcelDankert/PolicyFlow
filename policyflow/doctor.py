@@ -1,38 +1,28 @@
 from __future__ import annotations
 
-import json
-import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-import yaml
-
-from policyflow.consumer_config import ConsumerConfig, load_consumer_config
+from policyflow.config import PolicyFlowConfig, load_config
 from policyflow.exceptions import WorkflowValidationError
-
-
-GhRunner = Callable[[list[str]], tuple[int, str, str]]
+from policyflow.validator import validate_workflow_v2_file
 
 
 def doctor_consumer_repo(
     target: str | Path = Path("."),
-    github_app_preflight_repo: str | None = None,
-    gh_runner: GhRunner | None = None,
 ) -> dict[str, Any]:
     target_root = Path(target)
     checks: list[dict[str, str]] = [_check_python_runtime()]
 
-    config: ConsumerConfig | None = None
+    config: PolicyFlowConfig | None = None
     try:
-        config = load_consumer_config(target_root / "policyflow.yml")
-        checks.append(_check("consumer_config", "pass", "policyflow.yml is valid."))
+        config = load_config(target_root / "policyflow.yml")
+        checks.append(_check("config", "pass", "policyflow.yml is valid."))
     except WorkflowValidationError as exc:
         checks.append(
             _check(
-                "consumer_config",
+                "config",
                 "failure",
                 "; ".join(exc.errors),
                 "Run `policyflow init` or add a valid root policyflow.yml.",
@@ -40,18 +30,8 @@ def doctor_consumer_repo(
         )
 
     if config is not None:
-        checks.append(_check_bootstrap_artifacts(target_root, config))
-        checks.append(_check_project_context(target_root, config))
+        checks.append(_check_change_example(target_root, config))
         checks.append(_check_github_templates(target_root, config))
-        checks.append(_check_github_cli(config))
-
-    if github_app_preflight_repo is not None:
-        checks.append(
-            _check_github_app_governance_preflight(
-                github_app_preflight_repo,
-                gh_runner,
-            )
-        )
 
     failures = sum(1 for check in checks if check["status"] == "failure")
     warnings = sum(1 for check in checks if check["status"] == "warning")
@@ -90,275 +70,43 @@ def _check_python_runtime() -> dict[str, str]:
     return _check("python_runtime", "pass", f"Python {version_text} is supported.")
 
 
-def _check_bootstrap_artifacts(target_root: Path, config: ConsumerConfig) -> dict[str, str]:
-    required = [
-        config.paths.workflows,
-        config.paths.prompts,
-        config.paths.agents,
-        config.paths.rules,
-        Path(".policyflow/bootstrap.json"),
-    ]
-    missing = _missing_paths(target_root, required)
-    if missing:
+def _check_change_example(target_root: Path, config: PolicyFlowConfig) -> dict[str, str]:
+    change_path = target_root / config.paths.changes / "change.example.yml"
+    if not change_path.exists():
         return _check(
-            "bootstrap_artifacts",
+            "change_example",
             "failure",
-            f"Missing bootstrap artifacts: {', '.join(missing)}",
-            "Run `policyflow init` to scaffold missing PolicyFlow assets.",
-        )
-    return _check("bootstrap_artifacts", "pass", "Required bootstrap artifacts exist.")
-
-
-def _check_project_context(target_root: Path, config: ConsumerConfig) -> dict[str, str]:
-    project_context_path = target_root / config.paths.project_context
-    if not project_context_path.exists():
-        return _check(
-            "project_context",
-            "failure",
-            f"Project context not found: {config.paths.project_context.as_posix()}",
-            "Run `policyflow init` or add ai/project-context.yml.",
+            f"Example change file not found: {(config.paths.changes / 'change.example.yml').as_posix()}",
+            "Run `policyflow init` to scaffold the V2 example change.",
         )
     try:
-        data = yaml.safe_load(project_context_path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as exc:
+        validate_workflow_v2_file(change_path)
+    except WorkflowValidationError as exc:
         return _check(
-            "project_context",
+            "change_example",
             "failure",
-            f"Project context YAML is invalid: {exc}",
-            "Fix ai/project-context.yml.",
+            "Example change does not match the V2 governance schema: " + "; ".join(exc.errors),
+            "Fix policyflow/change.example.yml or rerun `policyflow init --force`.",
         )
-    if not isinstance(data, dict):
-        return _check(
-            "project_context",
-            "failure",
-            "Project context must contain a top-level mapping.",
-            "Fix ai/project-context.yml.",
-        )
-    return _check("project_context", "pass", "Project context is present and parseable.")
+    return _check("change_example", "pass", "V2 example change is present and valid.")
 
 
-def _check_github_templates(target_root: Path, config: ConsumerConfig) -> dict[str, str]:
-    if not config.features.pr_validation:
+def _check_github_templates(target_root: Path, config: PolicyFlowConfig) -> dict[str, str]:
+    if not config.github.enabled:
         return _check("github_templates", "pass", "GitHub PR validation is disabled.")
 
     missing = _missing_paths(
         target_root,
-        [config.paths.pr_template, config.paths.issue_templates],
+        [config.paths.pr_template, config.paths.governance_workflow],
     )
     if missing:
         return _check(
             "github_templates",
             "failure",
-            f"Missing GitHub governance templates: {', '.join(missing)}",
-            "Run `policyflow init` to scaffold GitHub governance templates.",
+            f"Missing GitHub governance files: {', '.join(missing)}",
+            "Run `policyflow init` to scaffold read-only GitHub governance files.",
         )
-    return _check("github_templates", "pass", "GitHub governance templates are present.")
-
-
-def _check_github_cli(config: ConsumerConfig) -> dict[str, str]:
-    if not config.features.github_approval_checks:
-        return _check("github_cli", "pass", "GitHub approval checks are disabled.")
-
-    if shutil.which("gh") is None:
-        return _check(
-            "github_cli",
-            "warning",
-            "GitHub CLI was not found; live PR approval checks may not run locally.",
-            "Install GitHub CLI and authenticate with `gh auth login` for live approval checks.",
-        )
-    return _check("github_cli", "pass", "GitHub CLI is available.")
-
-
-def _check_github_app_governance_preflight(
-    repo: str,
-    gh_runner: GhRunner | None = None,
-) -> dict[str, str]:
-    repo = repo.strip()
-    if not _valid_github_repo_slug(repo):
-        return _check(
-            "github_app_governance_preflight",
-            "failure",
-            f"GitHub App governance preflight repo must use OWNER/REPO format: {repo}",
-            "Pass a repository slug such as `--github-app-preflight owner/repo`.",
-        )
-
-    if (
-        "GH_TOKEN" not in os.environ
-        and "GITHUB_TOKEN" not in os.environ
-        and gh_runner is None
-    ):
-        return _check(
-            "github_app_governance_preflight",
-            "failure",
-            "GH_TOKEN or GITHUB_TOKEN is required for GitHub App governance preflight.",
-            "Export a GitHub App installation token as GH_TOKEN before release or PR orchestration.",
-        )
-
-    if shutil.which("gh") is None and gh_runner is None:
-        return _check(
-            "github_app_governance_preflight",
-            "failure",
-            "GitHub CLI was not found; GH_TOKEN or GITHUB_TOKEN cannot be checked.",
-            "Install GitHub CLI and export the GitHub App installation token as GH_TOKEN.",
-        )
-
-    run_gh = gh_runner or _run_gh
-    metadata_code, metadata_stdout, _metadata_stderr = run_gh(["api", f"repos/{repo}"])
-    if metadata_code != 0:
-        return _check(
-            "github_app_governance_preflight",
-            "failure",
-            "Missing capability: read metadata for "
-            f"{repo}. Likely GitHub permission area: Metadata: read.",
-            "Configure the GitHub App installation for this repository and confirm "
-            "GH_TOKEN uses that installation token.",
-        )
-
-    permissions = _extract_github_permissions(metadata_stdout)
-    installation_code, installation_stdout, _installation_stderr = run_gh(
-        ["api", f"repos/{repo}/installation"]
-    )
-    if installation_code == 0:
-        permissions.update(_extract_github_permissions(installation_stdout))
-
-    if permissions:
-        missing = _missing_governance_capabilities(permissions)
-        if missing:
-            return _check(
-                "github_app_governance_preflight",
-                "failure",
-                "Missing GitHub App governance capabilities: " + "; ".join(missing),
-                "Configure the GitHub App installation with the listed permission areas "
-                "before release or PR orchestration.",
-            )
-    else:
-        probe_failure = _first_failed_github_read_probe(repo, run_gh)
-        if probe_failure is not None:
-            return probe_failure
-
-    return _check(
-        "github_app_governance_preflight",
-        "pass",
-        "GitHub App governance preflight verified non-mutating repository access "
-        "and expects these governance capabilities before mutation: "
-        + ", ".join(
-            capability
-            for capability, _area in _governance_capability_requirements()
-        ),
-    )
-
-
-def _valid_github_repo_slug(repo: str) -> bool:
-    parts = repo.split("/")
-    return len(parts) == 2 and all(part.strip() for part in parts)
-
-
-def _run_gh(args: list[str]) -> tuple[int, str, str]:
-    completed = subprocess.run(
-        ["gh", *args],
-        capture_output=True,
-        check=False,
-        text=True,
-    )
-    return completed.returncode, completed.stdout, completed.stderr
-
-
-def _extract_github_permissions(stdout: str) -> dict[str, str]:
-    try:
-        data = json.loads(stdout)
-    except json.JSONDecodeError:
-        return {}
-
-    permissions = data.get("permissions")
-    if isinstance(permissions, dict):
-        return {
-            str(name): _normalize_permission_level(value)
-            for name, value in permissions.items()
-            if str(name) in _known_github_app_permission_keys()
-        }
-    return {}
-
-
-def _known_github_app_permission_keys() -> set[str]:
-    return {"metadata", "contents", "issues", "pull_requests"}
-
-
-def _normalize_permission_level(value: Any) -> str:
-    if isinstance(value, str):
-        return value.lower()
-    if value is True:
-        return "write"
-    if value is False:
-        return "none"
-    return "none"
-
-
-def _missing_governance_capabilities(permissions: dict[str, str]) -> list[str]:
-    missing: list[str] = []
-    for capability, permission_area in _governance_capability_requirements():
-        area_name, required_level = permission_area.split(": ", maxsplit=1)
-        actual_level = permissions.get(_github_permission_key(area_name), "none")
-        if not _permission_satisfies(actual_level, required_level):
-            missing.append(f"{capability} ({permission_area})")
-    return missing
-
-
-def _governance_capability_requirements() -> list[tuple[str, str]]:
-    return [
-        ("read metadata", "Metadata: read"),
-        ("create branches", "Contents: write"),
-        ("push commits", "Contents: write"),
-        ("create/edit issues", "Issues: write"),
-        ("create/edit pull requests", "Pull requests: write"),
-        ("apply labels", "Issues: write"),
-        ("assign milestones", "Issues: write"),
-        ("read pull request reviews", "Pull requests: read"),
-    ]
-
-
-def _first_failed_github_read_probe(repo: str, run_gh: GhRunner) -> dict[str, str] | None:
-    probes = [
-        (
-            "read repository metadata",
-            ["api", f"repos/{repo}"],
-            "Metadata: read",
-        ),
-        (
-            "read labels",
-            ["api", f"repos/{repo}/labels?per_page=1"],
-            "Issues: read",
-        ),
-        (
-            "read milestones",
-            ["api", f"repos/{repo}/milestones?per_page=1"],
-            "Issues: read",
-        ),
-        (
-            "read pull requests",
-            ["api", f"repos/{repo}/pulls?per_page=1"],
-            "Pull requests: read",
-        ),
-    ]
-    for capability, args, permission_area in probes:
-        code, _stdout, _stderr = run_gh(args)
-        if code != 0:
-            return _check(
-                "github_app_governance_preflight",
-                "failure",
-                f"Missing capability: {capability}. Likely GitHub permission area: {permission_area}.",
-                "Configure the GitHub App installation with the listed permission area "
-                "before release or PR orchestration.",
-            )
-    return None
-
-
-def _github_permission_key(area_name: str) -> str:
-    return area_name.lower().replace(" ", "_")
-
-
-def _permission_satisfies(actual_level: str, required_level: str) -> bool:
-    order = {"none": 0, "read": 1, "write": 2, "admin": 3}
-    return order.get(actual_level, 0) >= order.get(required_level, 0)
+    return _check("github_templates", "pass", "Read-only GitHub governance files are present.")
 
 
 def _missing_paths(target_root: Path, paths: list[Path]) -> list[str]:
