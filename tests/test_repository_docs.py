@@ -92,34 +92,40 @@ def test_getting_started_has_end_to_end_consumer_quickstart() -> None:
     for command in (
         "python -m pip install policyflow==1.0.0",
         "policyflow init .",
+        "policyflow init . --no-github",
         "policyflow doctor .",
-        "policyflow new-workflow feature --id first-feature --risk LOW",
-        "policyflow validate ai/workflows/features/first-feature.yml",
-        "policyflow status ai/workflows/features/first-feature.yml",
-        "policyflow audit ai/workflows",
-        "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md",
-        "policyflow validate-pr ai/workflows/features/first-feature.yml pr-body.md --github-reviews pr-reviews.json",
-        "policyflow sync .",
+        "policyflow doctor . --json",
+        "policyflow validate policyflow/change.example.yml",
+        'policyflow validate-pr "$workflow_path" pr-body.md --github-reviews pr-reviews.json --allow-pending',
     ):
         assert command in text
+    for removed_command in (
+        "policyflow new-workflow",
+        "policyflow status",
+        "policyflow audit",
+        "policyflow sync",
+        "ai/workflows",
+    ):
+        assert removed_command not in text
 
 
-def test_getting_started_documents_github_app_governance_preflight() -> None:
+def test_getting_started_documents_read_only_github_boundary() -> None:
     text = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
 
-    assert "policyflow doctor . --github-app-preflight OWNER/REPO" in text
-    for capability in (
-        "read metadata",
-        "create branches",
-        "push commits",
-        "create/edit issues",
-        "create/edit pull requests",
-        "apply labels",
+    for expected in (
+        "read-only",
+        "contents",
+        "pull-requests",
+        "does not create branches",
+        "mutate labels",
         "assign milestones",
-        "read pull request reviews",
+        "approve pull requests",
+        "merge pull requests",
+        "check credentials",
     ):
-        assert capability in text
-    assert "GH_TOKEN" in text
+        assert expected in text
+    assert "--github-app-preflight" not in text
+    assert "GH_TOKEN" not in text
     assert "D:\\" not in text
     assert "C:\\" not in text
 
@@ -128,15 +134,10 @@ def test_docs_clarify_high_risk_approval_evidence_contract() -> None:
     getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "governance.approval_evidence" in getting_started
-    assert "evidence.approval" in getting_started
-    assert "evidence.approval.approved_by" in getting_started
-    assert (
-        "PR approval validation reads the required GitHub login from "
-        "`evidence.approval.approved_by`"
-    ) in getting_started
-    assert "governance.approval_evidence` does not replace `evidence.approval" in getting_started
-    assert "Approval evidence: `evidence.approval`" in readme
+    assert "human_approval_required" in getting_started
+    assert "approval evidence" in getting_started
+    assert "external systems publish governance evidence" in getting_started
+    assert "Approval evidence: `evidence.approval`" not in readme
 
 
 def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
@@ -146,14 +147,10 @@ def test_docs_define_pr_rerun_and_draft_stacked_semantics() -> None:
     )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "editing a PR body may not trigger a new GitHub Actions run" in getting_started
-    assert "rerun the failed PolicyFlow job or push a new commit" in getting_started
-    assert "reruns on `pull_request_review`" in getting_started
-    assert "submitted and dismissed events" in getting_started
-    assert "without keeping a CI job waiting" in getting_started
-    assert "draft PRs are planning or preview artifacts" in getting_started
-    assert "stacked PRs are dependency-bound" in getting_started
-    assert "not normal merge candidates until upstream dependencies are merged or otherwise satisfied" in getting_started
+    assert "pull_request" in getting_started
+    assert "pull_request_review" in getting_started
+    assert "pending approval instead of a failed governance check" in getting_started
+    assert "strict local or CI runs can omit `--allow-pending`" in getting_started
     assert "documentation-only guidance" in roadmap
     assert "Draft and stacked PRs need explicit merge-readiness semantics" in readme
     assert "the governance workflow reruns on" in readme
@@ -167,7 +164,7 @@ def test_docs_define_pending_approval_lifecycle_split() -> None:
     ).read_text(encoding="utf-8")
 
     for expected in (
-        "policyflow validate-pr --github-reviews pr-reviews.json --allow-pending",
+        'policyflow validate-pr "$workflow_path" pr-body.md --github-reviews pr-reviews.json --allow-pending',
         "pending approval instead of a failed governance check",
         "Use GitHub required approving review rules to block merge while approval is pending",
         "strict local or CI runs can omit `--allow-pending`",
@@ -308,7 +305,7 @@ def test_audit_reporting_docs_define_usage_and_runtime_boundary() -> None:
         assert expected in audit_doc
 
     assert packaged_doc == audit_doc
-    assert "docs/audit-reporting.md" in getting_started
+    assert "docs/audit-reporting.md" not in getting_started
     assert "docs/audit-reporting.md" in readme
 
 
@@ -335,7 +332,7 @@ def test_evaluation_governance_docs_define_consumer_usage() -> None:
         assert expected in evaluation_doc
 
     assert packaged_doc == evaluation_doc
-    assert "docs/evaluation-governance.md" in getting_started
+    assert "docs/evaluation-governance.md" not in getting_started
     assert "docs/evaluation-governance.md" in readme
 
 
@@ -436,7 +433,7 @@ def test_loop_governance_docs_reference_examples_and_failure_fixtures() -> None:
         assert expected in loop_doc
 
     assert packaged_doc == loop_doc
-    assert "docs/loop-governance.md" in getting_started
+    assert "docs/loop-governance.md" not in getting_started
     assert "docs/loop-governance.md" in readme
 
 
@@ -472,11 +469,9 @@ def test_pr_template_shows_high_risk_approval_evidence_path() -> None:
 def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
     text = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
 
-    assert "## Advanced Manual Adoption" in text
-    primary_text = text.split("## Advanced Manual Adoption", maxsplit=1)[0]
-
-    assert "Copy `github/ISSUE_TEMPLATE/*`" not in primary_text
-    assert "Copy `rules/`, `agents/`, `workflows/`, and `prompts/`" not in primary_text
+    assert "## Consumer Quickstart" in text
+    assert "Copy `github/ISSUE_TEMPLATE/*`" not in text
+    assert "Copy `rules/`, `agents/`, `workflows/`, and `prompts/`" not in text
 
 
 def test_packaged_getting_started_matches_source_doc() -> None:

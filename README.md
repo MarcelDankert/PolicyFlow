@@ -100,16 +100,14 @@ policyflow doctor .
 
 Then make the minimal project-specific edits:
 
-1. update `ai/project-context.yml`
-2. choose local-only or GitHub-governed features in `policyflow.yml`
-3. add project-specific overlays such as `ai/architecture.md`,
-   `ai/rules/project-overrides.md`, or `contracts/` if applicable
-4. create workflow instances for real work under `ai/workflows/features/` or the
-   configured workflow location before implementation starts
+1. choose local-only or GitHub-governed validation in `policyflow.yml`
+2. replace `policyflow/change.example.yml` with governance evidence for real work
+3. keep execution, runner setup, prompts, provider credentials, and generated
+   evidence production outside PolicyFlow
 
 See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
-Quickstart, including PR validation, GitHub approval checks, and
-managed asset sync.
+Quickstart, including V2 change validation and optional read-only GitHub PR
+checks.
 
 Audit Reporting is documented in
 [docs/audit-reporting.md](docs/audit-reporting.md). It explains local and CI
@@ -129,11 +127,10 @@ Querypilot-inspired SQL safety feedback loops while keeping loop execution,
 scheduling, message routing, memory, and provider runtimes external to
 PolicyFlow.
 
-For `HIGH` risk workflows with `governance.human_approval_required: true`, the
-PR body should reference Approval evidence: `evidence.approval`. GitHub approval
-validation reads the required approver login from
-`evidence.approval.approved_by`; `governance.approval_evidence` documents the
-workflow requirement but does not replace the machine-readable evidence block.
+For `HIGH` risk changes with `governance.human_approval_required: true`, the
+PR body should reference the relevant approval evidence item in the V2
+`evidence` list. GitHub approval validation compares the declared required
+human approver with read-only pull request review metadata.
 
 Draft and stacked PRs need explicit merge-readiness semantics: draft PRs are
 planning or preview artifacts until promoted, and stacked PRs remain
@@ -193,8 +190,7 @@ policyflow init .
 Create the first governed workflow instance:
 
 ```bash
-policyflow new-workflow feature --id first-feature --risk LOW
-policyflow validate ai/workflows/features/first-feature.yml
+policyflow validate policyflow/change.example.yml
 ```
 
 See [docs/release-and-upgrade.md](docs/release-and-upgrade.md) for pinning,
@@ -236,79 +232,36 @@ python -m pip install -e .[dev]
 Validate a workflow file:
 
 ```bash
-policyflow validate workflows/examples/example-feature-workflow.yml
+policyflow validate policyflow/change.example.yml
+policyflow validate policyflow/change.example.yml --json
 ```
 
-Create a workflow instance in a Consumer-Repo:
+Bootstrap a Consumer-Repo:
 
 ```bash
-policyflow new-workflow feature --id first-feature --risk LOW
-policyflow new-workflow bugfix --id parser-fix --risk MEDIUM
-policyflow new-workflow architecture-change --id storage-boundary --risk HIGH
+policyflow init .
+policyflow init . --no-github
+policyflow doctor .
+policyflow doctor . --json
 ```
 
 Validate a PR body markdown file against a workflow:
 
 ```bash
-policyflow validate-pr workflows/examples/example-feature-workflow.yml path/to/pull-request.md
+policyflow validate-pr policyflow/change.example.yml path/to/pull-request.md
 ```
 
 Validate PR approval logins against GitHub review metadata:
 
 ```bash
-policyflow validate-pr workflows/examples/example-architecture-change-workflow.yml path/to/pull-request.md --github-reviews path/to/pr-reviews.json
-```
-
-Workflow reporting helpers:
-
-```bash
-policyflow status workflows/examples/example-feature-workflow.yml
-policyflow status workflows/examples/example-feature-workflow.yml --json
-policyflow audit workflows/features
-policyflow audit workflows/features --json
+policyflow validate-pr policyflow/change.example.yml path/to/pull-request.md --github-reviews path/to/pr-reviews.json --allow-pending
 ```
 
 Execution systems are external to PolicyFlow. Local tools, CI jobs, hosted
 agent systems, and provider adapters may produce normalized evidence; PolicyFlow
 validates that evidence against repository governance policy and returns a
-governance decision.
-
-Runner result contract:
-
-- `phase`: must match the requested phase
-- `owner_agent`: must match the expected PolicyFlow owner agent
-- `status`: `completed` or `blocked`
-- `summary`: short result summary
-- `blockers`: required when the phase is blocked unless `summary` explains the block
-- `evidence_updates`: optional object written into the phase evidence block
-- `contract_updates`: optional object written into the phase contract block
-- `handoff`: optional object with `to_phase`, `required_inputs`, and `produced_outputs`
-
-Codex reference adapter exit codes:
-
-- `0`: valid PolicyFlow result JSON was written
-- `2`: Codex CLI command was not found
-- `3`: Codex CLI ran but failed
-- `4`: PolicyFlow input/output contract error
-
-Runtime orchestration helpers:
-
-```bash
-policyflow next-step workflows/examples/example-feature-workflow.yml
-policyflow handoff-status workflows/examples/example-feature-workflow.yml
-policyflow start-phase workflows/examples/example-feature-workflow.yml implementation
-policyflow complete-phase workflows/examples/example-feature-workflow.yml implementation
-policyflow block-phase workflows/examples/example-feature-workflow.yml implementation --reason "runtime contract uncertainty"
-policyflow record-handoff workflows/examples/example-feature-workflow.yml --from-phase implementation --to-phase review --required-input implementation_summary --produced-output review_findings
-```
-
-Managed asset upgrade helpers:
-
-```bash
-policyflow sync .
-policyflow sync . --apply
-policyflow sync . --apply --force
-```
+governance decision. PolicyFlow does not own runner contracts, Codex adapter
+exit codes, runtime phase mutation, or managed asset synchronization.
 
 Successful validation prints:
 
@@ -320,17 +273,13 @@ Validation failures print a readable error summary and return a non-zero exit co
 
 Current validator scope:
 
-- requires `workflow` metadata
-- requires `context.workflow_file`
-- requires `context.risk_level`
-- requires `context.confidence` with `planning`, `implementation`, `tests`, and `residual_uncertainty`
+- requires `change` metadata
+- requires `risk.level`
 - requires `governance.required_reviews`
-- requires `execution.mode`
-- requires `execution.phases`
-- accepts optional `evidence` blocks per workflow phase
-- accepts optional `contracts` blocks per canonical workflow phase
+- requires `governance.human_approval_required`
+- requires `confidence.level`
+- accepts declared evidence blocks produced by external systems
 - accepts optional typed `overrides` entries for approved exceptions
-- accepts optional `runtime` and `handoffs` blocks for lightweight workflow orchestration
 - accepts governance fields primarily from `context` + `governance`
 - accepts equivalent root-level fields only as a backward-compatible fallback
 - allows `LOW`, `MEDIUM`, or `HIGH` risk only

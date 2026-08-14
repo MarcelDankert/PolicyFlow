@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
-import json
 from pathlib import Path
-from typing import Iterable
-import hashlib
 
 import yaml
 
@@ -31,9 +28,10 @@ def bootstrap_consumer_repo(
     *,
     dry_run: bool = False,
     force: bool = False,
+    github: bool = True,
 ) -> BootstrapResult:
     target_root = Path(target)
-    assets = bootstrap_assets()
+    assets = bootstrap_assets(github=github)
     result = BootstrapResult()
 
     for asset in assets:
@@ -59,9 +57,6 @@ def bootstrap_consumer_repo(
         else:
             result.created.append(relative_target)
 
-    if not dry_run:
-        _write_bootstrap_metadata(target_root, assets, force)
-
     return result
 
 
@@ -69,8 +64,8 @@ def packaged_asset_root() -> Path:
     return Path(__file__).resolve().parent / "assets"
 
 
-def bootstrap_assets() -> list[BootstrapAsset]:
-    return _bootstrap_assets(packaged_asset_root())
+def bootstrap_assets(*, github: bool = True) -> list[BootstrapAsset]:
+    return _bootstrap_assets(packaged_asset_root(), github=github)
 
 
 def asset_content(asset: BootstrapAsset) -> str:
@@ -83,202 +78,90 @@ def asset_content(asset: BootstrapAsset) -> str:
     return asset.source.read_text(encoding="utf-8")
 
 
-def asset_digest(asset: BootstrapAsset) -> str:
-    return hashlib.sha256(asset_content(asset).encode("utf-8")).hexdigest()
-
-
-def _bootstrap_assets(source_root: Path) -> list[BootstrapAsset]:
+def _bootstrap_assets(source_root: Path, *, github: bool) -> list[BootstrapAsset]:
     assets: list[BootstrapAsset] = [
-        BootstrapAsset(None, Path("policyflow.yml"), _consumer_config_content()),
-        BootstrapAsset(
-            source_root / "examples" / "project-context.yml",
-            Path("ai/project-context.yml"),
-        ),
+        BootstrapAsset(None, Path("policyflow.yml"), _consumer_config_content(github=github)),
         BootstrapAsset(
             None,
-            Path("ai/workflows/features/starter-workflow.yml"),
-            _starter_workflow_content(),
-        ),
-        BootstrapAsset(
-            source_root / "github" / "PULL_REQUEST_TEMPLATE.md",
-            Path(".github/PULL_REQUEST_TEMPLATE.md"),
-        ),
-        BootstrapAsset(
-            source_root / "github" / "workflows" / "policyflow-governance.yml",
-            Path(".github/workflows/policyflow-governance.yml"),
+            Path("policyflow/change.example.yml"),
+            _change_example_content(),
         ),
     ]
 
-    for source_dir, target_dir in (
-        ("agents", "ai/agents"),
-        ("prompts", "ai/prompts"),
-        ("rules", "ai/rules"),
-        ("workflows/templates", "ai/workflows/templates"),
-        ("github/ISSUE_TEMPLATE", ".github/ISSUE_TEMPLATE"),
-    ):
-        assets.extend(_copy_tree_assets(source_root / source_dir, Path(target_dir)))
+    if github:
+        assets.extend(
+            [
+                BootstrapAsset(
+                    source_root / "github" / "PULL_REQUEST_TEMPLATE.md",
+                    Path(".github/PULL_REQUEST_TEMPLATE.md"),
+                ),
+                BootstrapAsset(
+                    source_root / "github" / "workflows" / "policyflow-governance.yml",
+                    Path(".github/workflows/policyflow.yml"),
+                ),
+            ]
+        )
 
     return assets
 
 
-def _copy_tree_assets(source_dir: Path, target_dir: Path) -> list[BootstrapAsset]:
-    return [
-        BootstrapAsset(path, target_dir / path.relative_to(source_dir))
-        for path in sorted(source_dir.rglob("*"))
-        if path.is_file()
-    ]
-
-
-def _consumer_config_content() -> str:
+def _consumer_config_content(*, github: bool) -> str:
     payload = {
-        "version": 1,
+        "version": 2,
         "paths": {
-            "workflows": "ai/workflows",
-            "prompts": "ai/prompts",
-            "agents": "ai/agents",
-            "rules": "ai/rules",
-            "project_context": "ai/project-context.yml",
+            "changes": "policyflow",
             "pr_template": ".github/PULL_REQUEST_TEMPLATE.md",
-            "issue_templates": ".github/ISSUE_TEMPLATE",
-            "governance_workflow": ".github/workflows/policyflow-governance.yml",
+            "governance_workflow": ".github/workflows/policyflow.yml",
         },
-        "features": {
-            "pr_validation": True,
-            "github_approval_checks": True,
-            "bootstrap_managed_assets": True,
-        },
-        "bootstrap": {
-            "managed_assets": [],
-        },
+        "github": {"enabled": github},
     }
     return yaml.safe_dump(payload, sort_keys=False)
 
 
-def _starter_workflow_content() -> str:
+def _change_example_content() -> str:
     payload = {
-        "workflow": {
-            "id": "starter-workflow",
+        "version": 2,
+        "change": {
+            "id": "example-change",
             "type": "feature",
+            "summary": "Example governed change.",
         },
-        "context": {
-            "workflow_file": "ai/workflows/features/starter-workflow.yml",
-            "risk_level": "MEDIUM",
-            "confidence": {
-                "planning": "Starter scope and non-goals are fixed before implementation.",
-                "implementation": "Starter implementation is bounded to validation of the generated workflow.",
-                "tests": "Starter validation uses PolicyFlow workflow validation as the first test path.",
-                "residual_uncertainty": "Consumer-specific overlays must still be reviewed by the target project.",
-            },
+        "risk": {
+            "level": "medium",
+            "rationale": "Touches application behavior but no protected areas.",
+            "protected_areas": [],
         },
         "governance": {
-            "required_reviews": [
-                "architecture-agent",
-                "review-agent",
-                "qa-agent",
-            ],
+            "required_reviews": ["architecture", "qa"],
             "human_approval_required": False,
-            "escalation_required": False,
-            "protected_areas_touched": ["none"],
         },
-        "execution": {
-            "mode": "strict",
-            "phases": [
-                {"phase": "planning", "state": "completed"},
-                {"phase": "architecture-check", "state": "completed"},
-                {"phase": "implementation", "state": "pending"},
-                {"phase": "review", "state": "pending"},
-                {"phase": "qa", "state": "pending"},
-            ],
+        "confidence": {
+            "level": "medium",
+            "summary": "Example evidence is sufficient for governance validation.",
         },
-        "evidence": {
-            "planning": {
-                "summary": "Starter workflow scope and non-goals were locked before implementation.",
-                "scope_locked": ["starter PolicyFlow validation"],
-                "non_goals_locked": ["no product runtime changes"],
-                "risk_rationale": "MEDIUM risk starter path because architecture, review, and QA are visible.",
-            },
-            "architecture-check": {
-                "decision": "Starter workflow architecture check completed before implementation.",
-                "constraints": ["keep starter validation bounded"],
-                "approval_path": "architecture-agent review",
-            },
-        },
-        "contracts": {
-            "planning": {
-                "owner_agent": "planning-agent",
-                "issue_brief": "Validate the starter PolicyFlow consumer path.",
-                "acceptance_criteria": [
-                    "workflow validates",
-                    "PR body validation can reference workflow evidence",
-                ],
-                "approved_scope": ["starter PolicyFlow validation"],
-                "non_goals": ["no product runtime changes"],
-                "initial_risk_level": "MEDIUM",
-                "protected_areas_touched": ["none"],
-                "confidence_summary": "Starter workflow is stable enough for bootstrap validation.",
-                "escalation_flags": ["none"],
-            },
-            "architecture-check": {
-                "owner_agent": "architecture-agent",
-                "architecture_assessment": "Starter workflow stays inside documentation and validation setup.",
-                "approved_scope": ["starter PolicyFlow validation"],
-                "module_boundaries": ["consumer bootstrap assets"],
-                "contract_impact": "No product contract impact.",
-                "risk_review_decision": "MEDIUM risk starter path approved.",
-                "required_reviews": [
-                    "architecture-agent",
-                    "review-agent",
-                    "qa-agent",
-                ],
-                "implementation_constraints": ["keep starter workflow bounded"],
-            },
-        },
-        "overrides": [
+        "evidence": [
             {
-                "id": "starter-phase-bypass",
-                "type": "phase_bypass",
-                "reason": "Starter workflow keeps review pending while allowing bootstrap validation to demonstrate override visibility.",
-                "scope_impact": "No scope expansion beyond starter validation.",
-                "risk_impact": "MEDIUM risk remains unchanged because compensating controls are explicit.",
-                "mitigations": [
-                    "review findings must still be resolved before QA completion"
-                ],
-                "approved_by": "architecture-agent",
-                "approval_reference": "STARTER-ARCH-OVERRIDE",
-                "review_by": "2099-12-31",
-                "bypassed_phase": "review",
-                "compensating_controls": [
-                    "review findings tracked before QA sign-off"
-                ],
-            }
+                "id": "tests",
+                "type": "test",
+                "source": "ci",
+                "status": "passed",
+                "ref": "ci://example/tests",
+            },
+            {
+                "id": "review",
+                "type": "review",
+                "source": "pull-request",
+                "status": "passed",
+                "ref": "pr://example/review",
+            },
         ],
+        "overrides": [],
     }
     return yaml.safe_dump(payload, sort_keys=False)
 
 
 def _write_asset(asset: BootstrapAsset, destination: Path) -> None:
     destination.write_text(asset_content(asset), encoding="utf-8")
-
-
-def _write_bootstrap_metadata(
-    target_root: Path, assets: Iterable[BootstrapAsset], force: bool
-) -> None:
-    metadata_path = target_root / ".policyflow" / "bootstrap.json"
-    if metadata_path.exists() and not force:
-        return
-
-    metadata_path.parent.mkdir(parents=True, exist_ok=True)
-    managed_assets = [_as_posix(asset.target) for asset in assets]
-    metadata = {
-        "policyflow_version": policyflow_version(),
-        "managed_assets": sorted([*managed_assets, ".policyflow/bootstrap.json"]),
-        "asset_hashes": {
-            _as_posix(asset.target): asset_digest(asset)
-            for asset in sorted(assets, key=lambda item: _as_posix(item.target))
-        },
-        "force": force,
-    }
-    metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
 
 def policyflow_version() -> str:

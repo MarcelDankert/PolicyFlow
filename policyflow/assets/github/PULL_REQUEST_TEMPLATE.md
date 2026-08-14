@@ -3,7 +3,7 @@
 ## Linked Issue
 
 ## Workflow File
-- Expected path format: `ai/workflows/<...>.yml`
+- Expected path format: `policyflow/<change>.yml`
 - This file must have existed before implementation and must have governed the work from the start.
 - This file is expected to have steered the implementation, not to be added only as retrospective documentation.
 - Required workflow phases should have been executed as real working steps, not only described after the work was done.

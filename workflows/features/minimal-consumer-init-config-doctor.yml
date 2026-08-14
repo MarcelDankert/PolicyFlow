@@ -1,0 +1,214 @@
+workflow:
+  id: policyflow-v2-minimal-consumer-init-config-doctor
+  type: feature
+
+context:
+  workflow_file: workflows/features/minimal-consumer-init-config-doctor.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #148 defines the minimal V2 consumer init, config, and doctor cutover after runtime ownership was removed.
+    implementation: Scope is limited to consumer bootstrap footprint, V2 config loading, local doctor readiness checks, and matching smoke tests.
+    tests: Bootstrap, config, doctor, golden consumer, repository docs, and full-suite checks will verify the new consumer path.
+    residual_uncertainty: Broader package asset cleanup and reporting simplification remain Issue #149.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - consumer bootstrap
+    - config schema
+    - doctor readiness
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #148 was selected after Issue #147 merged and branch codex/policyflow-v2-minimal-consumer-init was created from origin/main.
+    scope_locked:
+      - Rebuild init to create policyflow.yml, policyflow/change.example.yml, and optional GitHub governance files only.
+      - Replace consumer_config.py with config.py.
+      - Simplify doctor to local V2 config, schema, PR template, and GitHub workflow readiness.
+      - Remove managed sync metadata from init.
+    non_goals_locked:
+      - No managed asset sync.
+      - No workflow generator product work.
+      - No runner setup.
+      - No GitHub mutation preflight.
+      - No reporting/package-asset cleanup beyond the consumer path.
+    risk_rationale: HIGH because default generated files and config schema are breaking consumer-facing behavior.
+  architecture-check:
+    decision: The V2 consumer path should be understandable from four files and local validation only.
+    constraints:
+      - Do not generate agents, prompts, rules, large workflow templates, runner config, or sync metadata.
+      - Do not check provider CLIs, credentials, mutation permissions, issue mutation, branch mutation, labels, milestones, or merge permissions.
+      - GitHub assets remain read-only validation assets.
+      - External systems remain responsible for execution and evidence production.
+    approval_path: ADR-0004 and Issue #148.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/148
+    scope_confirmed: true
+  implementation:
+    summary: Minimal V2 consumer bootstrap, config loading, and doctor readiness replaced the V1 consumer setup path.
+    changed_files:
+      - policyflow/bootstrap.py
+      - policyflow/config.py
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - docs/getting-started.md
+      - examples/reference-consumer
+  review:
+    outcome: approved
+    findings_summary: Review found no execution ownership, provider setup, managed sync, GitHub mutation preflight, or workflow generation reintroduced.
+    residual_risk: Broader packaged asset pruning remains Issue #149.
+  qa:
+    outcome: passed
+    evidence_summary: Focused and full-suite validation passed locally.
+    checks_run:
+      - pytest -q tests/test_bootstrap.py tests/test_consumer_config.py tests/test_doctor.py tests/test_golden_consumer_smoke.py tests/test_asset_sync.py tests/test_workflow_generator.py tests/test_repository_docs.py
+      - pytest -q
+    unresolved_risks:
+      - Broader packaged asset pruning remains Issue #149.
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Rebuild minimal V2 consumer init, config, and doctor.
+    acceptance_criteria:
+      - policyflow init creates only policyflow.yml, policyflow/change.example.yml, and conditional GitHub PR/workflow files.
+      - policyflow init does not create policyflow.runners.yml, prompts, agents, runtime state, .policyflow/bootstrap.json, or large workflow templates.
+      - policyflow doctor passes on a clean V2 initialized repository.
+      - Doctor does not check provider CLIs, runner commands, credentials, issue mutation, branch mutation, label mutation, milestone mutation, or merge permissions.
+      - Clean consumer V2 golden-path smoke test passes.
+    approved_scope:
+      - policyflow/bootstrap.py
+      - policyflow/config.py
+      - policyflow/consumer_config.py
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - policyflow/assets
+      - tests/test_bootstrap.py
+      - tests/test_consumer_config.py
+      - tests/test_doctor.py
+      - tests/test_golden_consumer_smoke.py
+      - examples
+      - docs/getting-started.md
+    non_goals:
+      - No managed asset sync.
+      - No workflow generator product work.
+      - No runner setup.
+      - No GitHub mutation preflight.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - consumer bootstrap
+      - config schema
+      - doctor readiness
+    confidence_summary: "#148 follows the completed V2 boundary, schema, validation, CLI/API, and runtime removal issues."
+    escalation_flags:
+      - Breaking init footprint
+      - Breaking config schema
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: Minimal init can be cut over now because V2 validation and runtime removal are already merged.
+    approved_scope:
+      - V2 config loader.
+      - Minimal bootstrap assets.
+      - Local doctor readiness checks.
+      - V2 golden consumer smoke.
+    module_boundaries:
+      - config owns policyflow.yml parsing.
+      - bootstrap owns only initial file creation.
+      - doctor owns local readiness diagnostics.
+      - validator owns V2 change schema validation.
+    contract_impact: Consumers with V1 bootstrapped assets keep their files, but V2 init no longer manages or requires them.
+    risk_review_decision: HIGH risk accepted because ADR-0004 requires a deliberate V2 breaking release.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - No hidden sync metadata.
+      - No GitHub mutation preflight.
+      - No execution setup.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Minimal V2 bootstrap, config loading, and doctor readiness replaced the V1 consumer setup path.
+    changed_files:
+      - policyflow/bootstrap.py
+      - policyflow/config.py
+      - policyflow/consumer_config.py
+      - policyflow/doctor.py
+      - policyflow/cli.py
+      - policyflow/sync.py
+      - policyflow/workflow_generator.py
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/examples/policyflow.github-governed.yml
+      - policyflow/assets/examples/policyflow.minimal.yml
+      - policyflow/assets/github/PULL_REQUEST_TEMPLATE.md
+      - docs/getting-started.md
+      - README.md
+      - examples/reference-consumer
+      - tests/test_bootstrap.py
+      - tests/test_consumer_config.py
+      - tests/test_doctor.py
+      - tests/test_golden_consumer_smoke.py
+      - tests/test_asset_sync.py
+      - tests/test_workflow_generator.py
+      - tests/test_repository_docs.py
+      - tests/test_consumer_github_workflow.py
+    test_summary: 67 focused consumer/docs tests and 203 full-suite tests passed locally.
+    docs_updates:
+      - docs/getting-started.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - examples/reference-consumer/README.md
+    known_limitations:
+      - Broader packaged asset pruning remains Issue #149.
+      - Full release documentation rewrite remains a later release-phase task.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: approved
+    review_approval: Scope matches Issue #148 and preserves the V2 governance-only boundary.
+    residual_risk: Broader packaged asset pruning remains Issue #149.
+    qa_focus_areas:
+      - Clean V2 bootstrap output.
+      - Doctor readiness on initialized repositories.
+      - Removed CLI command assertions.
+      - Reference consumer smoke path.
+    test_expectations:
+      - Focused consumer experience tests pass.
+      - Full pytest suite passes.
+  qa:
+    owner_agent: qa-agent
+    qa_report: Focused consumer experience tests and full pytest suite passed locally.
+    quality_gate_status: passed
+    unresolved_risks:
+      - Broader packaged asset pruning remains Issue #149.
+    approval_required: true
+    merge_readiness: true
+
+overrides: []
