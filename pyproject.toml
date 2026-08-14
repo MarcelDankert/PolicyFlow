@@ -1,7 +1,7 @@
 [project]
 name = "policyflow"
-version = "1.0.0"
-description = "Lightweight governance validator for PolicyFlow workflows."
+version = "2.0.0"
+description = "Provider-neutral governance validator for AI-assisted software changes."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [

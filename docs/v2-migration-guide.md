@@ -1,265 +1,199 @@
-# PolicyFlow v2 Migration Guide
+# PolicyFlow V2 Migration Guide
 
-This guide helps Consumer-Repos migrate from early `0.x` workflow shapes to the
-stable v2 governance contract. It is an adoption guide, not a runtime upgrade
-engine: PolicyFlow does not execute workflows, schedule agents, own provider
-credentials, merge pull requests, or replace CI and review systems.
+PolicyFlow 2.0 is a deliberate breaking release. It returns the product to a
+small provider-neutral governance validator.
+
+Use this guide with the full migration matrix:
+
+- [policyflow-v1-v2-migration-matrix.md](planning/policyflow-v1-v2-migration-matrix.md)
 
 ## Migration Scope
 
-The v2 migration covers these governance contracts:
+V2 keeps:
 
-- Workflow Governance: canonical workflow identity, `context`, `governance`,
-  phases, evidence, contracts, runtime state, and handoffs.
-- Loop Governance: declared feedback-loop rules, bounded iteration state, stop
-  conditions, escalation conditions, and evidence references.
-- Evaluation And Metric Governance: declared evaluation categories, required
-  metrics, thresholds, observed values, status, and merge-blocking intent.
-- Human Governance: explicit approval, escalation, override, and arbitration
-  evidence for governed work.
-- Audit Integration: read-only `policyflow.audit.v1` reporting for workflow,
-  loop, evaluation, and human governance summaries.
+- governance configuration
+- risk rules
+- required review validation
+- human approval validation
+- normalized evidence validation
+- override validation
+- PR body validation
+- read-only GitHub review validation
+- merge-readiness decisions
 
-The migration does not remove `0.x` fallback support by itself. Removing
-fallback support requires a separate release decision, release notes, tests, and
-consumer-facing migration checklist.
+V2 removes PolicyFlow ownership of execution, orchestration, providers,
+analytics, and managed asset synchronization.
 
-## Deprecated 0.x Fallbacks
+## V1 To V2 Field Map
 
-The current compatibility window still accepts selected root-level fallback
-fields when canonical blocks are missing. New workflow files should not use
-these fallback fields:
+| V1 Field | V2 Decision | V2 Representation |
+| --- | --- | --- |
+| `context` | REBUILD | `change`, `risk`, `confidence` |
+| `workflow` | RENAME | `change` |
+| `governance.required_reviews` | KEEP | `governance.required_reviews` |
+| `governance.human_approval_required` | KEEP | `governance.human_approval_required` |
+| `governance.protected_areas_touched` | RENAME | `risk.protected_areas` |
+| `governance.approval_evidence` | SIMPLIFY | `evidence[]` item with `type: approval` |
+| `execution` | REMOVE | external workflow tooling |
+| `contracts` | MOVE | external evidence or review system |
+| `runtime` | REMOVE | external runtime state |
+| `handoffs` | MOVE | external runtime or evidence system |
+| `loop_governance` | REMOVE/MOVE | external loop governance or normalized evidence |
+| `evaluation` | SIMPLIFY | normalized evidence |
+| keyed V1 `evidence` | SIMPLIFY | V2 `evidence[]` |
+| `overrides` | KEEP/SIMPLIFY | V2 `overrides[]` |
 
-- `workflow_file`
-- `risk_level`
-- `confidence`
-- `required_reviews`
-- `human_approval_required`
-- `escalation_required`
-- `protected_areas_touched`
-- `approval_evidence`
-
-Treat these fields as legacy input compatibility only. New v2 workflow
-instances should use canonical `context` and `governance` blocks.
-
-## Workflow Governance Migration
-
-Move workflow identity and risk context into `context`, and move review,
-approval, escalation, and protected-area rules into `governance`.
-
-Before:
+## V2 Target Shape
 
 ```yaml
-workflow:
+version: 2
+
+change:
   id: consumer-feature
-  name: Consumer Feature
   type: feature
+  summary: Consumer-facing feature change.
 
-workflow_file: ai/workflows/features/consumer-feature.yml
-risk_level: MEDIUM
-confidence:
-  planning: Goal and scope are understood.
-  implementation: Existing module boundaries are clear.
-  tests: Unit and governance checks are available.
-  residual_uncertainty: No known release blocker.
-required_reviews:
-  - review-agent
-human_approval_required: false
-escalation_required: false
-protected_areas_touched:
-  - none
-```
-
-After:
-
-```yaml
-workflow:
-  id: consumer-feature
-  name: Consumer Feature
-  type: feature
-
-context:
-  workflow_file: ai/workflows/features/consumer-feature.yml
-  risk_level: MEDIUM
-  confidence:
-    planning: Goal and scope are understood.
-    implementation: Existing module boundaries are clear.
-    tests: Unit and governance checks are available.
-    residual_uncertainty: No known release blocker.
+risk:
+  level: medium
+  rationale: Changes user-visible behavior.
+  protected_areas: []
 
 governance:
   required_reviews:
-    - review-agent
+    - review
   human_approval_required: false
-  escalation_required: false
-  protected_areas_touched:
-    - none
-```
 
-Keep `execution`, `evidence`, `contracts`, `overrides`, `runtime`, and
-`handoffs` at their canonical top-level locations.
-
-## Loop Governance Migration
-
-Add `loop_governance` when a workflow has governed feedback loops between
-phases. PolicyFlow validates and reports declared loop governance; it does not
-run the loop or route feedback.
-
-Before:
-
-```yaml
-evidence:
-  review:
-    status: changes_requested
-    summary: Review feedback must be resolved before QA.
-```
-
-After:
-
-```yaml
-loop_governance:
-  loops:
-    - id: review-feedback
-      source_phase: review
-      target_phase: implementation
-      allowed_feedback_sources:
-        - review-findings
-        - qa-findings
-      max_iterations: 3
-      current_iteration: 1
-      status: active
-      stop_conditions:
-        - id: review-findings-resolved
-          description: All blocking review findings are resolved.
-      escalation_conditions:
-        - id: iteration-limit-reached
-          trigger: max_iterations_exceeded
-          escalate_to: human-arbitration
-      evidence_refs:
-        - evidence.review
-```
-
-Use loop governance when a Consumer-Repo needs explicit limits, stop criteria,
-or escalation criteria for repeated agent or reviewer feedback.
-
-## Evaluation And Metric Migration
-
-Add `evaluation` when a workflow declares quality criteria that must be
-reported or validated before merge readiness. Consumer-Repos remain responsible
-for running tests, scanners, benchmarks, and domain evaluations.
-
-Before:
-
-```yaml
-evidence:
-  qa:
-    tests:
-      - pytest -q
-```
-
-After:
-
-```yaml
-evaluation:
-  compliance_status: pending
-  categories:
-    - id: tests
-      required_metrics:
-        - id: tests-passed
-          name: Test suite pass status
-          category: tests
-          source: ci
-          required: true
-          thresholds:
-            operator: equals
-            value: passed
-          actual_value: pending
-          status: pending
-          evidence_refs:
-            - evidence.qa
-          blocks_merge: true
-```
-
-For HIGH-risk workflows that declare Evaluation Governance, include the
-risk-required categories and at least one required metric per required category.
-Metric Governance lives inside `evaluation.required_metrics`; PolicyFlow
-validates declarations and evidence references, but it does not calculate all
-metrics.
-
-## Human Governance Migration
-
-For approval-gated workflows, `governance.approval_evidence is not sufficient`
-by itself. It declares which evidence path must exist. The workflow must also
-provide the actual `evidence.approval` object and the PR body must reference it.
-
-Before:
-
-```yaml
-governance:
-  human_approval_required: true
-  approval_evidence:
-    - evidence.approval
-```
-
-After:
-
-```yaml
-governance:
-  human_approval_required: true
-  approval_evidence:
-    - evidence.approval
+confidence:
+  level: medium
+  summary: CI and review evidence are available.
 
 evidence:
-  approval:
-    approved_by: MarcelDankert
-    reference: PR approval required before merge
-    scope_confirmed: true
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://runs/123
+  - id: review
+    type: review
+    source: pull-request
+    status: passed
+    ref: pr://123/review
+
+overrides: []
 ```
 
-Human approval evidence records the declared approval claim. It does not replace
-the actual GitHub review or organizational approval rule.
+## Migration Steps
 
-## Audit Integration Migration
+1. Upgrade local and CI pins to `policyflow==2.0.0`.
+2. Run `policyflow init . --no-github` or `policyflow init .` in a clean branch
+   to inspect the V2 consumer footprint.
+3. Create or update `policyflow.yml` with `version: 2`.
+4. Replace V1 workflow documents with V2 governance files under `policyflow/`.
+5. Move risk and protected-area declarations into `risk`.
+6. Move required reviews and human approval requirements into `governance`.
+7. Convert test, review, security, approval, and exception artifacts into
+   normalized `evidence[]` entries.
+8. Convert valid governance exceptions into V2 `overrides[]`.
+9. Move execution, runtime, handoff, loop execution, metric calculation,
+   provider, runner, agent, and prompt responsibilities outside PolicyFlow.
+10. Run `policyflow doctor .`.
+11. Run `policyflow validate policyflow/<change>.yml --json`.
+12. Run `policyflow validate-pr policyflow/<change>.yml pr-body.md`.
 
-Consumers that read audit output should target `policyflow.audit.v1` and read
-`schema_version` before interpreting the payload.
+## Removed CLI Commands
 
-```json
-{
-  "schema_version": "policyflow.audit.v1",
-  "summary": {
-    "workflow_governance": {},
-    "loop_governance": {},
-    "evaluation_governance": {},
-    "human_governance": {}
-  }
-}
+Remove these commands from local scripts and CI:
+
+- `policyflow new-workflow`
+- `policyflow sync`
+- `policyflow status`
+- `policyflow audit`
+- `policyflow evaluation-report`
+- `policyflow loop-report`
+- `policyflow run-phase`
+- `policyflow start-phase`
+- `policyflow complete-phase`
+- `policyflow block-phase`
+- `policyflow next-step`
+- `policyflow handoff-status`
+- `policyflow record-handoff`
+- `policyflow validate-github-approvals`
+
+New owners:
+
+- scaffolding: repository templates or external project tooling
+- execution: CI, local scripts, agent runtimes, or provider tools
+- reporting aggregation: external compliance/reporting systems using validation
+  JSON
+- managed asset upgrades: release notes and normal repository review
+
+## Removed Public API
+
+Remove imports for:
+
+- `get_workflow_status`
+- `audit_workflows`
+- phase mutation helpers
+- handoff mutation helpers
+- runner helpers
+- sync helpers
+- workflow generator helpers
+
+Use `inspect_workflow_v2`, `validate_workflow_v2`, `validate_pr_body`, and
+`validate_github_approvals`.
+
+## Bootstrapped Consumer Repositories
+
+Existing V1 bootstrapped repositories may contain:
+
+- `ai/`
+- `.policyflow/bootstrap.json`
+- `policyflow.runners.yml`
+- prompt assets
+- agent assets
+- rule assets
+- workflow template trees
+- GitHub issue templates
+
+PolicyFlow 2.0 no longer manages or requires those files. Keep, migrate, or
+delete them according to the consumer repository's own process. They are not
+part of the V2 package asset source of truth.
+
+## GitHub Migration
+
+The generated V2 GitHub workflow is read-only. It reads the PR body and PR
+reviews, then runs `policyflow validate-pr`.
+
+PolicyFlow does not check GitHub mutation permissions and does not create
+branches, issues, labels, milestones, PRs, approvals, or merges.
+
+## Reporting Migration
+
+Consumers parsing `policyflow.audit.v1` should move to
+`policyflow.validation.v2` JSON:
+
+```bash
+policyflow validate policyflow/<change>.yml --json
+policyflow validate-pr policyflow/<change>.yml pr-body.md --json
 ```
 
-Treat new top-level and per-workflow audit fields as additive unless a future
-release note declares a breaking audit contract. Audit JSON remains a reporting
-contract: it does not execute workflows, fetch external artifacts, approve PRs,
-or manage credentials.
+Read:
 
-## Validation Checklist
+- `decision`
+- `merge_ready`
+- `merge_readiness.ready`
+- `merge_readiness.explanation`
+- `merge_readiness.blockers`
+- `errors`
+- `warnings`
 
-Use this checklist when upgrading a Consumer-Repo:
+PolicyFlow no longer owns audit dashboards, evaluation dashboards, loop
+reports, productivity metrics, model comparison, team performance metrics, or
+engineering forecasting.
 
-1. Pin the target package version in local setup, CI, and GitHub Actions.
-2. Run `policyflow doctor .` to inspect the Consumer-Repo setup.
-3. Run `policyflow sync .` to preview managed asset updates.
-4. Move deprecated root-level fallback fields into `context` and `governance`.
-5. Add `loop_governance` for declared feedback loops that need stop conditions,
-   escalation_conditions, and `evidence_refs`.
-6. Add `evaluation` for declared quality gates and required_metrics.
-7. Add `evidence.approval` for approval-gated workflows.
-8. Run `policyflow validate ai/workflows/features/<workflow>.yml`.
-9. Run `policyflow validate-pr ai/workflows/features/<workflow>.yml pr-body.md`
-   for active pull requests.
-10. Run `policyflow audit ai/workflows --json` for audit integrations.
-11. Run `policyflow evaluation-report ai/workflows --json` when downstream
-    reporting depends on Evaluation Governance.
-12. Run `policyflow loop-report ai/workflows --json` when downstream reporting
-    depends on Loop Governance.
-13. Review release notes before removing any Consumer-Repo fallback usage.
+## Migration Command
 
+PolicyFlow 2.0 does not add `policyflow migrate`. The migration surface is
+bounded documentation, diagnostics, and tests. A migration command should be
+considered only if a future issue proves enough repeated migration work to
+justify the maintenance cost.

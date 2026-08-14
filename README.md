@@ -6,221 +6,45 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Typed](https://img.shields.io/badge/typed-yes-brightgreen.svg)](pyproject.toml)
 
-PolicyFlow is a reusable governance framework for agent-assisted software
-delivery.
+PolicyFlow 2.0 is a small provider-neutral policy-as-code governance validator
+for AI-assisted software development.
 
-It provides policy-as-code style documentation, risk-aware workflow templates,
-human approval gates, evidence validation, and GitHub governance patterns that a
-target project can adopt without building its own process layer from scratch.
+PolicyFlow starts when a repository declares governance policy and evidence for
+a software change. PolicyFlow ends when it returns a governance decision:
+`PASS`, `WARN`, or `BLOCK`.
 
-## PolicyFlow 2.0 Architecture Decision
+PolicyFlow validates governance. It does not execute work.
 
-PolicyFlow 2.0 returns to a small provider-neutral policy-as-code governance
-core. It validates declared governance policy and evidence, validates pull
-request claims, validates GitHub approval evidence, and produces a
-merge-readiness decision. It does not execute work.
+## Product Boundary
+
+PolicyFlow answers governance questions:
+
+- Is this change valid under repository governance policy?
+- What risk level applies?
+- Which reviews are required?
+- Is human approval required?
+- Is required evidence present?
+- Are exceptions valid?
+- Is the PR governance-ready?
+- Is the change merge-ready from a governance perspective?
+
+PolicyFlow does not own agent execution, runner configuration, prompt
+management, provider adapters, model routing, scheduling, queues, memory,
+workflow engines, test execution, security scan execution, metric calculation,
+productivity analytics, issue creation, branch creation, PR creation, label or
+milestone mutation, merge automation, or managed asset synchronization.
 
 The final V2 boundary is defined in
 [ADR-0004: PolicyFlow 2.0 Returns To Governance Core](docs/adr/0004-policyflow-v2-return-to-governance-core.md).
-Runtime execution, runner configuration, Codex/Copilot/provider adapters,
-prompt management, handoff orchestration, model routing, scheduling, queues,
-memory, analytics, GitHub mutation, merge automation, and managed asset
-synchronization are outside the V2 core.
 
-## What PolicyFlow Is
-
-- A template repository for agentic SDLC governance
-- A set of reusable rules, workflows, prompts, and GitHub intake patterns
-- A way to make agent-driven work more reviewable, risk-aware, and auditable
-- A governance validator for declared policy, evidence, human approval, and PR
-  merge readiness
-
-## What PolicyFlow Is Not
-
-- Not a product repository
-- Not a full orchestration platform or hosted agent runtime
-- Not a substitute for target-project architecture, contracts, or domain context
-
-PolicyFlow is not a hosted scheduler, merge bot, or provider credential manager.
-
-## Why It Exists
-
-Many teams want to use coding agents, review agents, and workflow automation, but they lack a consistent governance layer. PolicyFlow exists to separate reusable process logic from target-project domain logic so teams can adopt agent workflows with less ambiguity and less hidden risk.
-
-## Core Concepts
-
-- Policy-as-code
-- Risk-aware workflows
-- Phase evidence schema
-- Typed workflow overrides
-- Confidence governance
-- Human-in-the-loop controls
-- GitHub governance templates
-
-## Repository Structure
-
-```text
-PolicyFlow/
-|-- docs/
-|-- rules/
-|-- agents/
-|-- workflows/
-|-- prompts/
-|-- github/
-`-- examples/
-```
-
-## Repository Agent Guidance
-
-See [AGENTS.md](AGENTS.md) for PolicyFlow repository guidance for Codex and
-other coding agents working on this framework.
-
-## How To Use It In A Consumer-Repo
-
-Install a pinned PolicyFlow release:
+## Install
 
 ```bash
-python -m pip install policyflow==1.0.0
+python -m pip install policyflow==2.0.0
 ```
 
-Release links: [PyPI](https://pypi.org/project/policyflow/1.0.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0).
-
-Bootstrap the standard Consumer-Repo layout:
-
-```bash
-policyflow init .
-```
-
-Validate the local setup before the first governed change:
-
-```bash
-policyflow doctor .
-```
-
-Then make the minimal project-specific edits:
-
-1. choose local-only or GitHub-governed validation in `policyflow.yml`
-2. replace `policyflow/change.example.yml` with governance evidence for real work
-3. keep execution, runner setup, prompts, provider credentials, and generated
-   evidence production outside PolicyFlow
-
-See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
-Quickstart, including V2 change validation and optional read-only GitHub PR
-checks.
-
-Reporting is documented in [docs/audit-reporting.md](docs/audit-reporting.md).
-It explains V2 validation JSON, merge-readiness output, removed report commands,
-and the boundary between compliance explanation and runtime execution.
-
-Evaluation Governance is documented in
-[docs/evaluation-governance.md](docs/evaluation-governance.md). It explains how
-Consumer-Repos can declare tests, coverage, review, security, and performance
-criteria while keeping CI, scanners, test tooling, benchmark tooling, and human
-review execution external to PolicyFlow.
-
-Loop Governance is documented in
-[docs/loop-governance.md](docs/loop-governance.md). It explains how
-Consumer-Repos can declare bounded review, QA, security, human arbitration, and
-Querypilot-inspired SQL safety feedback loops while keeping loop execution,
-scheduling, message routing, memory, and provider runtimes external to
-PolicyFlow.
-
-For `HIGH` risk changes with `governance.human_approval_required: true`, the
-PR body should reference the relevant approval evidence item in the V2
-`evidence` list. GitHub approval validation compares the declared required
-human approver with read-only pull request review metadata.
-
-Draft and stacked PRs need explicit merge-readiness semantics: draft PRs are
-planning or preview artifacts until promoted, and stacked PRs remain
-dependency-bound until their upstream dependencies are satisfied. If a PR body
-edit fixes PolicyFlow metadata, rerun the failed PolicyFlow job or push a new
-commit because GitHub may not start a new Actions run for the body edit alone.
-When GitHub approval state changes, the governance workflow reruns on
-`pull_request_review` submitted and dismissed events instead of waiting inside a
-long-running CI job.
-
-## Workflow-First Delivery Standard
-
-PolicyFlow treats `workflow-first delivery` as the required default process for all consumer repositories that adopt these templates. The workflow is not retrospective paperwork. It is created first and then used to steer implementation, review, and merge readiness.
-
-Required order for every consumer repo:
-
-1. Create the workflow file first.
-2. Lock scope, non-goals, and risk before implementation.
-3. Declare the workflow execution state using canonical phases and states.
-4. Execute the workflow phases as real work: planning first, then architecture-check as required by risk, then implementation, review, and QA.
-5. Record machine-readable role contracts as phases complete so each canonical phase has an explicit owner agent and output contract.
-6. Record typed overrides only for explicit approved exceptions, and make them visible in the PR when they exist.
-7. Keep the execution state aligned with the current workflow phase, runtime status, and recorded handoffs.
-8. Implement inside the declared workflow.
-9. Allow small workflow refinements in the same PR when they stay within the same scope and risk posture.
-10. Do not silently expand scope, risk, or non-goals.
-11. Review the PR body, delivery evidence, declared overrides, and runtime handoffs against the workflow before merge.
-
-Pragmatic-strict transition mode:
-
-- the workflow file is mandatory from the start of the work
-- the workflow guides the work from the beginning, not only in the PR write-up
-- the workflow declares canonical execution phases with explicit states such as `pending`, `in_progress`, `completed`, and `blocked`
-- workflow phases are operational steps, not only descriptive labels
-- `planning`, `architecture-check`, `review`, and `qa` should be visible in how the work is executed and evidenced
-- completed canonical phases should also carry matching machine-readable role contracts with the expected owner agent
-- approved exceptions should be modeled as typed workflow overrides and explicitly confirmed in the PR
-- runtime status and handoffs should be persisted as the workflow advances
-- small same-scope clarifications in the same PR are allowed
-- hidden scope, risk, or non-goal expansion is not allowed
-- PolicyFlow documents, templates, and PR checks make the workflow visible and lightly enforceable
-
-## Example Installation Approach
-
-Install a pinned PolicyFlow release in the target project:
-
-```bash
-python -m pip install policyflow==1.0.0
-```
-
-Then run bootstrap:
-
-```bash
-policyflow init .
-```
-
-Create the first governed workflow instance:
-
-```bash
-policyflow validate policyflow/change.example.yml
-```
-
-See [docs/release-and-upgrade.md](docs/release-and-upgrade.md) for pinning,
-release note, and upgrade guidance.
-
-## Current Status
-
-- Template and governance framework
-- Lightweight governance validator
-- Workflow execution state schema
-- Phase evidence schema
-- Transition and gate validator
-- PR evidence mapping
-- GitHub governance workflow for PolicyFlow itself
-- Agent role contract schema for canonical workflow phases
-- Typed workflow override schema with PR visibility
-- Runtime and handoff orchestration state with CLI mutation support
-- Risk-review matrix enforcement
-- Approval evidence enforcement for `HIGH` risk
-- Protected-area escalation enforcement
-- Lightweight runtime workflow orchestration with direct YAML mutation commands
-
-## Validator
-
-PolicyFlow now includes a lightweight governance validator for workflow YAML files.
-
-Consumer install:
-
-```bash
-python -m pip install policyflow==1.0.0
-```
+Release target links: [PyPI](https://pypi.org/project/policyflow/2.0.0/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.0).
 
 Developer install from a source checkout:
 
@@ -228,152 +52,147 @@ Developer install from a source checkout:
 python -m pip install -e .[dev]
 ```
 
-Validate a workflow file:
+## CLI
 
-```bash
-policyflow validate policyflow/change.example.yml
-policyflow validate policyflow/change.example.yml --json
-```
-
-Bootstrap a Consumer-Repo:
+The V2 CLI is intentionally small:
 
 ```bash
 policyflow init .
-policyflow init . --no-github
+policyflow validate policyflow/change.example.yml
+policyflow validate-pr policyflow/change.example.yml pr-body.md
 policyflow doctor .
+```
+
+Useful JSON paths:
+
+```bash
+policyflow validate policyflow/change.example.yml --json
+policyflow validate-pr policyflow/change.example.yml pr-body.md --json
 policyflow doctor . --json
 ```
 
-Validate a PR body markdown file against a workflow:
+Read-only GitHub review validation uses review JSON produced outside
+PolicyFlow:
 
 ```bash
-policyflow validate-pr policyflow/change.example.yml path/to/pull-request.md
+policyflow validate-pr policyflow/change.example.yml pr-body.md --github-reviews pr-reviews.json --allow-pending
 ```
 
-Validate PR approval logins against GitHub review metadata:
+Removed V1 commands include `new-workflow`, `sync`, `status`, `audit`,
+`evaluation-report`, `loop-report`, runtime phase mutation commands, and the
+standalone `validate-github-approvals` command.
 
-```bash
-policyflow validate-pr policyflow/change.example.yml path/to/pull-request.md --github-reviews path/to/pr-reviews.json --allow-pending
+## V2 Schema
+
+New governance files use:
+
+```yaml
+version: 2
+
+change:
+  id: example-change
+  type: feature
+  summary: Example change.
+
+risk:
+  level: medium
+  rationale: Example risk rationale.
+  protected_areas: []
+
+governance:
+  required_reviews: []
+  human_approval_required: false
+
+confidence:
+  level: medium
+  summary: Example confidence summary.
+
+evidence:
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://example/tests
+
+overrides: []
 ```
 
-Execution systems are external to PolicyFlow. Local tools, CI jobs, hosted
-agent systems, and provider adapters may produce normalized evidence; PolicyFlow
-validates that evidence against repository governance policy and returns a
-governance decision. PolicyFlow does not own runner contracts, Codex adapter
-exit codes, runtime phase mutation, or managed asset synchronization.
+Every schema field must affect a governance decision. Runtime state, active
+agents, runner status, handoff state, provider-specific fields, model-specific
+fields, loop iteration state, and analytics values are not V2 governance input.
 
-Successful validation prints:
+## Consumer Footprint
 
-```text
-[SUCCESS] Workflow validation passed.
-```
+`policyflow init .` creates only:
 
-Validation failures print a readable error summary and return a non-zero exit code.
+- `policyflow.yml`
+- `policyflow/change.example.yml`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/workflows/policyflow.yml`
 
-Current validator scope:
+Use `policyflow init . --no-github` for local-only validation. That creates only
+`policyflow.yml` and `policyflow/change.example.yml`.
 
-- requires `change` metadata
-- requires `risk.level`
-- requires `governance.required_reviews`
-- requires `governance.human_approval_required`
-- requires `confidence.level`
-- accepts declared evidence blocks produced by external systems
-- accepts optional typed `overrides` entries for approved exceptions
-- accepts governance fields primarily from `context` + `governance`
-- accepts equivalent root-level fields only as a backward-compatible fallback
-- allows `LOW`, `MEDIUM`, or `HIGH` risk only
-- requires workflow confidence to be explicit before implementation starts and treats PR `Confidence summary` as a summary of `context.confidence`
-- requires `governance.required_reviews` to be a non-empty list
-- allows execution states `pending`, `in_progress`, `completed`, and `blocked`
-- validates canonical evidence blocks when present:
-  - `planning`: `summary`, `scope_locked`, `non_goals_locked`, `risk_rationale`
-  - `architecture-check`: `decision`, `constraints`, `approval_path`
-  - `review`: `outcome`, `findings_summary`, `residual_risk`
-  - `qa`: `outcome`, `evidence_summary`, `unresolved_risks`
-  - `approval`: `approved_by`, `reference`, `scope_confirmed`
-- validates canonical role contracts when present:
-  - `planning`: `owner_agent`, `issue_brief`, `acceptance_criteria`, `approved_scope`, `non_goals`, `initial_risk_level`, `protected_areas_touched`, `confidence_summary`, `escalation_flags`
-  - `architecture-check`: `owner_agent`, `architecture_assessment`, `approved_scope`, `module_boundaries`, `contract_impact`, `risk_review_decision`, `required_reviews`, `implementation_constraints`
-  - `implementation`: `owner_agent`, `implementation_summary`, `changed_files`, `test_summary`, `docs_updates`, `known_limitations`, `unresolved_questions`
-  - `review`: `owner_agent`, `review_findings`, `required_fixes`, `severity`, `approval_status`, `review_approval`, `residual_risk`, `qa_focus_areas`, `test_expectations`
-  - `qa`: `owner_agent`, `qa_report`, `quality_gate_status`, `unresolved_risks`, `approval_required`, `merge_readiness`
-- validates typed overrides when present:
-  - shared fields: `id`, `type`, `reason`, `scope_impact`, `risk_impact`, `mitigations`, `approved_by`, `approval_reference`, exactly one of `review_by` or `expires_on`
-  - `scope_exception`: `affected_scope_items`
-  - `risk_exception`: `original_risk`, `effective_risk`
-  - `phase_bypass`: `bypassed_phase`, `compensating_controls`
-  - `approval_bypass`: `approval_target`, `compensating_controls`
-  - `non_goal_exception`: `affected_non_goals`
-  - override lifecycle: `active` until the declared review/expiry window closes, `expiring` during the last 7 days before it closes, `revalidation_required` after it has passed
-- validates runtime orchestration when present:
-  - `runtime.status`: `idle`, `in_progress`, `handoff_pending`, `blocked`, `completed`
-  - `runtime.current_phase`, `runtime.active_agent`, `runtime.last_transition`, `runtime.block_reason`
-  - `handoffs`: `from_phase`, `to_phase`, `status`, `required_inputs`, `produced_outputs`, `blockers`, `override_refs`
-- enforces the first execution transition gates:
-  - `implementation` cannot start before `planning` is completed
-  - `MEDIUM`/`HIGH` implementation cannot start before `architecture-check` is completed
-  - `review` cannot start before `implementation` is completed
-  - `qa` cannot start before `review` is completed
-  - `approval` cannot start before `qa` is completed
-- requires matching evidence blocks for completed evidence-bearing phases
-- requires matching role contract blocks for completed canonical agent-owned phases
-- requires approval metadata for `risk_exception` and `approval_bypass`
-- emits non-blocking warnings for `expiring` overrides and blocks workflows that reach `revalidation_required`
-- requires PR-visible override references for declared workflow overrides
-- requires runtime `handoff_pending` states to point to an open pending handoff
-- blocks handoffs that still reference overrides requiring revalidation
-- requires concrete handoff input and output artifact lists
-- requires canonical execution phases by risk:
-  - `LOW`: `planning`, `implementation`, `review`
-  - `MEDIUM`: `planning`, `architecture-check`, `implementation`, `review`, `qa`
-  - `HIGH`: `planning`, `architecture-check`, `implementation`, `review`, `qa`, `approval`
-- enforces minimum `required_reviews` from `rules/risk-review-matrix.md`
-- requires `governance.human_approval_required: true` for `HIGH` risk workflows
-- requires non-empty `governance.approval_evidence` for `HIGH` risk workflows
-- requires workflows that touch protected areas to:
-  - use `HIGH` risk
-  - set `governance.escalation_required: true`
-- treats `governance.protected_areas_touched: [none]` as an explicit no-protected-area case
-- validates PR body markdown files against the existing PR template with:
-  - a non-empty `Linked Issue` section
-  - a `Workflow File` entry matching `context.workflow_file`
-  - a `Declared risk level` entry matching `context.risk_level`
-  - a `Human approval login if required` entry matching `evidence.approval.approved_by` for approval-gated workflows
-  - override `Approved by login` entries matching workflow `approved_by` logins when present
-  - evidence references that point to existing workflow evidence blocks
-  - override references that point to existing typed workflow overrides
-  - a checked confirmation that the linked workflow governed the change
-  - a checked confirmation that the workflow governed the work from the start, not only as a retrospective reference
-  - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
-  - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
-- validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
-- returns validation JSON with `decision`, `merge_ready`, `merge_readiness`, errors, and warnings
-- keeps reporting to compliance explanation rather than audit dashboards, productivity analytics, or loop/evaluation reports
-- keeps execution, runner setup, provider credentials, managed asset synchronization, and GitHub mutation outside PolicyFlow
+PolicyFlow does not generate agents, prompts, runner configs, runtime state,
+managed sync metadata, large workflow template trees, provider adapters, or
+product-specific examples.
 
-PolicyFlow is a governance validator, not a runtime orchestration layer, scheduler, agent runtime, or merge bot.
+## GitHub Boundary
 
-## Compatibility
+GitHub is an evidence source, not a PolicyFlow control plane.
 
-Follow the canonical workflow schema and migration guidance in
-[docs/schema-compatibility.md](docs/schema-compatibility.md). Stable public
-imports are documented in [docs/public-api.md](docs/public-api.md).
+The generated GitHub workflow uses read-only `contents` and `pull-requests`
+permissions. It reads the PR body and review metadata, then runs
+`policyflow validate-pr`.
+
+PolicyFlow does not create branches, create issues, request reviews, approve
+pull requests, mutate labels, assign milestones, merge pull requests, or check
+provider credentials.
+
+## Reporting
+
+Reporting is validation output:
+
+- human-readable diagnostics
+- `policyflow.validation.v2` JSON
+- `merge_ready`
+- `merge_readiness.ready`
+- `merge_readiness.explanation`
+- `merge_readiness.blockers`
+
+PolicyFlow does not provide productivity analytics, evaluation dashboards, loop
+performance reports, model comparison, team performance metrics, or engineering
+forecasting. See [docs/audit-reporting.md](docs/audit-reporting.md).
+
+## Public API
+
+Stable imports are documented in [docs/public-api.md](docs/public-api.md).
+The public API is governance-only: V2 validation, PR body validation, and
+read-only GitHub approval validation.
+
+## Migration
+
+V2 is a deliberate breaking release. Migration guidance:
+
+- [docs/schema-compatibility.md](docs/schema-compatibility.md)
+- [docs/v2-migration-guide.md](docs/v2-migration-guide.md)
+- [docs/planning/policyflow-v1-v2-migration-matrix.md](docs/planning/policyflow-v1-v2-migration-matrix.md)
+- [docs/release-and-upgrade.md](docs/release-and-upgrade.md)
+
+V1 runtime, handoff, contract, loop, evaluation, audit, sync, workflow
+generation, runner, agent, prompt, and provider-adapter responsibilities move
+outside PolicyFlow core. External systems may produce normalized evidence that
+PolicyFlow validates.
+
+## Repository Guidance
+
+See [AGENTS.md](AGENTS.md) for PolicyFlow repository guidance for Codex and
+other coding agents working on this repository.
 
 ## Project Status
 
-PolicyFlow `1.0.0` is published on
-[PyPI](https://pypi.org/project/policyflow/1.0.0/) with a matching
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v1.0.0).
-Use `python -m pip install policyflow==1.0.0` for the published Consumer-Repo
-path.
-
-## Future Roadmap
-
-- V2 decision: [ADR-0004: PolicyFlow 2.0 Returns To Governance Core](docs/adr/0004-policyflow-v2-return-to-governance-core.md)
-- strategic background: [Agentic Governance Roadmap](docs/roadmap-agentic-governance.md)
-  and [Architecture Decision Records](docs/adr/)
-- release publishing automation after packaged release checks are proven
-- additional consumer validation beyond AurumEdge once more repos adopt the workflow
+PolicyFlow `2.0.0` is prepared as the governance-core release target. Use
+`python -m pip install policyflow==2.0.0` after the release is published.
 
 ## License
 

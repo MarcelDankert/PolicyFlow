@@ -1,0 +1,234 @@
+workflow:
+  id: policyflow-v2-release-docs-readiness
+  type: feature
+
+context:
+  workflow_file: workflows/features/v2-release-docs-readiness.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #150 defines the final V2 documentation, migration, and release-readiness cutover after all previous V2 implementation issues merged.
+    implementation: Scope is limited to release metadata, documentation rewrite, migration guidance, examples/docs consistency, and release-readiness tests.
+    tests: Repository docs tests, golden consumer smoke, release packaging tests, consumer GitHub workflow tests, active workflow validation, and full suite cover the release path.
+    residual_uncertainty: Actual PyPI publishing and GitHub release creation remain external release-operator actions after review.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+    - human approval
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - release metadata
+    - upgrade compatibility
+    - public documentation
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #150 was selected after Issue #149 merged and branch codex/policyflow-v2-release-docs was created from main.
+    scope_locked:
+      - Rewrite README around governance-only V2.
+      - Rewrite Getting Started for ten-minute adoption and package parity.
+      - Rewrite public API docs.
+      - Rewrite schema compatibility and V2 migration guide.
+      - Update release notes and packaging metadata for V2.0.0.
+      - Run final release readiness and smoke tests.
+    non_goals_locked:
+      - No new product features.
+      - No migration command.
+      - No runtime or analytics docs as core product docs.
+      - No PyPI publish or GitHub release creation in this PR.
+    risk_rationale: HIGH because release metadata and upgrade compatibility are protected release surfaces.
+  architecture-check:
+    decision: The final release docs should describe PolicyFlow as a governance validator only and route removed V1 responsibilities to external systems.
+    constraints:
+      - Do not reintroduce execution ownership.
+      - Do not document removed CLI commands as active V2 usage.
+      - Do not document reporting, analytics, loop execution, or evaluation dashboards as core product features.
+      - Keep GitHub read-only from PolicyFlow's perspective.
+      - Treat 2.0.0 publishing as a later release-operator action.
+    approval_path: ADR-0004 and Issue #150.
+  implementation:
+    summary: Release metadata and public docs now target PolicyFlow 2.0.0 governance-core readiness.
+    changed_files:
+      - README.md
+      - docs/getting-started.md
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - CHANGELOG.md
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_repository_docs.py
+  review:
+    outcome: approved
+    findings_summary: Self-review found the rewritten docs describe V2 as governance-only, identify removed commands and APIs, and keep execution, analytics, and GitHub mutation external.
+    residual_risk: Actual package publication and GitHub release creation still require release-operator credentials and are outside this PR.
+  qa:
+    outcome: passed
+    evidence_summary: Targeted release docs, golden consumer, release packaging, consumer GitHub workflow tests and full suite passed locally.
+    checks_run:
+      - pytest -q tests/test_repository_docs.py tests/test_golden_consumer_smoke.py tests/test_release_packaging.py tests/test_consumer_github_workflow.py
+      - pytest -q
+    unresolved_risks:
+      - Release publication credentials are external.
+      - PyPI and GitHub Release creation are not performed in this PR.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/150
+    scope_confirmed: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Rewrite docs, migration guide, and prepare V2 release.
+    acceptance_criteria:
+      - README explains PolicyFlow 2.0 in governance-only terms.
+      - Getting Started covers install, init, validate, validate-pr, and doctor in one concise path.
+      - Migration guide references the V1 to V2 migration matrix.
+      - Release notes list removed commands, removed public API symbols, removed fields, and external ownership guidance.
+      - Full test suite passes.
+      - V2 golden consumer smoke test passes.
+    approved_scope:
+      - README.md
+      - docs/getting-started.md
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - CHANGELOG.md
+      - examples
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_repository_docs.py
+    non_goals:
+      - No new product features.
+      - No migration command.
+      - No runtime or analytics docs as core product docs.
+      - No PyPI publish or GitHub release creation in this PR.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - release metadata
+      - upgrade compatibility
+      - public documentation
+    confidence_summary: "#150 follows the completed V2 architecture, schema, validation, CLI, runtime removal, consumer init, reporting, and packaged asset cleanup issues."
+    escalation_flags:
+      - Release metadata changed.
+      - Upgrade documentation changed.
+      - Version changed to 2.0.0.
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The docs cutover aligns with ADR-0004 and avoids preserving removed V1 runtime, reporting, analytics, and managed asset responsibilities as V2 product behavior.
+    approved_scope:
+      - Public docs rewrite.
+      - Migration guide rewrite.
+      - Release guide rewrite.
+      - Changelog and version metadata update.
+      - Release readiness test updates.
+    module_boundaries:
+      - docs own consumer-facing release guidance.
+      - pyproject and __init__ own release version metadata.
+      - bootstrap owns fallback package version.
+      - GitHub workflow assets own consumer package pin defaults.
+    contract_impact: Consumers should pin PolicyFlow 2.0.0 and migrate to V2 governance files and validation JSON.
+    risk_review_decision: HIGH risk accepted because this is the final V2 breaking release preparation issue.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+      - human approval
+    implementation_constraints:
+      - Keep release publishing external.
+      - Do not add migration command.
+      - Keep GitHub read-only.
+      - Do not reintroduce runtime or analytics ownership.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Rewrote public V2 docs, migration guide, release guide, changelog, version metadata, GitHub workflow pins, and repository documentation tests for the 2.0.0 governance-core release target.
+    changed_files:
+      - README.md
+      - docs/getting-started.md
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - CHANGELOG.md
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/docs/getting-started.md
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - tests/test_repository_docs.py
+      - workflows/features/v2-release-docs-readiness.yml
+    test_summary: Targeted release-readiness tests and the full 176-test suite passed locally.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/public-api.md
+      - docs/schema-compatibility.md
+      - docs/v2-migration-guide.md
+      - docs/release-and-upgrade.md
+      - CHANGELOG.md
+    known_limitations:
+      - Actual package publication is not performed by PolicyFlow.
+      - GitHub release creation remains a release-operator action.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: approved
+    review_approval: Documentation and release metadata match Issue #150 and preserve the V2 governance-only boundary.
+    residual_risk: Release publication remains external and requires operator credentials.
+    qa_focus_areas:
+      - README governance-only positioning.
+      - Migration guide matrix reference and removed command/API coverage.
+      - Release guide version and artifact checklist.
+      - Getting Started packaged doc parity.
+      - Golden consumer smoke path.
+    test_expectations:
+      - Repository docs tests pass.
+      - Golden consumer smoke passes.
+      - Release packaging tests pass.
+      - Full pytest suite passes.
+  qa:
+    owner_agent: qa-agent
+    qa_report: Targeted release-readiness tests and full pytest suite passed locally.
+    quality_gate_status: passed
+    unresolved_risks:
+      - Release publication credentials are external.
+      - PyPI and GitHub Release publication are outside this PR.
+    approval_required: true
+    merge_readiness: true
+
+overrides: []
