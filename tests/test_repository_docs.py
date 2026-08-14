@@ -222,9 +222,6 @@ def test_schema_docs_define_evaluation_governance_shape() -> None:
 
 def test_schema_docs_define_loop_governance_shape() -> None:
     schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
-    packaged_schema = (
-        ROOT / "policyflow/assets/docs/schema-compatibility.md"
-    ).read_text(encoding="utf-8")
     roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
         encoding="utf-8"
     )
@@ -243,15 +240,11 @@ def test_schema_docs_define_loop_governance_shape() -> None:
     ):
         assert expected in schema
 
-    assert packaged_schema == schema
     assert "Loop Governance defines feedback-loop rules declaratively" in roadmap
 
 
 def test_audit_json_docs_define_machine_readable_contract() -> None:
     schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
-    packaged_schema = (
-        ROOT / "policyflow/assets/docs/schema-compatibility.md"
-    ).read_text(encoding="utf-8")
 
     for expected in (
         "policyflow.audit.v1",
@@ -265,46 +258,36 @@ def test_audit_json_docs_define_machine_readable_contract() -> None:
     ):
         assert expected in schema
 
-    assert packaged_schema == schema
-
 
 def test_audit_reporting_docs_define_usage_and_runtime_boundary() -> None:
     audit_doc = (ROOT / "docs/audit-reporting.md").read_text(encoding="utf-8")
-    packaged_doc = (
-        ROOT / "policyflow/assets/docs/audit-reporting.md"
-    ).read_text(encoding="utf-8")
     getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     for expected in (
-        "# Audit Reporting",
-        "## Local Usage",
-        "## CI Usage",
-        "## Governance Examples",
+        "# Reporting Boundary",
+        "## Supported Output",
+        "## Removed Output",
         "## Runtime Boundary",
-        "policyflow audit ai/workflows",
-        "policyflow audit ai/workflows --json",
-        "policyflow evaluation-report ai/workflows",
-        "policyflow evaluation-report ai/workflows --json",
-        "policyflow loop-report ai/workflows",
-        "policyflow loop-report ai/workflows --json",
+        "policyflow validate policyflow/change.example.yml --json",
+        "policyflow validate-pr policyflow/change.example.yml pr-body.md --json",
+        "merge_readiness.explanation",
+        "merge_readiness.blockers",
         "policyflow.audit.v1",
-        "workflow_governance",
-        "loop_governance",
-        "evaluation_governance",
-        "human_governance",
-        "Audit reporting is read-only",
+        "validation JSON",
         "PolicyFlow does not execute workflows",
-        "does not run loops",
-        "does not calculate metrics",
-        "does not approve pull requests",
-        "docs/evaluation-governance.md",
-        "docs/loop-governance.md",
-        "docs/metric-governance.md",
+        "calculate metrics",
+        "mutate GitHub state",
     ):
         assert expected in audit_doc
 
-    assert packaged_doc == audit_doc
+    for removed_command in (
+        "policyflow audit ai/workflows",
+        "policyflow evaluation-report ai/workflows",
+        "policyflow loop-report ai/workflows",
+    ):
+        assert removed_command not in audit_doc
+
     assert "docs/audit-reporting.md" not in getting_started
     assert "docs/audit-reporting.md" in readme
 
@@ -313,9 +296,6 @@ def test_evaluation_governance_docs_define_consumer_usage() -> None:
     evaluation_doc = (ROOT / "docs/evaluation-governance.md").read_text(
         encoding="utf-8"
     )
-    packaged_doc = (
-        ROOT / "policyflow/assets/docs/evaluation-governance.md"
-    ).read_text(encoding="utf-8")
     getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -331,16 +311,12 @@ def test_evaluation_governance_docs_define_consumer_usage() -> None:
     ):
         assert expected in evaluation_doc
 
-    assert packaged_doc == evaluation_doc
     assert "docs/evaluation-governance.md" not in getting_started
     assert "docs/evaluation-governance.md" in readme
 
 
 def test_metric_governance_docs_define_metric_boundaries() -> None:
     metric_doc = (ROOT / "docs/metric-governance.md").read_text(encoding="utf-8")
-    packaged_doc = (
-        ROOT / "policyflow/assets/docs/metric-governance.md"
-    ).read_text(encoding="utf-8")
     roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
         encoding="utf-8"
     )
@@ -360,7 +336,6 @@ def test_metric_governance_docs_define_metric_boundaries() -> None:
     ):
         assert expected in metric_doc or expected in roadmap
 
-    assert packaged_doc == metric_doc
     assert "docs/metric-governance.md" in roadmap
 
 
@@ -370,10 +345,6 @@ def test_workflow_templates_reference_evaluation_schema() -> None:
         "workflows/templates/bugfix-workflow.template.yml",
         "workflows/templates/architecture-change-workflow.template.yml",
         "workflows/templates/low-risk-workflow.template.yml",
-        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
-        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
-        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
-        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
     ):
         text = (ROOT / relative_path).read_text(encoding="utf-8")
 
@@ -391,10 +362,6 @@ def test_workflow_templates_reference_loop_governance_schema() -> None:
         "workflows/templates/bugfix-workflow.template.yml",
         "workflows/templates/architecture-change-workflow.template.yml",
         "workflows/templates/low-risk-workflow.template.yml",
-        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
-        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
-        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
-        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
     ):
         text = (ROOT / relative_path).read_text(encoding="utf-8")
 
@@ -407,9 +374,6 @@ def test_workflow_templates_reference_loop_governance_schema() -> None:
 
 def test_loop_governance_docs_reference_examples_and_failure_fixtures() -> None:
     loop_doc = (ROOT / "docs/loop-governance.md").read_text(encoding="utf-8")
-    packaged_doc = (
-        ROOT / "policyflow/assets/docs/loop-governance.md"
-    ).read_text(encoding="utf-8")
     getting_started = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -432,7 +396,6 @@ def test_loop_governance_docs_reference_examples_and_failure_fixtures() -> None:
     ):
         assert expected in loop_doc
 
-    assert packaged_doc == loop_doc
     assert "docs/loop-governance.md" not in getting_started
     assert "docs/loop-governance.md" in readme
 
@@ -443,10 +406,6 @@ def test_workflow_templates_reference_release_readiness_evidence() -> None:
         "workflows/templates/bugfix-workflow.template.yml",
         "workflows/templates/architecture-change-workflow.template.yml",
         "workflows/templates/low-risk-workflow.template.yml",
-        "policyflow/assets/workflows/templates/feature-workflow.template.yml",
-        "policyflow/assets/workflows/templates/bugfix-workflow.template.yml",
-        "policyflow/assets/workflows/templates/architecture-change-workflow.template.yml",
-        "policyflow/assets/workflows/templates/low-risk-workflow.template.yml",
     ):
         text = (ROOT / relative_path).read_text(encoding="utf-8")
 
@@ -475,27 +434,12 @@ def test_getting_started_keeps_manual_copy_out_of_primary_path() -> None:
 
 
 def test_packaged_getting_started_matches_source_doc() -> None:
-    for relative_path in (
-        "audit-reporting.md",
-        "evaluation-governance.md",
-        "getting-started.md",
-        "metric-governance.md",
-        "overview.md",
-        "governance-enforcement-roadmap.md",
-        "provider-neutral-integration-contract.md",
-        "public-api.md",
-        "querypilot-pilot.md",
-        "release-and-upgrade.md",
-        "roadmap-agentic-governance.md",
-        "schema-compatibility.md",
-        "v2-migration-guide.md",
-    ):
-        source = (ROOT / "docs" / relative_path).read_text(encoding="utf-8")
-        packaged = (ROOT / "policyflow/assets/docs" / relative_path).read_text(
-            encoding="utf-8"
-        )
+    source = (ROOT / "docs/getting-started.md").read_text(encoding="utf-8")
+    packaged = (ROOT / "policyflow/assets/docs/getting-started.md").read_text(
+        encoding="utf-8"
+    )
 
-        assert packaged == source
+    assert packaged == source
 
 
 def test_overview_and_roadmap_reflect_current_capabilities() -> None:
@@ -563,12 +507,6 @@ def test_schema_compatibility_docs_define_canonical_and_legacy_policy() -> None:
 def test_schema_compatibility_docs_define_v2_stable_governance_boundaries() -> None:
     schema = (ROOT / "docs/schema-compatibility.md").read_text(encoding="utf-8")
     public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
-    packaged_schema = (
-        ROOT / "policyflow/assets/docs/schema-compatibility.md"
-    ).read_text(encoding="utf-8")
-    packaged_public_api = (ROOT / "policyflow/assets/docs/public-api.md").read_text(
-        encoding="utf-8"
-    )
 
     for expected in (
         "## v2 Stable Governance Boundary",
@@ -603,15 +541,9 @@ def test_schema_compatibility_docs_define_v2_stable_governance_boundaries() -> N
     ):
         assert expected in public_api
 
-    assert packaged_schema == schema
-    assert packaged_public_api == public_api
-
 
 def test_v2_migration_guide_covers_contract_changes_and_examples() -> None:
     guide = (ROOT / "docs/v2-migration-guide.md").read_text(encoding="utf-8")
-    packaged_guide = (ROOT / "policyflow/assets/docs/v2-migration-guide.md").read_text(
-        encoding="utf-8"
-    )
     release = (ROOT / "docs/release-and-upgrade.md").read_text(encoding="utf-8")
 
     for expected in (
@@ -652,7 +584,6 @@ def test_v2_migration_guide_covers_contract_changes_and_examples() -> None:
     ):
         assert expected in guide
 
-    assert packaged_guide == guide
     assert "docs/v2-migration-guide.md" in release
 
 
@@ -660,9 +591,6 @@ def test_provider_neutral_integration_contract_defines_evidence_boundary() -> No
     contract = (ROOT / "docs/provider-neutral-integration-contract.md").read_text(
         encoding="utf-8"
     )
-    packaged_contract = (
-        ROOT / "policyflow/assets/docs/provider-neutral-integration-contract.md"
-    ).read_text(encoding="utf-8")
     runner = (ROOT / "docs/runner-contract.md").read_text(encoding="utf-8")
     public_api = (ROOT / "docs/public-api.md").read_text(encoding="utf-8")
 
@@ -698,14 +626,10 @@ def test_provider_neutral_integration_contract_defines_evidence_boundary() -> No
 
     assert "docs/provider-neutral-integration-contract.md" in runner
     assert "provider-neutral-integration-contract.md" in public_api
-    assert packaged_contract == contract
 
 
 def test_querypilot_pilot_docs_define_governance_boundaries() -> None:
     pilot = (ROOT / "docs/querypilot-pilot.md").read_text(encoding="utf-8")
-    packaged_pilot = (ROOT / "policyflow/assets/docs/querypilot-pilot.md").read_text(
-        encoding="utf-8"
-    )
     roadmap = (ROOT / "docs/roadmap-agentic-governance.md").read_text(
         encoding="utf-8"
     )
@@ -753,7 +677,6 @@ def test_querypilot_pilot_docs_define_governance_boundaries() -> None:
 
     assert "docs/querypilot-pilot.md" in roadmap
     assert "workflows/examples/querypilot-pilot-workflow.yml" in roadmap
-    assert packaged_pilot == pilot
 
 
 def test_schema_todo_was_replaced_with_migration_path() -> None:

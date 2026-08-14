@@ -57,6 +57,11 @@ def test_validate_v2_json_reports_pass() -> None:
     assert payload["schema_version"] == "policyflow.validation.v2"
     assert payload["decision"] == "PASS"
     assert payload["merge_ready"] is True
+    assert payload["merge_readiness"] == {
+        "ready": True,
+        "explanation": "Governance validation passed with no blocking findings.",
+        "blockers": [],
+    }
 
 
 def test_validate_v2_json_blocks_missing_required_evidence() -> None:
@@ -69,6 +74,9 @@ def test_validate_v2_json_blocks_missing_required_evidence() -> None:
     payload = json.loads(result.stdout)
     assert payload["decision"] == "BLOCK"
     assert payload["merge_ready"] is False
+    assert payload["merge_readiness"]["ready"] is False
+    assert "blocked" in payload["merge_readiness"]["explanation"]
+    assert payload["merge_readiness"]["blockers"]
     assert payload["errors"][0]["code"] == "missing_required_evidence"
 
 

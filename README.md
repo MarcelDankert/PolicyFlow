@@ -109,10 +109,9 @@ See [docs/getting-started.md](docs/getting-started.md) for the full Consumer
 Quickstart, including V2 change validation and optional read-only GitHub PR
 checks.
 
-Audit Reporting is documented in
-[docs/audit-reporting.md](docs/audit-reporting.md). It explains local and CI
-usage for workflow audit, evaluation reports, loop reports, human governance
-status, and the read-only boundary between reporting and runtime execution.
+Reporting is documented in [docs/audit-reporting.md](docs/audit-reporting.md).
+It explains V2 validation JSON, merge-readiness output, removed report commands,
+and the boundary between compliance explanation and runtime execution.
 
 Evaluation Governance is documented in
 [docs/evaluation-governance.md](docs/evaluation-governance.md). It explains how
@@ -348,13 +347,11 @@ Current validator scope:
   - a checked confirmation that scope, non-goals, and risk were fixed in the workflow before implementation started
   - a checked confirmation that required workflow phases were executed as visible working steps, not only documented after the fact
 - validates GitHub PR review metadata against workflow approval claims by requiring `APPROVED` reviews from the declared `approved_by` logins
-- exposes workflow reporting views for a single workflow (`status`) and a directory tree (`audit`) with optional JSON output
-- supports synchronous external agent execution for canonical agent-owned phases through a central runner config and JSON result contract
-- supports dry-run and explicit-apply sync for PolicyFlow-managed Consumer-Repo assets
+- returns validation JSON with `decision`, `merge_ready`, `merge_readiness`, errors, and warnings
+- keeps reporting to compliance explanation rather than audit dashboards, productivity analytics, or loop/evaluation reports
+- keeps execution, runner setup, provider credentials, managed asset synchronization, and GitHub mutation outside PolicyFlow
 
-This runtime layer is intentionally small. It mutates only controlled workflow fields and does not execute agents, schedule work, or orchestrate GitHub runs directly.
-
-PolicyFlow now acts as a lightweight workflow orchestration layer as well as a governance validator, but it is still not a full orchestration platform, scheduler, or agent runtime.
+PolicyFlow is a governance validator, not a runtime orchestration layer, scheduler, agent runtime, or merge bot.
 
 ## Compatibility
 
