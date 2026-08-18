@@ -5,11 +5,11 @@ PolicyFlow 2.0 is the governance-core breaking release.
 Consumer repositories should install a pinned package version:
 
 ```bash
-python -m pip install policyflow==2.0.0
+python -m pip install policyflow==2.0.1
 ```
 
-Release target links: [PyPI](https://pypi.org/project/policyflow/2.0.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.0).
+Release target links: [PyPI](https://pypi.org/project/policyflow/2.0.1/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.1).
 
 ## Release Channel
 
@@ -22,19 +22,19 @@ Generated GitHub Actions governance workflows pin the package version through
 
 ```yaml
 env:
-  POLICYFLOW_VERSION: "2.0.0"
+  POLICYFLOW_VERSION: "2.0.1"
 ```
 
 ```bash
 python -m pip install "policyflow==${POLICYFLOW_VERSION}"
 ```
 
-## 2.0.0 Release Artifact Checklist
+## 2.0.1 Release Artifact Checklist
 
-Before publishing 2.0.0:
+Before publishing 2.0.1:
 
 1. Confirm `pyproject.toml` and `policyflow.__version__` both declare
-   `2.0.0`.
+   `2.0.1`.
 2. Build the source distribution and wheel from a clean checkout.
 3. Inspect the wheel contents and verify packaged assets contain only:
    `assets/github/*.md`, `assets/github/workflows/*.yml`,
@@ -46,7 +46,7 @@ Before publishing 2.0.0:
 6. Run the full test suite.
 7. Validate the active release workflow.
 8. Publish the package to PyPI.
-9. Create the matching GitHub Release `v2.0.0`.
+9. Create the matching GitHub Release `v2.0.1`.
 
 The release artifacts are the PyPI source distribution, PyPI wheel, matching
 GitHub Release notes, and the minimal packaged V2 governance assets.
@@ -81,7 +81,7 @@ mutation, approvals, and merges.
 1. Read [v2-migration-guide.md](v2-migration-guide.md).
 2. Review the full migration matrix:
    [policyflow-v1-v2-migration-matrix.md](planning/policyflow-v1-v2-migration-matrix.md).
-3. Update local, CI, and GitHub Actions pins to `policyflow==2.0.0`.
+3. Update local, CI, and GitHub Actions pins to `policyflow==2.0.1`.
 4. Replace V1 workflow files with V2 governance files under `policyflow/`.
 5. Move execution, runtime, handoff, loop execution, metric calculation,
    provider, runner, agent, and prompt responsibilities outside PolicyFlow.
@@ -115,7 +115,7 @@ evidence:
     issue_ordering:
       - issue: "#150"
         before:
-          - v2.0.0
+          - v2.0.1
         state: done
     external_credentials_required:
       - name: PYPI_API_TOKEN
@@ -136,7 +136,15 @@ Use the state values consistently:
 
 ## Release Notes Expectations
 
-2.0.0 release notes must include:
+2.0.1 release notes must include:
+
+- V2 `validate-pr --github-reviews` approval validation behavior
+- V2 GitHub approval evidence convention
+- V1 compatibility statement
+- package, documentation, and generated workflow pin updates
+- test and package build results
+
+2.0.0 breaking release notes must include:
 
 - removed commands
 - removed public API symbols
@@ -149,6 +157,6 @@ Use the state values consistently:
 - V2 golden consumer smoke test result
 - full test suite result
 
-Patch releases after 2.0.0 should preserve V2 governance API compatibility.
+Patch releases after 2.0.1 should preserve V2 governance API compatibility.
 Breaking governance schema changes require a new migration note and release
 decision.

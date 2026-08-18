@@ -40,11 +40,11 @@ The final V2 boundary is defined in
 ## Install
 
 ```bash
-python -m pip install policyflow==2.0.0
+python -m pip install policyflow==2.0.1
 ```
 
-Release target links: [PyPI](https://pypi.org/project/policyflow/2.0.0/) and
-[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.0).
+Release target links: [PyPI](https://pypi.org/project/policyflow/2.0.1/) and
+[GitHub Release](https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.1).
 
 Developer install from a source checkout:
 
@@ -198,8 +198,8 @@ other coding agents working on this repository.
 
 ## Project Status
 
-PolicyFlow `2.0.0` is prepared as the governance-core release target. Use
-`python -m pip install policyflow==2.0.0` after the release is published.
+PolicyFlow `2.0.1` is prepared as the governance-core release target. Use
+`python -m pip install policyflow==2.0.1` after the release is published.
 
 ## License
 

@@ -1,0 +1,180 @@
+workflow:
+  id: release-2-0-1
+  type: release
+
+context:
+  workflow_file: workflows/features/release-2-0-1.yml
+  risk_level: MEDIUM
+  confidence:
+    planning: PolicyFlow 2.0.0 is published and PR #160 has merged, making 2.0.1 the next patch release target.
+    implementation: Scope is bounded to version metadata, release pins, changelog, release docs, and release validation tests.
+    tests: Repository docs tests, packaging tests, workflow validation, package build, and the full suite will validate the release prep.
+    residual_uncertainty: Actual PyPI upload and GitHub Release creation remain post-merge release-operator actions.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: false
+  escalation_required: false
+  protected_areas_touched: []
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+
+evidence:
+  planning:
+    summary: Release 2.0.1 scope was locked after PR #160 merged V2 GitHub approval validation.
+    scope_locked:
+      - Update package version metadata to 2.0.1.
+      - Update public and packaged consumer install pins to 2.0.1.
+      - Add 2.0.1 changelog and release guidance.
+      - Update repository tests that assert release metadata and docs.
+    non_goals_locked:
+      - No validator semantics beyond already-merged PR #160.
+      - No schema-breaking change.
+      - No PyPI upload in this PR.
+      - No GitHub Release publication in this PR.
+    risk_rationale: MEDIUM because release pins and package metadata are consumer-facing, while the patch release remains V2-compatible.
+  architecture-check:
+    decision: Prepare a V2-compatible patch release without changing runtime, schema, or GitHub mutation boundaries.
+    constraints:
+      - Preserve V2 governance API compatibility.
+      - Keep generated GitHub workflow read-only.
+      - Keep release publication as a post-merge operator action.
+      - Keep docs, tests, and metadata aligned on 2.0.1.
+    approval_path: review-agent and qa-agent review before merge.
+  review:
+    outcome: approved
+    findings_summary: Review confirmed version metadata, docs, tests, generated workflow pins, and changelog consistently target 2.0.1 without introducing new feature behavior.
+    residual_risk: PyPI upload and GitHub Release publication remain external post-merge release-operator actions.
+  qa:
+    outcome: passed
+    evidence_summary: Release docs tests, release packaging tests, bootstrap tests, workflow validations, package build, wheel metadata inspection, and full pytest passed locally.
+    unresolved_risks: []
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Prepare PolicyFlow 2.0.1 patch release metadata and documentation.
+    acceptance_criteria:
+      - pyproject.toml and policyflow.__version__ declare 2.0.1.
+      - README, getting started docs, release docs, packaged docs, and generated GitHub workflow pins reference 2.0.1.
+      - CHANGELOG.md includes 2.0.1 release notes.
+      - Repository docs tests and release packaging tests pass.
+      - Package build and artifact inspection pass.
+      - Full pytest suite passes or any unrelated local blocker is recorded.
+    approved_scope:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - CHANGELOG.md
+      - tests/test_repository_docs.py
+      - tests/test_bootstrap.py
+      - workflows/features/release-2-0-1.yml
+    non_goals:
+      - No PyPI upload.
+      - No GitHub Release publication.
+      - No new feature behavior.
+    initial_risk_level: MEDIUM
+    protected_areas_touched: []
+    confidence_summary: Release prep is mechanical and bounded to metadata, docs, pins, and validation.
+    escalation_flags: []
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: The patch release should advertise the already-merged V2 GitHub approval validation fix while preserving all V2 public contracts.
+    approved_scope:
+      - Version metadata bump.
+      - Consumer pin updates.
+      - Release notes.
+      - Release validation tests.
+    module_boundaries:
+      - pyproject.toml and policyflow.__version__ own package version.
+      - release docs and README own public release guidance.
+      - packaged docs and GitHub workflow own consumer bootstrap pins.
+      - tests own release metadata assertions.
+    contract_impact: Consumers can pin PolicyFlow 2.0.1 for the V2 GitHub approval validation patch without a migration.
+    risk_review_decision: MEDIUM risk accepted because release metadata affects consumers but preserves V2 compatibility.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not introduce breaking V2 schema changes.
+      - Do not add GitHub mutation behavior.
+      - Do not publish external release artifacts from this PR.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Updated PolicyFlow package metadata, public docs, packaged docs, generated GitHub workflow pins, changelog, and repository release tests for 2.0.1.
+    changed_files:
+      - pyproject.toml
+      - policyflow/__init__.py
+      - policyflow/bootstrap.py
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+      - github/workflows/policyflow-governance.yml
+      - policyflow/assets/github/workflows/policyflow-governance.yml
+      - CHANGELOG.md
+      - tests/test_repository_docs.py
+      - tests/test_bootstrap.py
+      - workflows/features/release-2-0-1.yml
+    test_summary: Release docs, packaging, and bootstrap tests passed; active and example workflow validations passed; package build produced policyflow-2.0.1 artifacts; wheel metadata inspection confirmed Version 2.0.1 and packaged workflow pin; full pytest passed with 186 tests.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/release-and-upgrade.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+      - CHANGELOG.md
+    known_limitations:
+      - PyPI upload and GitHub Release publication are not performed in this PR.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: approved
+    review_approval: Release prep is limited to 2.0.1 metadata, pins, docs, tests, and workflow evidence.
+    residual_risk: Release publication remains a post-merge operator action.
+    qa_focus_areas:
+      - Version metadata consistency.
+      - Consumer workflow pin consistency.
+      - Changelog and release guidance accuracy.
+      - Package build artifact version.
+    test_expectations:
+      - pytest -q tests/test_repository_docs.py tests/test_release_packaging.py
+      - pytest -q
+      - python -m build
+      - policyflow validate workflows/features/release-2-0-1.yml
+  qa:
+    owner_agent: qa-agent
+    qa_report: Release-specific tests, bootstrap tests, workflow validations, package build, wheel inspection, and full pytest passed locally.
+    quality_gate_status: passed
+    unresolved_risks: []
+    approval_required: false
+    merge_readiness: true
+
+overrides: []

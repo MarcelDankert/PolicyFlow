@@ -5,7 +5,11 @@ from pathlib import Path
 import yaml
 from typer.testing import CliRunner
 
-from policyflow.bootstrap import bootstrap_assets, bootstrap_consumer_repo
+from policyflow.bootstrap import (
+    bootstrap_assets,
+    bootstrap_consumer_repo,
+    packaged_asset_root,
+)
 from policyflow.cli import app
 from policyflow.config import load_config
 
@@ -39,9 +43,10 @@ def test_bootstrap_fresh_repo_creates_consumer_layout(tmp_path: Path) -> None:
 
 def test_bootstrap_assets_do_not_include_runner_or_codex_assets() -> None:
     bootstrap_consumer_repo_assets = bootstrap_assets()
+    asset_root = packaged_asset_root()
     targets = {asset.target.as_posix() for asset in bootstrap_consumer_repo_assets}
     source_names = {
-        asset.source.as_posix()
+        asset.source.relative_to(asset_root).as_posix()
         for asset in bootstrap_consumer_repo_assets
         if asset.source is not None
     }

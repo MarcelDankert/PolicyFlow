@@ -6,6 +6,22 @@ and migration compatibility changes.
 
 ## Unreleased
 
+## 2.0.1
+
+Released: 2026-08-18
+
+V2 GitHub Approval Validation patch release.
+
+- Added V2 change-file support to `policyflow validate-pr`.
+- Added read-only GitHub review validation for V2 approval evidence using
+  `source: github-review:<login>` and `ref` review matching.
+- Preserved V1 `validate-pr --github-reviews` behavior and V2
+  `--allow-pending` pending-approval semantics.
+- Documented the V2 GitHub approval evidence convention in README, getting
+  started, packaged docs, and migration guidance.
+- Updated generated Consumer-Repo GitHub governance workflow pins to
+  `policyflow==2.0.1`.
+
 ## 2.0.0
 
 Released: 2026-08-14

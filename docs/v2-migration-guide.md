@@ -84,7 +84,7 @@ overrides: []
 
 ## Migration Steps
 
-1. Upgrade local and CI pins to `policyflow==2.0.0`.
+1. Upgrade local and CI pins to `policyflow==2.0.1`.
 2. Run `policyflow init . --no-github` or `policyflow init .` in a clean branch
    to inspect the V2 consumer footprint.
 3. Create or update `policyflow.yml` with `version: 2`.
