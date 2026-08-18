@@ -78,6 +78,13 @@ PolicyFlow:
 policyflow validate-pr policyflow/change.example.yml pr-body.md --github-reviews pr-reviews.json --allow-pending
 ```
 
+For V2 human approvals backed by GitHub reviews, use an approval evidence item
+with `type: approval`, `source: github-review:<login>`, and `ref` set to the
+GitHub review `id` or review URL from the supplied reviews JSON. When that item
+has `status: passed`, `validate-pr --github-reviews` requires the latest review
+from `<login>` to be `APPROVED` and to match `ref`. With `status: pending`,
+`--allow-pending` reports a pending approval warning instead of failing.
+
 Removed V1 commands include `new-workflow`, `sync`, `status`, `audit`,
 `evaluation-report`, `loop-report`, runtime phase mutation commands, and the
 standalone `validate-github-approvals` command.

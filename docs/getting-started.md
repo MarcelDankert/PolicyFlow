@@ -110,6 +110,23 @@ Use GitHub required approving review rules to block merge while approval is pend
 
 For high-risk changes, set `governance.human_approval_required: true` and include approval evidence from the external review system in the V2 `evidence` list. PolicyFlow validates after external systems publish governance evidence.
 
+For GitHub-backed V2 human approval evidence, use:
+
+```yaml
+evidence:
+  - id: approval
+    type: approval
+    source: github-review:arch-board
+    status: passed
+    ref: https://github.com/example/repo/pull/1#pullrequestreview-99
+```
+
+`source` identifies the required approving GitHub login after
+`github-review:`. `ref` must match the latest `APPROVED` review for that login
+by GitHub review `id`, `url`, `html_url`, `node_id`, or `pull_request_url` in
+the supplied `pr-reviews.json`. Pending approvals can use `status: pending` and
+the pull request URL as `ref` until the approval review exists.
+
 PolicyFlow does not create branches, create issues, mutate labels, assign milestones, approve pull requests, merge pull requests, or check credentials.
 
 For a maintained static reference project, see `examples/reference-consumer`.

@@ -154,15 +154,36 @@ def validate_pr(
 
     try:
         if github_reviews is None:
-            workflow = validate_pull_request(workflow_path, pr_body_path)
-            payload: dict[str, Any] = {
-                "schema_version": "policyflow.pr_validation.v1",
-                "decision": "PASS",
-                "workflow_id": workflow.workflow.id,
-                "github_approval_status": "not_checked",
-                "pending_logins": [],
-                "errors": [],
-            }
+            if _is_v2_workflow(workflow_path):
+                if not pr_body_path.exists():
+                    raise WorkflowValidationError(
+                        [f"PR body file not found: {pr_body_path}"]
+                    )
+                result = inspect_workflow_v2_file(
+                    workflow_path, allow_pending_human_approval=allow_pending
+                )
+                if result.decision == "BLOCK":
+                    raise WorkflowValidationError(
+                        [finding.message for finding in result.errors]
+                    )
+                payload: dict[str, Any] = {
+                    "schema_version": "policyflow.pr_validation.v2",
+                    "decision": result.decision.value,
+                    "workflow_id": result.workflow.change.id,
+                    "github_approval_status": "not_checked",
+                    "pending_logins": [],
+                    "errors": [],
+                }
+            else:
+                workflow = validate_pull_request(workflow_path, pr_body_path)
+                payload = {
+                    "schema_version": "policyflow.pr_validation.v1",
+                    "decision": "PASS",
+                    "workflow_id": workflow.workflow.id,
+                    "github_approval_status": "not_checked",
+                    "pending_logins": [],
+                    "errors": [],
+                }
         else:
             result = validate_github_pr_approvals(
                 workflow_path,
@@ -170,10 +191,17 @@ def validate_pr(
                 github_reviews,
                 allow_pending=allow_pending,
             )
+            is_v2 = _is_v2_workflow(workflow_path)
             payload = {
-                "schema_version": "policyflow.pr_validation.v1",
+                "schema_version": (
+                    "policyflow.pr_validation.v2"
+                    if is_v2
+                    else "policyflow.pr_validation.v1"
+                ),
                 "decision": "WARN" if result.status == "pending" else "PASS",
-                "workflow_id": result.workflow.workflow.id,
+                "workflow_id": (
+                    result.workflow.change.id if is_v2 else result.workflow.workflow.id
+                ),
                 "github_approval_status": result.status,
                 "pending_logins": result.pending_logins,
                 "errors": [],

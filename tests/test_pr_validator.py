@@ -319,3 +319,19 @@ def test_validate_pr_command_succeeds() -> None:
 
     assert result.exit_code == 0
     assert "[SUCCESS] Pull request validation passed." in result.stdout
+
+
+def test_validate_pr_command_accepts_v2_change_file() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "validate-pr",
+            str(fixture_path("valid-v2-governance.yml")),
+            str(fixture_path("valid-pr-body.md")),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"schema_version": "policyflow.pr_validation.v2"' in result.stdout
+    assert '"workflow_id": "example-change"' in result.stdout
