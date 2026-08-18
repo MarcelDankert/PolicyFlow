@@ -38,7 +38,7 @@ def test_readme_explains_v2_governance_only_product() -> None:
         "policyflow validate-pr policyflow/change.example.yml pr-body.md",
         "policyflow doctor .",
         "merge_readiness.explanation",
-        "PolicyFlow `2.0.0` is prepared as the governance-core release target",
+        "PolicyFlow `2.0.1` is prepared as the governance-core release target",
     ):
         assert expected in readme
 
@@ -58,7 +58,7 @@ def test_getting_started_has_ten_minute_v2_path() -> None:
     packaged = _read("policyflow/assets/docs/getting-started.md")
 
     for command in (
-        "python -m pip install policyflow==2.0.0",
+        "python -m pip install policyflow==2.0.1",
         "policyflow init .",
         "policyflow init . --no-github",
         "policyflow doctor .",
@@ -176,26 +176,24 @@ def test_release_docs_and_changelog_prepare_v2_release() -> None:
     changelog = _read("CHANGELOG.md")
 
     for expected in (
-        "python -m pip install policyflow==2.0.0",
-        "https://pypi.org/project/policyflow/2.0.0/",
-        "https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.0",
-        "POLICYFLOW_VERSION: \"2.0.0\"",
-        "2.0.0 Release Artifact Checklist",
-        "Breaking Changes",
-        "removed commands",
-        "removed public API symbols",
-        "removed schema fields",
-        "removed package assets",
-        "V2 golden consumer smoke test result",
+        "python -m pip install policyflow==2.0.1",
+        "https://pypi.org/project/policyflow/2.0.1/",
+        "https://github.com/MarcelDankert/PolicyFlow/releases/tag/v2.0.1",
+        "POLICYFLOW_VERSION: \"2.0.1\"",
+        "2.0.1 Release Artifact Checklist",
+        "V2 `validate-pr --github-reviews` approval validation behavior",
+        "V2 GitHub approval evidence convention",
+        "V1 compatibility statement",
+        "test and package build results",
     ):
         assert expected in release
 
     for expected in (
-        "## 2.0.0",
-        "Governance Core release",
-        "Reduced the CLI to `init`, `validate`, `validate-pr`, and `doctor`",
-        "Removed runtime execution",
-        "Reduced packaged assets to V2 governance assets only",
+        "## 2.0.1",
+        "V2 GitHub Approval Validation patch release",
+        "Added V2 change-file support to `policyflow validate-pr`",
+        "`source: github-review:<login>`",
+        "Preserved V1 `validate-pr --github-reviews` behavior",
     ):
         assert expected in changelog
 
@@ -204,7 +202,7 @@ def test_package_metadata_targets_v2_release() -> None:
     data = tomllib.loads(_read("pyproject.toml"))
     project = data["project"]
 
-    assert project["version"] == "2.0.0"
+    assert project["version"] == "2.0.1"
     assert "Provider-neutral governance validator" in project["description"]
     assert project["urls"]["Repository"] == "https://github.com/MarcelDankert/PolicyFlow"
     assert "Typing :: Typed" in project["classifiers"]
@@ -217,7 +215,7 @@ def test_github_workflow_pins_v2_release_for_consumers() -> None:
     ):
         text = _read(relative_path)
 
-        assert 'POLICYFLOW_VERSION: "2.0.0"' in text
+        assert 'POLICYFLOW_VERSION: "2.0.1"' in text
         assert "contents: read" in text
         assert "pull-requests: read" in text
         assert "policyflow validate-pr" in text
@@ -228,7 +226,7 @@ def test_public_repository_standard_files_are_present() -> None:
     expected_files = {
         "CONTRIBUTING.md": ("workflow-first", "pull request"),
         "SECURITY.md": ("security", "vulnerability"),
-        "CHANGELOG.md": ("2.0.0", "Governance Core release"),
+        "CHANGELOG.md": ("2.0.1", "V2 GitHub Approval Validation"),
     }
 
     for relative_path, expected_terms in expected_files.items():
