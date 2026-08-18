@@ -142,6 +142,25 @@ Remove imports for:
 Use `inspect_workflow_v2`, `validate_workflow_v2`, `validate_pr_body`, and
 `validate_github_approvals`.
 
+## GitHub Approval Evidence
+
+For V2 changes where `governance.human_approval_required: true`, represent a
+GitHub-backed approval as a normal evidence item:
+
+```yaml
+evidence:
+  - id: approval
+    type: approval
+    source: github-review:arch-board
+    status: passed
+    ref: https://github.com/example/repo/pull/1#pullrequestreview-99
+```
+
+`source: github-review:<login>` declares the GitHub login that must have the
+latest `APPROVED` review in `pr-reviews.json`. `ref` must match that review's
+GitHub `id`, `url`, `html_url`, `node_id`, or `pull_request_url`. Use
+`status: pending` with `--allow-pending` until the review exists.
+
 ## Bootstrapped Consumer Repositories
 
 Existing V1 bootstrapped repositories may contain:

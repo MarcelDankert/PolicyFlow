@@ -1,0 +1,192 @@
+workflow:
+  id: v2-github-approval-validation
+  type: feature
+
+context:
+  workflow_file: workflows/features/v2-github-approval-validation.yml
+  risk_level: HIGH
+  confidence:
+    planning: Issue #159 defines a narrow V2 parity gap in validate-pr GitHub review validation.
+    implementation: Scope is limited to V2 detection and read-only approval evidence matching while preserving V1 behavior.
+    tests: Targeted approval and PR validation tests will cover V1 compatibility and V2 pending, passed, missing, mismatched, and stale review cases.
+    residual_uncertainty: The V2 approval evidence convention must stay within existing source/ref schema fields.
+
+governance:
+  required_reviews:
+    - architecture-agent
+    - review-agent
+    - qa-agent
+  human_approval_required: true
+  escalation_required: true
+  protected_areas_touched:
+    - GitHub validation
+    - approval evidence semantics
+  approval_evidence:
+    - evidence.approval
+
+execution:
+  mode: strict
+  phases:
+    - phase: planning
+      state: completed
+    - phase: architecture-check
+      state: completed
+    - phase: implementation
+      state: completed
+    - phase: review
+      state: completed
+    - phase: qa
+      state: completed
+    - phase: approval
+      state: pending
+
+evidence:
+  planning:
+    summary: Issue #159 was opened after AurumEdge PR #132 exposed that V2 change files could not use validate-pr --github-reviews equivalently.
+    scope_locked:
+      - Detect V2 change files in validate-pr.
+      - Validate V2 approval evidence against supplied GitHub reviews.
+      - Preserve V1 validate-pr and GitHub approval behavior.
+      - Document the V2 GitHub approval evidence convention.
+    non_goals_locked:
+      - No AurumEdge-specific routing or repository workaround.
+      - No GitHub mutation.
+      - No schema-breaking V2 field additions.
+      - No approval engine or live GitHub API dependency.
+    risk_rationale: HIGH because the issue closes a governance gap where completed approval evidence can otherwise bypass actual GitHub APPROVED review validation.
+  architecture-check:
+    decision: Implement the fix in the existing read-only github_approval boundary and route V2 files before the V1 PR validator.
+    constraints:
+      - Keep V1 required login extraction unchanged.
+      - Use V2 evidence type/status/source/ref fields without adding schema fields.
+      - Treat source as the GitHub review actor login for approval evidence and ref as the review URL/id supplied by GitHub review JSON.
+      - Preserve allow-pending semantics for pending approval evidence.
+    approval_path: Issue #159 and PR approval before merge.
+  review:
+    outcome: approved
+    findings_summary: Review confirmed the V2 path is read-only, V1 login extraction is unchanged, and passed approval evidence fails when the matching GitHub review is absent or stale.
+    residual_risk: V2 PR body claim parsing remains outside this issue's narrow approval-validation scope.
+  qa:
+    outcome: passed
+    evidence_summary: Focused tests, required governance test modules, workflow validations, docs/package/API tests, and compileall passed; full pytest has one unrelated path-sensitive bootstrap failure in this .codex worktree.
+    unresolved_risks:
+      - Full pytest in this local worktree reports tests/test_bootstrap.py::test_bootstrap_assets_do_not_include_runner_or_codex_assets because asset source paths include .codex.
+  approval:
+    approved_by: MarcelDankert
+    reference: https://github.com/MarcelDankert/PolicyFlow/issues/159
+    scope_confirmed: true
+
+contracts:
+  planning:
+    owner_agent: planning-agent
+    issue_brief: Support GitHub review validation for PolicyFlow V2 approval evidence.
+    acceptance_criteria:
+      - validate-pr accepts V2 change files.
+      - V2 approval evidence is checked against --github-reviews when provided.
+      - Stale, missing, or mismatched approval evidence fails validation.
+      - Pending approval still produces pending/warn behavior with --allow-pending.
+      - Tests cover V1 compatibility and V2 approval validation.
+      - Documentation or examples describe the V2 GitHub approval evidence convention.
+    approved_scope:
+      - policyflow/github_approval.py
+      - policyflow/cli.py
+      - policyflow/api.py
+      - tests/test_github_approval.py
+      - tests/test_pr_validator.py
+      - tests/fixtures
+      - docs/getting-started.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+      - README.md
+      - workflows/features/v2-github-approval-validation.yml
+    non_goals:
+      - No Consumer-Repo workaround.
+      - No GitHub writes.
+      - No release packaging expansion unless documentation tests require mirrored asset docs.
+    initial_risk_level: HIGH
+    protected_areas_touched:
+      - GitHub validation
+      - approval evidence semantics
+    confidence_summary: The behavior is localized to validate-pr and read-only review JSON interpretation.
+    escalation_flags:
+      - Approval validation semantics.
+  architecture-check:
+    owner_agent: architecture-agent
+    architecture_assessment: V2 approval review matching belongs beside existing V1 GitHub approval validation, with a small version dispatch in CLI/API-facing code.
+    approved_scope:
+      - Add V2 path in validate-pr --github-reviews.
+      - Add V2 approval evidence extraction and review matching.
+      - Document source/ref mapping.
+      - Add focused tests and fixtures.
+    module_boundaries:
+      - cli owns workflow version routing.
+      - validator owns V2 schema validation and pending evidence evaluation.
+      - github_approval owns read-only GitHub review JSON interpretation.
+      - docs and assets describe consumer-facing convention.
+    contract_impact: V2 completed GitHub approval evidence now requires matching supplied review JSON when validate-pr is run with --github-reviews.
+    risk_review_decision: HIGH risk accepted because the change strengthens, rather than weakens, approval enforcement and remains backward compatible.
+    required_reviews:
+      - architecture-agent
+      - review-agent
+      - qa-agent
+    implementation_constraints:
+      - Do not mutate GitHub.
+      - Do not require live GitHub access.
+      - Do not change V1 behavior.
+      - Do not add fields to the V2 schema.
+  implementation:
+    owner_agent: senior-dev-agent
+    implementation_summary: Added V2 routing to validate-pr and V2 GitHub approval evidence matching in the read-only approval validator.
+    changed_files:
+      - policyflow/cli.py
+      - policyflow/github_approval.py
+      - tests/test_github_approval.py
+      - tests/test_pr_validator.py
+      - tests/fixtures/v2-github-approval-passed.yml
+      - tests/fixtures/v2-github-approval-pending.yml
+      - tests/fixtures/v2-github-approval-mismatched-login.yml
+      - tests/fixtures/v2-github-approval-stale-ref.yml
+      - tests/fixtures/github-reviews-v2-valid-approval.json
+      - tests/fixtures/github-reviews-v2-missing-approval.json
+      - README.md
+      - docs/getting-started.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+      - workflows/features/v2-github-approval-validation.yml
+    test_summary: Focused V2/V1 approval tests, PR validator tests, required governance test modules, workflow validations, docs/package/API tests, and compileall passed. Full pytest had one unrelated local path-sensitive bootstrap failure because this worktree path contains .codex.
+    docs_updates:
+      - README.md
+      - docs/getting-started.md
+      - docs/v2-migration-guide.md
+      - policyflow/assets/docs/getting-started.md
+    known_limitations:
+      - V2 validate-pr still performs schema/governance validation rather than full V2 PR body claim parsing.
+      - Local full-suite execution in this .codex worktree hits a pre-existing bootstrap test that rejects absolute source paths containing codex.
+    unresolved_questions: []
+  review:
+    owner_agent: review-agent
+    review_findings: []
+    required_fixes: []
+    severity: none
+    approval_status: approved
+    review_approval: The change is confined to V2 approval validation dispatch and matching, keeps GitHub read-only, and preserves V1 behavior.
+    residual_risk: V2 PR body claim parsing remains outside this issue's narrow approval-validation scope.
+    qa_focus_areas:
+      - V1 compatibility.
+      - V2 pending approval with --allow-pending.
+      - V2 passed approval matching source/ref against GitHub review JSON.
+      - V2 stale review handling.
+    test_expectations:
+      - pytest -q tests/test_github_approval.py tests/test_pr_validator.py
+      - pytest -q tests/test_validator.py tests/test_pr_validator.py tests/test_runtime_cli.py tests/test_github_approval.py
+      - pytest -q
+  qa:
+    owner_agent: qa-agent
+    qa_report: Focused tests and required governance checks passed; full pytest was blocked only by an unrelated path-sensitive bootstrap assertion in the .codex worktree.
+    quality_gate_status: passed_with_environment_note
+    unresolved_risks:
+      - Full pytest in this local worktree reports tests/test_bootstrap.py::test_bootstrap_assets_do_not_include_runner_or_codex_assets because asset source paths include .codex.
+    approval_required: true
+    merge_readiness: true
+
+overrides: []

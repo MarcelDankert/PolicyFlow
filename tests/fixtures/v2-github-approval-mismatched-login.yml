@@ -1,0 +1,46 @@
+version: 2
+
+change:
+  id: github-approval-mismatched-login
+  type: feature
+  summary: High-risk change with mismatched GitHub approval evidence.
+
+risk:
+  level: high
+  rationale: Protected area requires security and approval evidence.
+  protected_areas:
+    - database schema
+
+governance:
+  required_reviews:
+    - architecture
+    - qa
+  human_approval_required: true
+
+confidence:
+  level: medium
+  summary: Approval evidence claims the wrong reviewer.
+
+evidence:
+  - id: tests
+    type: test
+    source: ci
+    status: passed
+    ref: ci://runs/123/tests
+  - id: review
+    type: review
+    source: github
+    status: passed
+    ref: https://github.com/example/repo/pull/1#pullrequestreview-1
+  - id: security
+    type: security
+    source: scanner
+    status: passed
+    ref: security://scan/123
+  - id: approval
+    type: approval
+    source: github-review:someone-else
+    status: passed
+    ref: https://github.com/example/repo/pull/1#pullrequestreview-99
+
+overrides: []

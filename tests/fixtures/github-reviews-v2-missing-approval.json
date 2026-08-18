@@ -1,0 +1,8 @@
+[
+  {
+    "id": 12,
+    "html_url": "https://github.com/example/repo/pull/1#pullrequestreview-12",
+    "state": "APPROVED",
+    "user": {"login": "someone-else"}
+  }
+]
